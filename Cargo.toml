@@ -5,7 +5,19 @@ authors = ["Pavan Kumar Sunkara <pavan.sss1991@gmail.com>"]
 edition = "2018"
 description = "Cargo workspace manager"
 license = "MIT"
+readme = "README.md"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "cargo-workspaces"
+path = "src/main.rs"
+
+[[bin]]
+name = "cargo-ws"
+path = "src/main.rs"
 
 [dependencies]
+log = "0.4"
+clap = { version = "3.0.0-beta.1", git = "git://github.com/clap-rs/clap" }
+cargo_metadata = "0.9"
+termcolor = "1.1"
+atty = "0.2"
