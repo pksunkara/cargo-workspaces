@@ -1,7 +1,18 @@
 use crate::utils::Writer;
 use cargo_metadata::Metadata;
 use clap::Clap;
-use std::io::Result;
+use serde::Serialize;
+use std::{io::Result, path::PathBuf};
+
+#[derive(Serialize, Ord, Eq, PartialOrd, PartialEq)]
+struct Pkg {
+    name: String,
+    version: String,
+    location: PathBuf,
+    #[serde(skip)]
+    path: String,
+    private: bool,
+}
 
 /// List local packages
 #[derive(Debug, Clap)]
@@ -15,7 +26,6 @@ pub struct List {
     all: bool,
 
     /// Show information as a JSON array
-    // TODO:
     #[clap(long)]
     json: bool,
 }
@@ -34,64 +44,73 @@ impl List {
                     continue;
                 }
 
-                let path = pkg.manifest_path.strip_prefix(&metadata.workspace_root);
+                let loc = pkg.manifest_path.strip_prefix(&metadata.workspace_root);
 
-                if path.is_err() {
+                if loc.is_err() {
                     stderr.b_red("error")?;
                     stderr.none(": package ")?;
                     stderr.cyan(&pkg.id.repr)?;
                     stderr.none(" is not inside workspace ")?;
                     stderr.cyan(metadata.workspace_root.to_string_lossy().as_ref())?;
+                    stderr.none("\n")?;
 
                     return Ok(());
                 }
 
-                let path = path.unwrap().to_string_lossy();
-                let mut path = path.trim_end_matches("Cargo.toml").trim_end_matches("/");
+                let loc = loc.unwrap().to_string_lossy();
+                let mut loc = loc.trim_end_matches("Cargo.toml").trim_end_matches("/");
 
-                if path.is_empty() {
-                    path = ".";
+                if loc.is_empty() {
+                    loc = ".";
                 }
 
-                pkgs.push((
-                    &pkg.name,
-                    format!("v{}", pkg.version),
-                    format!("{}", path),
+                pkgs.push(Pkg {
+                    name: pkg.name.clone(),
+                    version: format!("{}", pkg.version),
+                    location: metadata.workspace_root.join(loc),
+                    path: loc.to_string(),
                     private,
-                ));
+                });
             } else {
                 stderr.b_red("error")?;
                 stderr.none(": unable to find package ")?;
                 stderr.cyan(&id.repr)?;
+                stderr.none("\n")?;
             }
         }
 
         if pkgs.is_empty() {
             stderr.b_red("error")?;
-            stderr.none(": found no packages")?;
+            stderr.none(": found no packages\n")?;
             return Ok(());
         }
 
         pkgs.sort();
 
-        let first = pkgs.iter().map(|x| x.0.len()).max().unwrap();
-        let second = pkgs.iter().map(|x| x.1.len()).max().unwrap();
-        let third = pkgs.iter().map(|x| x.2.len()).max().unwrap();
+        if self.json {
+            stdout.none(&serde_json::to_string_pretty(&pkgs)?)?;
+            stdout.none("\n")?;
+            return Ok(());
+        }
+
+        let first = pkgs.iter().map(|x| x.name.len()).max().unwrap();
+        let second = pkgs.iter().map(|x| x.version.len() + 1).max().unwrap();
+        let third = pkgs.iter().map(|x| x.path.len()).max().unwrap();
 
         for pkg in pkgs {
-            stdout.none(pkg.0)?;
-            let mut width = first - pkg.0.len();
+            stdout.none(&pkg.name)?;
+            let mut width = first - pkg.name.len();
 
             if self.long {
                 stdout.none(&format!("{:w$} ", "", w = width))?;
-                stdout.green(&pkg.1)?;
-                stdout.none(&format!("{:w$} ", "", w = second - pkg.1.len()))?;
-                stdout.br_black(&pkg.2)?;
+                stdout.green(&format!("v{}", pkg.version))?;
+                stdout.none(&format!("{:w$} ", "", w = second - pkg.version.len() - 1))?;
+                stdout.br_black(&pkg.path)?;
 
-                width = third - pkg.2.len();
+                width = third - pkg.path.len();
             }
 
-            if self.all && pkg.3 {
+            if self.all && pkg.private {
                 stdout.none(&format!("{:w$} (", "", w = width))?;
                 stdout.red("PRIVATE")?;
                 stdout.none(")")?;
