@@ -1,15 +1,19 @@
 use cargo_metadata::MetadataCommand;
 use clap::{AppSettings, Clap};
 
+mod changed;
 mod list;
 mod utils;
 
+use changed::Changed;
 use list::List;
+use utils::Writer;
 
 #[derive(Debug, Clap)]
 enum Subcommand {
     #[clap(alias = "ls")]
     List(List),
+    Changed(Changed),
 }
 
 #[derive(Debug, Clap)]
@@ -48,9 +52,12 @@ fn main() {
     }
 
     let metadata = cmd.exec().unwrap();
+    let mut stdout = Writer::new(false);
+    let mut stderr = Writer::new(true);
 
     match opt.subcommand {
-        Subcommand::List(list) => list.run(metadata),
+        Subcommand::List(x) => x.run(metadata, &mut stdout, &mut stderr),
+        Subcommand::Changed(x) => x.run(metadata, &mut stdout, &mut stderr),
     }
     .unwrap();
 }

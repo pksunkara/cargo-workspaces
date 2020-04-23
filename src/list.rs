@@ -1,18 +1,7 @@
-use crate::utils::Writer;
+use crate::utils::{Listable, Pkg, Writer};
 use cargo_metadata::Metadata;
 use clap::Clap;
-use serde::Serialize;
-use std::{io::Result, path::PathBuf};
-
-#[derive(Serialize, Ord, Eq, PartialOrd, PartialEq)]
-struct Pkg {
-    name: String,
-    version: String,
-    location: PathBuf,
-    #[serde(skip)]
-    path: String,
-    private: bool,
-}
+use std::io::Result;
 
 /// List local packages
 #[derive(Debug, Clap)]
@@ -31,9 +20,7 @@ pub struct List {
 }
 
 impl List {
-    pub fn run(self, metadata: Metadata) -> Result<()> {
-        let mut stdout = Writer::new(false);
-        let mut stderr = Writer::new(true);
+    pub fn run(self, metadata: Metadata, stdout: &mut Writer, stderr: &mut Writer) -> Result<()> {
         let mut pkgs = vec![];
 
         for id in metadata.workspace_members {
@@ -58,11 +45,7 @@ impl List {
                 }
 
                 let loc = loc.unwrap().to_string_lossy();
-                let mut loc = loc.trim_end_matches("Cargo.toml").trim_end_matches("/");
-
-                if loc.is_empty() {
-                    loc = ".";
-                }
+                let loc = loc.trim_end_matches("Cargo.toml").trim_end_matches("/");
 
                 pkgs.push(Pkg {
                     name: pkg.name.clone(),
@@ -86,39 +69,6 @@ impl List {
         }
 
         pkgs.sort();
-
-        if self.json {
-            stdout.none(&serde_json::to_string_pretty(&pkgs)?)?;
-            stdout.none("\n")?;
-            return Ok(());
-        }
-
-        let first = pkgs.iter().map(|x| x.name.len()).max().unwrap();
-        let second = pkgs.iter().map(|x| x.version.len() + 1).max().unwrap();
-        let third = pkgs.iter().map(|x| x.path.len()).max().unwrap();
-
-        for pkg in pkgs {
-            stdout.none(&pkg.name)?;
-            let mut width = first - pkg.name.len();
-
-            if self.long {
-                stdout.none(&format!("{:w$} ", "", w = width))?;
-                stdout.green(&format!("v{}", pkg.version))?;
-                stdout.none(&format!("{:w$} ", "", w = second - pkg.version.len() - 1))?;
-                stdout.br_black(&pkg.path)?;
-
-                width = third - pkg.path.len();
-            }
-
-            if self.all && pkg.private {
-                stdout.none(&format!("{:w$} (", "", w = width))?;
-                stdout.red("PRIVATE")?;
-                stdout.none(")")?;
-            }
-
-            stdout.none("\n")?;
-        }
-
-        Ok(())
+        pkgs.list(stdout, self.json, self.long, self.all)
     }
 }
