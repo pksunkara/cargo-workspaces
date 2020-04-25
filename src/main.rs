@@ -52,12 +52,11 @@ fn main() {
     }
 
     let metadata = cmd.exec().unwrap();
-    let mut stdout = Writer::new(false);
-    let mut stderr = Writer::new(true);
+    let stdout = Writer::new(false);
 
     match opt.subcommand {
-        Subcommand::List(x) => x.run(metadata, &mut stdout, &mut stderr),
-        Subcommand::Changed(x) => x.run(metadata, &mut stdout, &mut stderr),
+        Subcommand::List(x) => x.run(metadata, stdout),
+        Subcommand::Changed(x) => x.run(metadata, stdout),
     }
     .unwrap();
 }

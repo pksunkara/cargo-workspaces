@@ -1,6 +1,6 @@
-use crate::utils::{Listable, Writer};
+use crate::utils::{Error, ListOpt, Listable, Writer};
 use serde::Serialize;
-use std::{cmp::max, io::Result, path::PathBuf};
+use std::{cmp::max, path::PathBuf};
 
 #[derive(Serialize, Ord, Eq, PartialOrd, PartialEq)]
 pub struct Pkg {
@@ -13,8 +13,8 @@ pub struct Pkg {
 }
 
 impl Listable for Vec<Pkg> {
-    fn list(&self, w: &mut Writer, json: bool, long: bool, all: bool) -> Result<()> {
-        if json {
+    fn list(&self, mut w: Writer, list: ListOpt) -> Result<(), Error> {
+        if list.json {
             return self.json(w);
         }
 
@@ -26,7 +26,7 @@ impl Listable for Vec<Pkg> {
             w.none(&pkg.name)?;
             let mut width = first - pkg.name.len();
 
-            if long {
+            if list.long {
                 w.none(&format!("{:w$} ", "", w = width))?;
                 w.green(&format!("v{}", pkg.version))?;
                 w.none(&format!("{:w$} ", "", w = second - pkg.version.len() - 1))?;
@@ -40,7 +40,7 @@ impl Listable for Vec<Pkg> {
                 width = third - pkg.path.len();
             }
 
-            if all && pkg.private {
+            if list.all && pkg.private {
                 w.none(&format!("{:w$} (", "", w = width))?;
                 w.red("PRIVATE")?;
                 w.none(")")?;
