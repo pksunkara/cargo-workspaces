@@ -53,10 +53,11 @@ fn main() {
 
     let metadata = cmd.exec().unwrap();
     let stdout = Writer::new(false);
+    let stderr = Writer::new(true);
 
     match opt.subcommand {
-        Subcommand::List(x) => x.run(metadata, stdout),
-        Subcommand::Changed(x) => x.run(metadata, stdout),
+        Subcommand::List(x) => x.run(metadata, stdout, stderr),
+        Subcommand::Changed(x) => x.run(metadata, stdout, stderr),
     }
     .unwrap();
 }

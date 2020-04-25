@@ -1,8 +1,9 @@
 use crate::utils::{Error, ListOpt, Listable, Writer};
+use cargo_metadata::Metadata;
 use serde::Serialize;
 use std::{cmp::max, path::PathBuf};
 
-#[derive(Serialize, Ord, Eq, PartialOrd, PartialEq)]
+#[derive(Serialize, Debug, Ord, Eq, PartialOrd, PartialEq)]
 pub struct Pkg {
     pub name: String,
     pub version: String,
@@ -51,4 +52,50 @@ impl Listable for Vec<Pkg> {
 
         Ok(())
     }
+}
+
+pub fn get_pkgs(metadata: &Metadata, all: bool) -> Result<Vec<Pkg>, Error> {
+    let mut pkgs = vec![];
+
+    for id in &metadata.workspace_members {
+        if let Some(pkg) = metadata.packages.iter().find(|x| x.id == *id) {
+            let private = pkg.publish.is_some() && pkg.publish.as_ref().unwrap().is_empty();
+
+            if !all && private {
+                continue;
+            }
+
+            let loc = pkg.manifest_path.strip_prefix(&metadata.workspace_root);
+
+            if loc.is_err() {
+                return Err(Error::PackageNotInWorkspace {
+                    id: pkg.id.repr.clone(),
+                    ws: metadata.workspace_root.to_string_lossy().to_string(),
+                });
+            }
+
+            let loc = loc.unwrap().to_string_lossy();
+            let loc = loc.trim_end_matches("Cargo.toml").trim_end_matches("/");
+
+            pkgs.push(Pkg {
+                name: pkg.name.clone(),
+                version: format!("{}", pkg.version),
+                location: metadata.workspace_root.join(loc),
+                path: loc.to_string(),
+                private,
+            });
+        } else {
+            Error::PackageNotFound {
+                id: id.repr.clone(),
+            }
+            .print()?;
+        }
+    }
+
+    if pkgs.is_empty() {
+        return Err(Error::EmptyWorkspace);
+    }
+
+    pkgs.sort();
+    Ok(pkgs)
 }

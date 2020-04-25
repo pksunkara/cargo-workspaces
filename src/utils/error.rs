@@ -11,7 +11,8 @@ pub enum Error {
     PackageNotFound { id: String },
     #[error("did not find any package")]
     EmptyWorkspace,
-
+    #[error("unable to find information about current state of repository, {0}")]
+    DescribeRefFail(String),
     #[error("unable to run git command with args {args:?}, got {err}")]
     Git { err: io::Error, args: Vec<String> },
 
@@ -43,7 +44,6 @@ impl Error {
                 stderr.cyan(id)?;
                 stderr.none("\n")?;
             }
-            Self::EmptyWorkspace => stderr.none("did not find any package\n")?,
             _ => stderr.none(&format!("{}", self))?,
         }
 
