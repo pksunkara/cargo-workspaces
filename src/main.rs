@@ -3,10 +3,14 @@ use clap::{AppSettings, Clap};
 
 mod changed;
 mod list;
+mod version;
+
 mod utils;
 
 use changed::Changed;
 use list::List;
+use version::Version;
+
 use utils::Writer;
 
 #[derive(Debug, Clap)]
@@ -14,6 +18,7 @@ enum Subcommand {
     #[clap(alias = "ls")]
     List(List),
     Changed(Changed),
+    Version(Version),
 }
 
 #[derive(Debug, Clap)]
@@ -58,6 +63,7 @@ fn main() {
     match opt.subcommand {
         Subcommand::List(x) => x.run(metadata, stdout, stderr),
         Subcommand::Changed(x) => x.run(metadata, stdout, stderr),
+        Subcommand::Version(x) => x.run(metadata, stdout, stderr),
     }
     .unwrap();
 }

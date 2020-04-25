@@ -1,10 +1,12 @@
 use std::{path::PathBuf, process::Command};
 
+mod changable;
 mod error;
 mod listable;
 mod pkg;
 mod writer;
 
+pub use changable::{get_changed_pkgs, ChangeData, ChangeOpt};
 pub use error::Error;
 pub use listable::{ListOpt, Listable};
 pub use pkg::{get_pkgs, Pkg};
