@@ -28,7 +28,7 @@ impl ChangeData {
             args.push("--first-parent");
         }
 
-        let description = git(&metadata.workspace_root, &args)?;
+        let (description, _) = git(&metadata.workspace_root, &args)?;
 
         let sha_regex = Regex::new("^([0-9a-f]{7,40})(-dirty)?$").expect(INTERNAL_ERR);
         let tag_regex =
@@ -41,7 +41,10 @@ impl ChangeData {
 
             ret.sha = caps.get(1).expect(INTERNAL_ERR).as_str().to_string();
             ret.dirty = caps.get(2).is_some();
-            ret.count = git(&metadata.workspace_root, &["rev-list", "--count", &ret.sha])?;
+
+            let (count, _) = git(&metadata.workspace_root, &["rev-list", "--count", &ret.sha])?;
+
+            ret.count = count;
         } else if tag_regex.is_match(&description) {
             let caps = tag_regex.captures(&description).expect(INTERNAL_ERR);
 
@@ -51,8 +54,6 @@ impl ChangeData {
             ret.sha = caps.get(4).expect(INTERNAL_ERR).as_str().to_string();
             ret.dirty = caps.get(5).is_some();
             ret.count = caps.get(3).expect(INTERNAL_ERR).as_str().to_string();
-        } else {
-            return Err(Error::DescribeRefFail(description));
         }
 
         Ok(ret)
@@ -74,7 +75,7 @@ pub fn get_changed_pkgs(
         stderr.cyan(&since)?;
         stderr.none("\n")?;
 
-        let changed_files = git(
+        let (changed_files, _) = git(
             &metadata.workspace_root,
             &["diff", "--name-only", "--relative", since],
         )?;

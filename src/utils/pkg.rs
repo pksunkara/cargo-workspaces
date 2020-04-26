@@ -1,16 +1,21 @@
 use crate::utils::{Error, ListOpt, Listable, Writer};
-use cargo_metadata::Metadata;
+use cargo_metadata::{Metadata, PackageId};
+use semver::Version;
 use serde::Serialize;
+use serde_json::Value;
 use std::{cmp::max, path::PathBuf};
 
-#[derive(Serialize, Debug, Ord, Eq, PartialOrd, PartialEq)]
+#[derive(Serialize, Debug, Clone, Ord, Eq, PartialOrd, PartialEq)]
 pub struct Pkg {
+    #[serde(skip)]
+    pub id: PackageId,
     pub name: String,
-    pub version: String,
+    pub version: Version,
     pub location: PathBuf,
     #[serde(skip)]
     pub path: String,
     pub private: bool,
+    pub independent: bool,
 }
 
 impl Listable for Vec<Pkg> {
@@ -20,7 +25,11 @@ impl Listable for Vec<Pkg> {
         }
 
         let first = self.iter().map(|x| x.name.len()).max().unwrap();
-        let second = self.iter().map(|x| x.version.len() + 1).max().unwrap();
+        let second = self
+            .iter()
+            .map(|x| x.version.to_string().len() + 1)
+            .max()
+            .unwrap();
         let third = self.iter().map(|x| max(1, x.path.len())).max().unwrap();
 
         for pkg in self {
@@ -30,7 +39,11 @@ impl Listable for Vec<Pkg> {
             if list.long {
                 w.none(&format!("{:w$} ", "", w = width))?;
                 w.green(&format!("v{}", pkg.version))?;
-                w.none(&format!("{:w$} ", "", w = second - pkg.version.len() - 1))?;
+                w.none(&format!(
+                    "{:w$} ",
+                    "",
+                    w = second - pkg.version.to_string().len() - 1
+                ))?;
 
                 if pkg.path.is_empty() {
                     w.br_black(".")?;
@@ -52,6 +65,18 @@ impl Listable for Vec<Pkg> {
 
         Ok(())
     }
+}
+
+fn is_independent(metadata: &Value) -> bool {
+    if let Value::Object(v) = metadata {
+        if let Some(Value::Object(v)) = v.get("workspaces") {
+            if let Some(Value::Bool(v)) = v.get("independent") {
+                return *v;
+            }
+        }
+    }
+
+    false
 }
 
 pub fn get_pkgs(metadata: &Metadata, all: bool) -> Result<Vec<Pkg>, Error> {
@@ -78,11 +103,13 @@ pub fn get_pkgs(metadata: &Metadata, all: bool) -> Result<Vec<Pkg>, Error> {
             let loc = loc.trim_end_matches("Cargo.toml").trim_end_matches("/");
 
             pkgs.push(Pkg {
+                id: pkg.id.clone(),
                 name: pkg.name.clone(),
-                version: format!("{}", pkg.version),
+                version: pkg.version.clone(),
                 location: metadata.workspace_root.join(loc),
                 path: loc.to_string(),
                 private,
+                independent: is_independent(&pkg.metadata),
             });
         } else {
             Error::PackageNotFound {

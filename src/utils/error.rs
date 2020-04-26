@@ -11,11 +11,24 @@ pub enum Error {
     PackageNotFound { id: String },
     #[error("did not find any package")]
     EmptyWorkspace,
-    #[error("unable to find information about current state of repository, {0}")]
-    DescribeRefFail(String),
+
     #[error("unable to run git command with args {args:?}, got {err}")]
     Git { err: io::Error, args: Vec<String> },
+    #[error("not a git repository")]
+    NotGit,
+    #[error("no commits in this repository")]
+    NoCommits,
+    #[error("not on a git branch")]
+    NotBranch,
+    #[error("remote {remote} not found or branch {branch} not in {remote}")]
+    NoRemote { remote: String, branch: String },
+    #[error("local branch {branch} is behind upstream {upstream}")]
+    BehindRemote { upstream: String, branch: String },
+    #[error("not allowed to run on branch {branch} because it doesn't match pattern {pattern}")]
+    BranchNotAllowed { branch: String, pattern: String },
 
+    #[error("{0}")]
+    Glob(#[from] glob::PatternError),
     #[error("{0}")]
     Serde(#[from] serde_json::Error),
     #[error("{0}")]
@@ -34,17 +47,40 @@ impl Error {
         match self {
             Self::PackageNotInWorkspace { id, ws } => {
                 stderr.none("package ")?;
-                stderr.cyan(id)?;
+                stderr.yellow(id)?;
                 stderr.none(" is not inside workspace ")?;
-                stderr.cyan(ws)?;
+                stderr.yellow(ws)?;
                 stderr.none("\n")?;
             }
             Self::PackageNotFound { id } => {
                 stderr.none("unable to find package ")?;
-                stderr.cyan(id)?;
+                stderr.yellow(id)?;
                 stderr.none("\n")?;
             }
-            _ => stderr.none(&format!("{}", self))?,
+            Self::NoRemote { remote, branch } => {
+                stderr.none("remote ")?;
+                stderr.yellow(remote)?;
+                stderr.none(" not found or branch ")?;
+                stderr.yellow(branch)?;
+                stderr.none(" not found in ")?;
+                stderr.yellow(remote)?;
+                stderr.none("\n")?;
+            }
+            Self::BehindRemote { upstream, branch } => {
+                stderr.none("local branch ")?;
+                stderr.yellow(branch)?;
+                stderr.none(" is behind upstream ")?;
+                stderr.yellow(upstream)?;
+                stderr.none("\n")?;
+            }
+            Self::BranchNotAllowed { branch, pattern } => {
+                stderr.none("not allowed to run on branch ")?;
+                stderr.yellow(branch)?;
+                stderr.none(" because it doesn't match pattern ")?;
+                stderr.yellow(pattern)?;
+                stderr.none("\n")?;
+            }
+            _ => stderr.none(&format!("{}\n", self))?,
         }
 
         return Ok(());

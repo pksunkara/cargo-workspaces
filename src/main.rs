@@ -44,7 +44,7 @@ struct Opt {
     global_setting(AppSettings::ColoredHelp)
 )]
 enum Cargo {
-    #[clap(name = "workspaces", alias = "ws")]
+    #[clap(alias = "ws")]
     Workspaces(Opt),
 }
 
@@ -60,10 +60,14 @@ fn main() {
     let stdout = Writer::new(false);
     let stderr = Writer::new(true);
 
-    match opt.subcommand {
+    let err = match opt.subcommand {
         Subcommand::List(x) => x.run(metadata, stdout, stderr),
         Subcommand::Changed(x) => x.run(metadata, stdout, stderr),
         Subcommand::Version(x) => x.run(metadata, stdout, stderr),
     }
-    .unwrap();
+    .err();
+
+    if let Some(err) = err {
+        err.print().unwrap();
+    }
 }

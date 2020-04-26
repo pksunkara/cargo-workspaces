@@ -49,7 +49,9 @@ impl Writer {
 
     color!(self, red, ColorSpec::new().set_fg(Some(Color::Red)));
     color!(self, green, ColorSpec::new().set_fg(Some(Color::Green)));
+    color!(self, yellow, ColorSpec::new().set_fg(Some(Color::Yellow)));
     color!(self, cyan, ColorSpec::new().set_fg(Some(Color::Cyan)));
+    color!(self, magenta, ColorSpec::new().set_fg(Some(Color::Magenta)));
     color!(
         self,
         b_red,
