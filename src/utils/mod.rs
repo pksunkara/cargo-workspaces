@@ -3,6 +3,7 @@ mod error;
 mod git;
 mod listable;
 mod pkg;
+mod toml;
 mod version;
 
 pub use changable::{get_changed_pkgs, ChangeData, ChangeOpt};
@@ -10,6 +11,7 @@ pub use error::Error;
 pub use git::{git, GitOpt};
 pub use listable::{ListOpt, Listable};
 pub use pkg::{get_pkgs, Pkg};
+pub use toml::change_versions;
 pub use version::ask_version;
 
 pub type Result = std::result::Result<(), Error>;

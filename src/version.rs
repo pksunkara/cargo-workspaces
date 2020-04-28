@@ -1,9 +1,12 @@
 use crate::utils::{
-    ask_version, get_changed_pkgs, ChangeData, ChangeOpt, GitOpt, Result, INTERNAL_ERR,
+    ask_version, change_versions, get_changed_pkgs, ChangeData, ChangeOpt, Error, GitOpt, Pkg,
+    INTERNAL_ERR,
 };
 use cargo_metadata::Metadata;
 use clap::Clap;
 use console::{Style, Term};
+use std::collections::BTreeMap as Map;
+use std::fs;
 
 #[derive(Clap, Debug)]
 pub struct Version {
@@ -16,7 +19,7 @@ pub struct Version {
 }
 
 impl Version {
-    pub fn run(self, metadata: Metadata, _: &Term, stderr: &Term) -> Result {
+    pub fn run(self, metadata: Metadata, _: &Term, stderr: &Term) -> Result<(), Error> {
         self.git.validate(&metadata.workspace_root)?;
 
         let change_data = ChangeData::new(&metadata, &self.change)?;
@@ -26,6 +29,39 @@ impl Version {
         }
 
         let pkgs = get_changed_pkgs(&metadata, &self.change, &change_data.since, false)?;
+        let new_versions = Self::get_new_versions(&metadata, pkgs, stderr)?;
+
+        for p in &metadata.packages {
+            if new_versions.get(&p.name).is_none()
+                && p.dependencies
+                    .iter()
+                    .all(|x| new_versions.get(&x.name).is_none())
+            {
+                continue;
+            }
+
+            fs::write(
+                &p.manifest_path,
+                format!(
+                    "{}\n",
+                    change_versions(
+                        fs::read_to_string(&p.manifest_path)?,
+                        &p.name,
+                        &new_versions,
+                    )
+                ),
+            )?;
+        }
+
+        Ok(())
+    }
+
+    fn get_new_versions(
+        metadata: &Metadata,
+        pkgs: Vec<Pkg>,
+        stderr: &Term,
+    ) -> Result<Map<String, semver::Version>, Error> {
+        let mut new_versions = Map::<String, semver::Version>::new();
 
         let (independent_pkgs, same_pkgs) =
             pkgs.into_iter().partition::<Vec<_>, _>(|p| p.independent);
@@ -52,17 +88,18 @@ impl Version {
                 style.cyan().apply_to(cur_version)
             ))?;
 
-            let new_version = ask_version(cur_version, None)?;
+            let new_version = ask_version(cur_version, None, stderr)?;
 
-            println!("{:#?}", new_version);
+            for p in same_pkgs {
+                new_versions.insert(p.name, new_version.clone());
+            }
         }
 
         for p in independent_pkgs {
-            let new_version = ask_version(&p.version, Some(p.name))?;
-
-            println!("{:#?}", new_version);
+            let new_version = ask_version(&p.version, Some(&p.name), stderr)?;
+            new_versions.insert(p.name, new_version);
         }
 
-        Ok(())
+        Ok(new_versions)
     }
 }

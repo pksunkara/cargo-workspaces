@@ -1,8 +1,13 @@
 use crate::utils::{Error, INTERNAL_ERR};
+use console::Term;
 use dialoguer::{theme::ColorfulTheme, Input, Select};
 use semver::{Identifier, Version};
 
-pub fn ask_version(cur_version: &Version, pkg_name: Option<String>) -> Result<Version, Error> {
+pub fn ask_version(
+    cur_version: &Version,
+    pkg_name: Option<&str>,
+    term: &Term,
+) -> Result<Version, Error> {
     let mut items = version_items(cur_version);
 
     items.push(("Custom Prerelease".to_string(), None));
@@ -23,7 +28,7 @@ pub fn ask_version(cur_version: &Version, pkg_name: Option<String>) -> Result<Ve
         ))
         .items(&items.iter().map(|x| &x.0).collect::<Vec<_>>())
         .default(0)
-        .interact()?;
+        .interact_on(term)?;
 
     let new_version = if selected == 6 {
         let custom = custom_pre(&cur_version);
@@ -34,13 +39,13 @@ pub fn ask_version(cur_version: &Version, pkg_name: Option<String>) -> Result<Ve
                 custom.0, custom.1
             ))
             .default(custom.0.to_string())
-            .interact()?;
+            .interact_on(term)?;
 
         inc_preid(&cur_version, Identifier::AlphaNumeric(preid))
     } else if selected == 7 {
         Input::with_theme(&theme)
             .with_prompt("Enter a custom version")
-            .interact()?
+            .interact_on(term)?
     } else {
         items
             .get(selected)
