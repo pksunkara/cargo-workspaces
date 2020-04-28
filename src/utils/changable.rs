@@ -1,7 +1,7 @@
 use crate::utils::{get_pkgs, git, Error, Pkg, INTERNAL_ERR};
 use cargo_metadata::Metadata;
 use clap::Clap;
-use console::{style, Term};
+use console::{Style, Term};
 use regex::Regex;
 
 #[derive(Debug, Clap)]
@@ -71,10 +71,15 @@ pub fn get_changed_pkgs(
 
     let pkgs = if let Some(since) = since {
         let term = Term::stderr();
+        let style = Style::new().for_stderr();
 
         term.write_line(&format!(
-            "Looking for changed packages since {}",
-            style(since).for_stderr().cyan()
+            "{} {}",
+            style
+                .clone()
+                .magenta()
+                .apply_to("looking for changes since"),
+            style.cyan().apply_to(since),
         ))?;
 
         let (changed_files, _) = git(

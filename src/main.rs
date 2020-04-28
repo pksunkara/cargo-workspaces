@@ -1,4 +1,4 @@
-use cargo_metadata::MetadataCommand;
+use cargo_metadata::{CargoOpt, MetadataCommand};
 use clap::{AppSettings, Clap};
 
 mod changed;
@@ -51,6 +51,9 @@ enum Cargo {
 fn main() {
     let Cargo::Workspaces(opt) = Cargo::parse();
     let mut cmd = MetadataCommand::new();
+
+    cmd.features(CargoOpt::AllFeatures);
+    cmd.no_deps();
 
     if let Some(path) = opt.manifest_path {
         cmd.manifest_path(path);

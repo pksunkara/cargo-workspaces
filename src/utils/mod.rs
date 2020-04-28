@@ -12,7 +12,7 @@ pub use git::{git, GitOpt};
 pub use listable::{ListOpt, Listable};
 pub use pkg::{get_pkgs, Pkg};
 pub use toml::change_versions;
-pub use version::ask_version;
+pub use version::{ask_version, confirm_versions};
 
 pub type Result = std::result::Result<(), Error>;
 

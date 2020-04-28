@@ -1,6 +1,6 @@
 use crate::utils::{
-    ask_version, change_versions, get_changed_pkgs, ChangeData, ChangeOpt, Error, GitOpt, Pkg,
-    INTERNAL_ERR,
+    ask_version, change_versions, confirm_versions, get_changed_pkgs, ChangeData, ChangeOpt, Error,
+    GitOpt, Pkg, INTERNAL_ERR,
 };
 use cargo_metadata::Metadata;
 use clap::Clap;
@@ -29,6 +29,11 @@ impl Version {
         }
 
         let pkgs = get_changed_pkgs(&metadata, &self.change, &change_data.since, false)?;
+
+        if pkgs.is_empty() {
+            return Ok(stderr.write_line("No changes detected, skipping versioning")?);
+        }
+
         let new_versions = Self::get_new_versions(&metadata, pkgs, stderr)?;
 
         for p in &metadata.packages {
@@ -61,7 +66,7 @@ impl Version {
         pkgs: Vec<Pkg>,
         stderr: &Term,
     ) -> Result<Map<String, semver::Version>, Error> {
-        let mut new_versions = Map::<String, semver::Version>::new();
+        let mut new_versions = vec![];
 
         let (independent_pkgs, same_pkgs) =
             pkgs.into_iter().partition::<Vec<_>, _>(|p| p.independent);
@@ -90,16 +95,16 @@ impl Version {
 
             let new_version = ask_version(cur_version, None, stderr)?;
 
-            for p in same_pkgs {
-                new_versions.insert(p.name, new_version.clone());
+            for p in &same_pkgs {
+                new_versions.push((p.name.to_string(), new_version.clone(), cur_version));
             }
         }
 
-        for p in independent_pkgs {
+        for p in &independent_pkgs {
             let new_version = ask_version(&p.version, Some(&p.name), stderr)?;
-            new_versions.insert(p.name, new_version);
+            new_versions.push((p.name.to_string(), new_version, &p.version));
         }
 
-        Ok(new_versions)
+        confirm_versions(new_versions, stderr)
     }
 }

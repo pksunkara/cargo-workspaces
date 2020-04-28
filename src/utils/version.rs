@@ -1,7 +1,43 @@
 use crate::utils::{Error, INTERNAL_ERR};
-use console::Term;
-use dialoguer::{theme::ColorfulTheme, Input, Select};
+use console::{Style, Term};
+use dialoguer::{theme::ColorfulTheme, Confirm, Input, Select};
 use semver::{Identifier, Version};
+use std::collections::BTreeMap as Map;
+use std::process::exit;
+
+pub fn confirm_versions(
+    versions: Vec<(String, Version, &Version)>,
+    term: &Term,
+) -> Result<Map<String, Version>, Error> {
+    let mut new_versions = Map::new();
+    let style = Style::new().for_stderr();
+
+    term.write_line("\nChanges:")?;
+
+    for v in versions {
+        term.write_line(&format!(
+            " - {}: {} => {}",
+            style.clone().yellow().apply_to(&v.0),
+            v.2,
+            style.clone().cyan().apply_to(&v.1),
+        ))?;
+        new_versions.insert(v.0, v.1);
+    }
+
+    term.write_line("")?;
+    term.flush()?;
+
+    let create = Confirm::with_theme(&ColorfulTheme::default())
+        .with_prompt("Are you sure you want to create these versions?")
+        .default(false)
+        .interact_on(term)?;
+
+    if !create {
+        exit(0);
+    }
+
+    Ok(new_versions)
+}
 
 pub fn ask_version(
     cur_version: &Version,
