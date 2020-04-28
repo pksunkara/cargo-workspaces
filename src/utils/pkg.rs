@@ -1,5 +1,6 @@
-use crate::utils::{Error, ListOpt, Listable, Writer};
+use crate::utils::{Error, ListOpt, Listable};
 use cargo_metadata::{Metadata, PackageId};
+use console::{style, Term};
 use semver::Version;
 use serde::Serialize;
 use serde_json::Value;
@@ -19,9 +20,9 @@ pub struct Pkg {
 }
 
 impl Listable for Vec<Pkg> {
-    fn list(&self, mut w: Writer, list: ListOpt) -> Result<(), Error> {
+    fn list(&self, term: &Term, list: ListOpt) -> Result<(), Error> {
         if list.json {
-            return self.json(w);
+            return self.json(term);
         }
 
         let first = self.iter().map(|x| x.name.len()).max().unwrap();
@@ -33,34 +34,35 @@ impl Listable for Vec<Pkg> {
         let third = self.iter().map(|x| max(1, x.path.len())).max().unwrap();
 
         for pkg in self {
-            w.none(&pkg.name)?;
+            term.write_str(&pkg.name)?;
             let mut width = first - pkg.name.len();
 
             if list.long {
-                w.none(&format!("{:w$} ", "", w = width))?;
-                w.green(&format!("v{}", pkg.version))?;
-                w.none(&format!(
-                    "{:w$} ",
-                    "",
-                    w = second - pkg.version.to_string().len() - 1
-                ))?;
+                let path = if pkg.path.is_empty() { "." } else { &pkg.path };
 
-                if pkg.path.is_empty() {
-                    w.br_black(".")?;
-                } else {
-                    w.br_black(&pkg.path)?;
-                }
+                term.write_str(&format!(
+                    "{:f$} {}{:s$} {}",
+                    "",
+                    style(format!("v{}", pkg.version)).green(),
+                    "",
+                    style(path).black().bright(),
+                    f = width,
+                    s = second - pkg.version.to_string().len() - 1,
+                ))?;
 
                 width = third - pkg.path.len();
             }
 
             if list.all && pkg.private {
-                w.none(&format!("{:w$} (", "", w = width))?;
-                w.red("PRIVATE")?;
-                w.none(")")?;
+                term.write_str(&format!(
+                    "{:w$} ({})",
+                    "",
+                    style("PRIVATE").red(),
+                    w = width
+                ))?;
             }
 
-            w.none("\n")?;
+            term.write_line("")?;
         }
 
         Ok(())
@@ -115,7 +117,7 @@ pub fn get_pkgs(metadata: &Metadata, all: bool) -> Result<Vec<Pkg>, Error> {
             Error::PackageNotFound {
                 id: id.repr.clone(),
             }
-            .print()?;
+            .print_err()?;
         }
     }
 

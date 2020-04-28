@@ -1,6 +1,7 @@
-use crate::utils::{get_changed_pkgs, ChangeData, ChangeOpt, ListOpt, Listable, Result, Writer};
+use crate::utils::{get_changed_pkgs, ChangeData, ChangeOpt, ListOpt, Listable, Result};
 use cargo_metadata::Metadata;
 use clap::Clap;
+use console::Term;
 
 /// List local packages that have changed since the last tagged release
 #[derive(Debug, Clap)]
@@ -17,16 +18,15 @@ pub struct Changed {
 }
 
 impl Changed {
-    pub fn run(self, metadata: Metadata, stdout: Writer, mut stderr: Writer) -> Result {
+    pub fn run(self, metadata: Metadata, stdout: &Term, stderr: &Term) -> Result {
         let mut since = self.since.clone();
 
         if self.since.is_none() {
             let change_data = ChangeData::new(&metadata, &self.change)?;
 
             if change_data.count == "0" {
-                return Ok(
-                    stderr.none("Current HEAD is already released, skipping change detection")?
-                );
+                return Ok(stderr
+                    .write_line("Current HEAD is already released, skipping change detection")?);
             }
 
             since = change_data.since;

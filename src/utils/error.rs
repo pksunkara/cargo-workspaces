@@ -1,4 +1,4 @@
-use crate::utils::Writer;
+use console::{style, Style, Term};
 use std::io;
 use std::string::FromUtf8Error;
 use thiserror::Error;
@@ -38,51 +38,45 @@ pub enum Error {
 }
 
 impl Error {
-    pub fn print(&self) -> io::Result<()> {
-        let mut stderr = Writer::new(true);
+    pub fn print_err(&self) -> io::Result<()> {
+        let term = Term::stderr();
+        self.print(&term)
+    }
 
-        stderr.b_red("error")?;
-        stderr.none(": ")?;
+    pub fn print(&self, term: &Term) -> io::Result<()> {
+        let yellow = Style::new().for_stderr().yellow();
 
-        match self {
-            Self::PackageNotInWorkspace { id, ws } => {
-                stderr.none("package ")?;
-                stderr.yellow(id)?;
-                stderr.none(" is not inside workspace ")?;
-                stderr.yellow(ws)?;
-                stderr.none("\n")?;
-            }
+        term.write_str(&format!("{}: ", style("error").for_stderr().red().bold()))?;
+
+        let msg = match self {
+            Self::PackageNotInWorkspace { id, ws } => format!(
+                "package {} is not inside workspace {}",
+                yellow.apply_to(id),
+                yellow.apply_to(ws)
+            ),
             Self::PackageNotFound { id } => {
-                stderr.none("unable to find package ")?;
-                stderr.yellow(id)?;
-                stderr.none("\n")?;
+                format!("unable to find package {}", yellow.apply_to(id))
             }
-            Self::NoRemote { remote, branch } => {
-                stderr.none("remote ")?;
-                stderr.yellow(remote)?;
-                stderr.none(" not found or branch ")?;
-                stderr.yellow(branch)?;
-                stderr.none(" not found in ")?;
-                stderr.yellow(remote)?;
-                stderr.none("\n")?;
-            }
-            Self::BehindRemote { upstream, branch } => {
-                stderr.none("local branch ")?;
-                stderr.yellow(branch)?;
-                stderr.none(" is behind upstream ")?;
-                stderr.yellow(upstream)?;
-                stderr.none("\n")?;
-            }
-            Self::BranchNotAllowed { branch, pattern } => {
-                stderr.none("not allowed to run on branch ")?;
-                stderr.yellow(branch)?;
-                stderr.none(" because it doesn't match pattern ")?;
-                stderr.yellow(pattern)?;
-                stderr.none("\n")?;
-            }
-            _ => stderr.none(&format!("{}\n", self))?,
-        }
+            Self::NoRemote { remote, branch } => format!(
+                "remote {} not found or branch {} not found in {}",
+                yellow.apply_to(remote),
+                yellow.apply_to(branch),
+                yellow.apply_to(remote)
+            ),
+            Self::BehindRemote { upstream, branch } => format!(
+                "local branch {} is behind upstream {}",
+                yellow.apply_to(branch),
+                yellow.apply_to(upstream)
+            ),
+            Self::BranchNotAllowed { branch, pattern } => format!(
+                "not allowed to run on branch {} because it doesn't match pattern {}",
+                yellow.apply_to(branch),
+                yellow.apply_to(pattern)
+            ),
+            _ => format!("{}", self),
+        };
 
-        return Ok(());
+        term.write_line(&msg)?;
+        term.flush()
     }
 }

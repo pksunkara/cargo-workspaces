@@ -1,6 +1,5 @@
 use crate::utils::{Error, INTERNAL_ERR};
-use dialoguer::{Input, Select};
-use enquirer::ColoredTheme;
+use dialoguer::{theme::ColorfulTheme, Input, Select};
 use semver::{Identifier, Version};
 
 pub fn ask_version(cur_version: &Version, pkg_name: Option<String>) -> Result<Version, Error> {
@@ -15,7 +14,9 @@ pub fn ask_version(cur_version: &Version, pkg_name: Option<String>) -> Result<Ve
         "".to_string()
     };
 
-    let selected = Select::with_theme(&ColoredTheme::default())
+    let theme = ColorfulTheme::default();
+
+    let selected = Select::with_theme(&theme)
         .with_prompt(&format!(
             "Select a new version {}(currently {})",
             prompt, cur_version
@@ -27,7 +28,7 @@ pub fn ask_version(cur_version: &Version, pkg_name: Option<String>) -> Result<Ve
     let new_version = if selected == 6 {
         let custom = custom_pre(&cur_version);
 
-        let preid = Input::with_theme(&ColoredTheme::default())
+        let preid = Input::with_theme(&theme)
             .with_prompt(&format!(
                 "Enter a prerelease identifier (default: '{}', yielding {})",
                 custom.0, custom.1
@@ -37,7 +38,7 @@ pub fn ask_version(cur_version: &Version, pkg_name: Option<String>) -> Result<Ve
 
         inc_preid(&cur_version, Identifier::AlphaNumeric(preid))
     } else if selected == 7 {
-        Input::with_theme(&ColoredTheme::default())
+        Input::with_theme(&theme)
             .with_prompt("Enter a custom version")
             .interact()?
     } else {

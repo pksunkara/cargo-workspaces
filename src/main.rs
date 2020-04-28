@@ -11,7 +11,7 @@ use changed::Changed;
 use list::List;
 use version::Version;
 
-use utils::Writer;
+use console::Term;
 
 #[derive(Debug, Clap)]
 enum Subcommand {
@@ -57,17 +57,20 @@ fn main() {
     }
 
     let metadata = cmd.exec().unwrap();
-    let stdout = Writer::new(false);
-    let stderr = Writer::new(true);
+    let stdout = Term::stdout();
+    let stderr = Term::stderr();
 
     let err = match opt.subcommand {
-        Subcommand::List(x) => x.run(metadata, stdout, stderr),
-        Subcommand::Changed(x) => x.run(metadata, stdout, stderr),
-        Subcommand::Version(x) => x.run(metadata, stdout, stderr),
+        Subcommand::List(x) => x.run(metadata, &stdout, &stderr),
+        Subcommand::Changed(x) => x.run(metadata, &stdout, &stderr),
+        Subcommand::Version(x) => x.run(metadata, &stdout, &stderr),
     }
     .err();
 
     if let Some(err) = err {
-        err.print().unwrap();
+        err.print(&stderr).unwrap();
     }
+
+    stderr.flush().unwrap();
+    stdout.flush().unwrap();
 }

@@ -1,6 +1,7 @@
-use crate::utils::{get_pkgs, git, Error, Pkg, Writer, INTERNAL_ERR};
+use crate::utils::{get_pkgs, git, Error, Pkg, INTERNAL_ERR};
 use cargo_metadata::Metadata;
 use clap::Clap;
+use console::{style, Term};
 use regex::Regex;
 
 #[derive(Debug, Clap)]
@@ -69,11 +70,12 @@ pub fn get_changed_pkgs(
     let pkgs = get_pkgs(&metadata, private)?;
 
     let pkgs = if let Some(since) = since {
-        let mut stderr = Writer::new(true);
+        let term = Term::stderr();
 
-        stderr.none("Looking for changed packages since ")?;
-        stderr.cyan(&since)?;
-        stderr.none("\n")?;
+        term.write_line(&format!(
+            "Looking for changed packages since {}",
+            style(since).for_stderr().cyan()
+        ))?;
 
         let (changed_files, _) = git(
             &metadata.workspace_root,
