@@ -40,7 +40,7 @@ pub struct GitOpt {
     #[clap(long, conflicts_with_all = &["tag-prefix"])]
     pub no_git_tag: bool,
 
-    #[clap(long, default_value = "")]
+    #[clap(long, default_value = "v")]
     pub tag_prefix: String,
 
     /// Do not push commit to git remote
