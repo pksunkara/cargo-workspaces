@@ -1,11 +1,126 @@
-use crate::utils::{Error, INTERNAL_ERR};
+use crate::utils::{
+    change_versions, get_changed_pkgs, ChangeData, ChangeOpt, Error, GitOpt, Pkg, INTERNAL_ERR,
+};
+use cargo_metadata::Metadata;
+use clap::Clap;
 use console::{Style, Term};
 use dialoguer::{theme::ColorfulTheme, Confirm, Input, Select};
 use semver::{Identifier, Version};
 use std::collections::BTreeMap as Map;
+use std::fs;
 use std::process::exit;
 
-pub fn confirm_versions(
+#[derive(Debug, Clap)]
+pub struct VersionOpt {
+    #[clap(flatten)]
+    pub change: ChangeOpt,
+
+    #[clap(flatten)]
+    pub git: GitOpt,
+    // TODO: exact
+}
+
+impl VersionOpt {
+    pub fn do_versioning(&self, metadata: &Metadata, stderr: &Term) -> Result<(), Error> {
+        let branch = self.git.validate(&metadata.workspace_root)?;
+
+        let change_data = ChangeData::new(metadata, &self.change)?;
+
+        if change_data.count == "0" {
+            return Ok(stderr.write_line("Current HEAD is already released, skipping versioning")?);
+        }
+
+        let pkgs = get_changed_pkgs(metadata, &self.change, &change_data.since, false)?;
+
+        if pkgs.is_empty() {
+            return Ok(stderr.write_line("No changes detected, skipping versioning")?);
+        }
+
+        let (new_versions, new_version) = get_new_versions(&metadata, pkgs, stderr)?;
+
+        for p in &metadata.packages {
+            if new_versions.get(&p.name).is_none()
+                && p.dependencies
+                    .iter()
+                    .all(|x| new_versions.get(&x.name).is_none())
+            {
+                continue;
+            }
+
+            fs::write(
+                &p.manifest_path,
+                format!(
+                    "{}\n",
+                    change_versions(
+                        fs::read_to_string(&p.manifest_path)?,
+                        &p.name,
+                        &new_versions,
+                    )
+                ),
+            )?;
+        }
+
+        self.git.commit(
+            &metadata.workspace_root,
+            &new_version,
+            &new_versions,
+            branch,
+        )?;
+
+        Ok(())
+    }
+}
+
+pub fn get_new_versions(
+    metadata: &Metadata,
+    pkgs: Vec<Pkg>,
+    stderr: &Term,
+) -> Result<(Map<String, Version>, Option<Version>), Error> {
+    let mut new_version = None;
+    let mut new_versions = vec![];
+
+    let (independent_pkgs, same_pkgs) = pkgs.into_iter().partition::<Vec<_>, _>(|p| p.independent);
+
+    if !same_pkgs.is_empty() {
+        let cur_version = same_pkgs
+            .iter()
+            .map(|p| {
+                &metadata
+                    .packages
+                    .iter()
+                    .find(|x| x.id == p.id)
+                    .expect(INTERNAL_ERR)
+                    .version
+            })
+            .max()
+            .expect(INTERNAL_ERR);
+
+        let style = Style::new().for_stderr();
+
+        stderr.write_line(&format!(
+            "{} {}",
+            style.clone().magenta().apply_to("current version"),
+            style.cyan().apply_to(cur_version)
+        ))?;
+
+        let version = ask_version(cur_version, None, stderr)?;
+
+        for p in &same_pkgs {
+            new_versions.push((p.name.to_string(), version.clone(), cur_version));
+        }
+
+        new_version = Some(version);
+    }
+
+    for p in &independent_pkgs {
+        let new_version = ask_version(&p.version, Some(&p.name), stderr)?;
+        new_versions.push((p.name.to_string(), new_version, &p.version));
+    }
+
+    Ok((confirm_versions(new_versions, stderr)?, new_version))
+}
+
+fn confirm_versions(
     versions: Vec<(String, Version, &Version)>,
     term: &Term,
 ) -> Result<Map<String, Version>, Error> {
@@ -39,7 +154,7 @@ pub fn confirm_versions(
     Ok(new_versions)
 }
 
-pub fn ask_version(
+fn ask_version(
     cur_version: &Version,
     pkg_name: Option<&str>,
     term: &Term,

@@ -3,12 +3,14 @@ use clap::{AppSettings, Clap};
 
 mod changed;
 mod list;
+mod publish;
 mod version;
 
 mod utils;
 
 use changed::Changed;
 use list::List;
+use publish::Publish;
 use version::Version;
 
 use console::Term;
@@ -19,6 +21,7 @@ enum Subcommand {
     List(List),
     Changed(Changed),
     Version(Version),
+    Publish(Publish),
 }
 
 #[derive(Debug, Clap)]
@@ -67,6 +70,7 @@ fn main() {
         Subcommand::List(x) => x.run(metadata, &stdout, &stderr),
         Subcommand::Changed(x) => x.run(metadata, &stdout, &stderr),
         Subcommand::Version(x) => x.run(metadata, &stdout, &stderr),
+        Subcommand::Publish(x) => x.run(metadata, &stdout, &stderr),
     }
     .err();
 
