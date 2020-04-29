@@ -1,4 +1,4 @@
-use crate::utils::{get_changed_pkgs, ChangeData, ChangeOpt, ListOpt, Listable, Result};
+use crate::utils::{ChangeData, ChangeOpt, ListOpt, Listable, Result};
 use cargo_metadata::Metadata;
 use clap::Clap;
 use console::Term;
@@ -32,8 +32,10 @@ impl Changed {
             since = change_data.since;
         }
 
-        let pkgs = get_changed_pkgs(&metadata, &self.change, &since, self.list.all)?;
+        let pkgs = self
+            .change
+            .get_changed_pkgs(&metadata, &since, self.list.all)?;
 
-        pkgs.list(stdout, self.list)
+        pkgs.0.list(stdout, self.list)
     }
 }

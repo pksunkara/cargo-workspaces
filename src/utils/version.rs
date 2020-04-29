@@ -1,6 +1,4 @@
-use crate::utils::{
-    change_versions, get_changed_pkgs, ChangeData, ChangeOpt, Error, GitOpt, Pkg, INTERNAL_ERR,
-};
+use crate::utils::{change_versions, ChangeData, ChangeOpt, Error, GitOpt, Pkg, INTERNAL_ERR};
 use cargo_metadata::Metadata;
 use clap::Clap;
 use console::{Style, Term};
@@ -26,17 +24,19 @@ impl VersionOpt {
 
         let change_data = ChangeData::new(metadata, &self.change)?;
 
-        if change_data.count == "0" {
+        if change_data.count == "0" && !change_data.dirty {
             return Ok(stderr.write_line("Current HEAD is already released, skipping versioning")?);
         }
 
-        let pkgs = get_changed_pkgs(metadata, &self.change, &change_data.since, false)?;
+        let pkgs = self
+            .change
+            .get_changed_pkgs(metadata, &change_data.since, false)?;
 
-        if pkgs.is_empty() {
+        if pkgs.0.is_empty() {
             return Ok(stderr.write_line("No changes detected, skipping versioning")?);
         }
 
-        let (new_versions, new_version) = get_new_versions(&metadata, pkgs, stderr)?;
+        let (new_versions, new_version) = get_new_versions(&metadata, pkgs.0, stderr)?;
 
         for p in &metadata.packages {
             if new_versions.get(&p.name).is_none()
@@ -71,7 +71,7 @@ impl VersionOpt {
     }
 }
 
-pub fn get_new_versions(
+fn get_new_versions(
     metadata: &Metadata,
     pkgs: Vec<Pkg>,
     stderr: &Term,

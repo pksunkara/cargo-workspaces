@@ -6,13 +6,13 @@ mod pkg;
 mod toml;
 mod version;
 
-pub use changable::{get_changed_pkgs, ChangeData, ChangeOpt};
+pub use changable::{ChangeData, ChangeOpt};
 pub use error::Error;
 pub use git::{git, GitOpt};
 pub use listable::{ListOpt, Listable};
 pub use pkg::{get_pkgs, Pkg};
 pub use toml::change_versions;
-pub use version::{get_new_versions, VersionOpt};
+pub use version::VersionOpt;
 
 pub type Result = std::result::Result<(), Error>;
 

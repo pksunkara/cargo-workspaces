@@ -2,6 +2,7 @@ use crate::utils::{get_pkgs, git, Error, Pkg, INTERNAL_ERR};
 use cargo_metadata::Metadata;
 use clap::Clap;
 use console::{Style, Term};
+use glob::{Pattern, PatternError};
 use regex::Regex;
 
 #[derive(Debug, Clap)]
@@ -10,6 +11,9 @@ pub struct ChangeOpt {
     /// Include tags from merged branches when detecting changed packages
     #[clap(long)]
     pub include_merged_tags: bool,
+
+    #[clap(long)]
+    pub force: Option<String>,
 }
 
 #[derive(Debug, Default)]
@@ -61,43 +65,53 @@ impl ChangeData {
     }
 }
 
-pub fn get_changed_pkgs(
-    metadata: &Metadata,
-    change: &ChangeOpt,
-    since: &Option<String>,
-    private: bool,
-) -> Result<Vec<Pkg>, Error> {
-    let pkgs = get_pkgs(&metadata, private)?;
+impl ChangeOpt {
+    pub fn get_changed_pkgs(
+        &self,
+        metadata: &Metadata,
+        since: &Option<String>,
+        private: bool,
+    ) -> Result<(Vec<Pkg>, Vec<Pkg>), Error> {
+        let pkgs = get_pkgs(&metadata, private)?;
 
-    let pkgs = if let Some(since) = since {
-        let term = Term::stderr();
-        let style = Style::new().for_stderr();
+        let pkgs = if let Some(since) = since {
+            let term = Term::stderr();
+            let style = Style::new().for_stderr();
 
-        term.write_line(&format!(
-            "{} {}",
-            style
+            term.write_line(&format!(
+                "{} {}",
+                style
+                    .clone()
+                    .magenta()
+                    .apply_to("looking for changes since"),
+                style.cyan().apply_to(since),
+            ))?;
+
+            let (changed_files, _) = git(
+                &metadata.workspace_root,
+                &["diff", "--name-only", "--relative", since],
+            )?;
+
+            let changed_files = changed_files.split("\n").collect::<Vec<_>>();
+            let force = self
+                .force
                 .clone()
-                .magenta()
-                .apply_to("looking for changes since"),
-            style.cyan().apply_to(since),
-        ))?;
+                .map(|x| Pattern::new(&x))
+                .map_or::<Result<_, PatternError>, _>(Ok(None), |x| Ok(x.ok()))?;
 
-        let (changed_files, _) = git(
-            &metadata.workspace_root,
-            &["diff", "--name-only", "--relative", since],
-        )?;
+            pkgs.into_iter().partition(|p: &Pkg| {
+                if let Some(pattern) = &force {
+                    if pattern.matches(&p.name) {
+                        return true;
+                    }
+                }
 
-        let changed_files = changed_files.split("\n").collect::<Vec<_>>();
-
-        pkgs.into_iter()
-            .filter(|p: &Pkg| {
-                //
                 changed_files.iter().any(|f| f.starts_with(&p.path))
             })
-            .collect()
-    } else {
-        pkgs
-    };
+        } else {
+            (pkgs, vec![])
+        };
 
-    Ok(pkgs)
+        Ok(pkgs)
+    }
 }
