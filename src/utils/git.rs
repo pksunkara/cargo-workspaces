@@ -24,7 +24,7 @@ pub fn git<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String), Err
 #[derive(Debug, Clap)]
 pub struct GitOpt {
     /// Do not commit changes
-    #[clap(long, conflicts_with_all = &["allow-branch", "amend", "message", "no-git-tag", "tag-prefix", "no-git-push", "git-remote"])]
+    #[clap(long, conflicts_with_all = &["allow-branch", "amend", "message", "no-git-tag", "tag-prefix", "no-independent-tags", "no-git-push", "git-remote"])]
     pub no_git_commit: bool,
 
     /// Specify which branches to allow from
@@ -37,11 +37,14 @@ pub struct GitOpt {
     #[clap(short, long)]
     pub message: Option<String>,
 
-    #[clap(long, conflicts_with_all = &["tag-prefix"])]
+    #[clap(long, conflicts_with_all = &["tag-prefix", "no-independent-tags"])]
     pub no_git_tag: bool,
 
     #[clap(long, default_value = "v")]
     pub tag_prefix: String,
+
+    #[clap(long)]
+    pub no_independent_tags: bool,
 
     /// Do not push commit to git remote
     #[clap(long, conflicts_with_all = &["git-remote"])]
@@ -175,8 +178,10 @@ impl GitOpt {
                     self.tag(root, &self.tag_prefix, version)?;
                 }
 
-                for (p, v) in new_versions {
-                    self.tag(root, &format!("{}@", p), v)?;
+                if !self.no_independent_tags {
+                    for (p, v) in new_versions {
+                        self.tag(root, &format!("{}@", p), v)?;
+                    }
                 }
             }
 
@@ -185,14 +190,29 @@ impl GitOpt {
                     root,
                     &[
                         "push",
-                        "--follow-tags",
                         &self.git_remote,
-                        &branch.expect(INTERNAL_ERR),
+                        &branch.as_ref().expect(INTERNAL_ERR),
                     ],
                 )?;
 
                 if !pushed.0.is_empty() || !pushed.1.starts_with("To") {
                     return Err(Error::NotPushed(pushed.0, pushed.1));
+                }
+
+                if !self.no_git_tag {
+                    let pushed = git(
+                        root,
+                        &[
+                            "push",
+                            "--tags",
+                            &self.git_remote,
+                            &branch.as_ref().expect(INTERNAL_ERR),
+                        ],
+                    )?;
+
+                    if !pushed.0.is_empty() || !pushed.1.starts_with("To") {
+                        return Err(Error::NotPushed(pushed.0, pushed.1));
+                    }
                 }
             }
         }
