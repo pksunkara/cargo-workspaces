@@ -26,6 +26,14 @@ pub enum Error {
     BehindRemote { upstream: String, branch: String },
     #[error("not allowed to run on branch {branch} because it doesn't match pattern {pattern}")]
     BranchNotAllowed { branch: String, pattern: String },
+    #[error("unable to add files to git index, out = {0:?}, err = {1:?}")]
+    NotAdded(String, String),
+    #[error("unable to commit to git, out = {0:?}, err = {1:?}")]
+    NotCommitted(String, String),
+    #[error("unable to tag {0}, out = {1:?}, err = {1:?}")]
+    NotTagged(String, String, String),
+    #[error("unable to push to remote, out = {0:?}, err = {1:?}")]
+    NotPushed(String, String),
 
     #[error("{0}")]
     Glob(#[from] glob::PatternError),
@@ -72,6 +80,12 @@ impl Error {
                 "not allowed to run on branch {} because it doesn't match pattern {}",
                 yellow.apply_to(branch),
                 yellow.apply_to(pattern)
+            ),
+            Self::NotTagged(tag, out, err) => format!(
+                "unable to tag {}\n\nout = {:?}\nerr = {:?}",
+                yellow.apply_to(tag),
+                out,
+                err
             ),
             _ => format!("{}", self),
         };

@@ -1,6 +1,8 @@
-use crate::utils::Error;
+use crate::utils::{Error, INTERNAL_ERR};
 use clap::Clap;
 use glob::Pattern;
+use semver::Version;
+use std::collections::BTreeMap as Map;
 use std::{path::PathBuf, process::Command};
 
 pub fn git<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String), Error> {
@@ -21,25 +23,39 @@ pub fn git<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String), Err
 
 #[derive(Debug, Clap)]
 pub struct GitOpt {
+    /// Do not commit changes
+    #[clap(long, conflicts_with_all = &["allow-branch", "amend", "message", "no-git-tag", "tag-prefix", "no-git-push", "git-remote"])]
+    pub no_git_commit: bool,
+
     /// Specify which branches to allow from
     #[clap(long, default_value = "master", value_name = "pattern")]
     pub allow_branch: String,
 
-    /// Push git changes to the specified remote
-    #[clap(long, default_value = "origin", value_name = "remote")]
-    pub git_remote: String,
+    #[clap(long)]
+    pub amend: bool,
 
-    /// Do not commit changes
-    #[clap(long, conflicts_with_all = &["no-git-push", "git-remote", "allow-branch"])]
-    pub no_git_commit: bool,
+    #[clap(short, long)]
+    pub message: Option<String>,
+
+    #[clap(long, conflicts_with_all = &["tag-prefix"])]
+    pub no_git_tag: bool,
+
+    #[clap(long, default_value = "")]
+    pub tag_prefix: String,
 
     /// Do not push commit to git remote
     #[clap(long, conflicts_with_all = &["git-remote"])]
     pub no_git_push: bool,
+
+    /// Push git changes to the specified remote
+    #[clap(long, default_value = "origin", value_name = "remote")]
+    pub git_remote: String,
 }
 
 impl GitOpt {
-    pub fn validate(&self, root: &PathBuf) -> Result<(), Error> {
+    pub fn validate(&self, root: &PathBuf) -> Result<Option<String>, Error> {
+        let mut ret = None;
+
         if !self.no_git_commit {
             let (out, err) = git(root, &["rev-list", "--count", "--all", "--max-count=1"])?;
 
@@ -56,6 +72,8 @@ impl GitOpt {
             if branch == "HEAD" {
                 return Err(Error::NotBranch);
             }
+
+            ret = Some(branch.clone());
 
             let pattern = Pattern::new(&self.allow_branch)?;
 
@@ -106,6 +124,102 @@ impl GitOpt {
             }
         }
 
+        Ok(ret)
+    }
+
+    pub fn commit(
+        &self,
+        root: &PathBuf,
+        new_version: &Option<Version>,
+        new_versions: &Map<String, Version>,
+        branch: Option<String>,
+    ) -> Result<(), Error> {
+        if !self.no_git_commit {
+            let added = git(root, &["add", "."])?;
+
+            if !added.0.is_empty() || !added.1.is_empty() {
+                return Err(Error::NotAdded(added.0, added.1));
+            }
+
+            let mut args = vec!["commit".to_string()];
+
+            if self.amend {
+                args.push("--amend".to_string());
+                args.push("--no-edit".to_string());
+            } else {
+                args.push("-m".to_string());
+
+                let mut msg = "Release %v";
+
+                if let Some(supplied) = &self.message {
+                    msg = supplied;
+                }
+
+                let mut msg = self.append_message(msg, new_versions);
+
+                if let Some(version) = new_version {
+                    msg = msg.replace("%v", &format!("{}", version));
+                }
+
+                args.push(msg);
+            }
+
+            let committed = git(root, &args.iter().map(|x| x.as_str()).collect::<Vec<_>>())?;
+
+            if !committed.0.contains("files changed") || !committed.1.is_empty() {
+                return Err(Error::NotCommitted(committed.0, committed.1));
+            }
+
+            if !self.no_git_tag {
+                if let Some(version) = new_version {
+                    self.tag(root, &self.tag_prefix, version)?;
+                }
+
+                for (p, v) in new_versions {
+                    self.tag(root, &format!("{}@", p), v)?;
+                }
+            }
+
+            if !self.no_git_push {
+                let pushed = git(
+                    root,
+                    &[
+                        "push",
+                        "--follow-tags",
+                        &self.git_remote,
+                        &branch.expect(INTERNAL_ERR),
+                    ],
+                )?;
+
+                if !pushed.0.contains("") || !pushed.1.is_empty() {
+                    return Err(Error::NotPushed(pushed.0, pushed.1));
+                }
+            }
+        }
+
         Ok(())
+    }
+
+    fn tag(&self, root: &PathBuf, prefix: &str, version: &Version) -> Result<(), Error> {
+        let tag = format!("{}{}", prefix, version);
+        let tagged = git(root, &["tag", &tag])?;
+
+        if !tagged.0.is_empty() || !tagged.1.is_empty() {
+            return Err(Error::NotTagged(tag, tagged.0, tagged.1));
+        }
+
+        Ok(())
+    }
+
+    fn append_message(&self, msg: &str, new_versions: &Map<String, Version>) -> String {
+        format!(
+            "{}\n\n{}\n\nGenerated by cargo-workspaces",
+            msg,
+            new_versions
+                .iter()
+                .map(|x| format!("{}@{}", x.0, x.1))
+                .collect::<Vec<_>>()
+                .join("\n")
+        )
     }
 }

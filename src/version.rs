@@ -15,12 +15,12 @@ pub struct Version {
 
     #[clap(flatten)]
     git: GitOpt,
-    // TODO: tag_version_prefix, exact
+    // TODO: exact
 }
 
 impl Version {
     pub fn run(self, metadata: Metadata, _: &Term, stderr: &Term) -> Result<(), Error> {
-        self.git.validate(&metadata.workspace_root)?;
+        let branch = self.git.validate(&metadata.workspace_root)?;
 
         let change_data = ChangeData::new(&metadata, &self.change)?;
 
@@ -34,7 +34,7 @@ impl Version {
             return Ok(stderr.write_line("No changes detected, skipping versioning")?);
         }
 
-        let new_versions = Self::get_new_versions(&metadata, pkgs, stderr)?;
+        let (new_versions, new_version) = Self::get_new_versions(&metadata, pkgs, stderr)?;
 
         for p in &metadata.packages {
             if new_versions.get(&p.name).is_none()
@@ -58,6 +58,13 @@ impl Version {
             )?;
         }
 
+        self.git.commit(
+            &metadata.workspace_root,
+            &new_version,
+            &new_versions,
+            branch,
+        )?;
+
         Ok(())
     }
 
@@ -65,7 +72,8 @@ impl Version {
         metadata: &Metadata,
         pkgs: Vec<Pkg>,
         stderr: &Term,
-    ) -> Result<Map<String, semver::Version>, Error> {
+    ) -> Result<(Map<String, semver::Version>, Option<semver::Version>), Error> {
+        let mut new_version = None;
         let mut new_versions = vec![];
 
         let (independent_pkgs, same_pkgs) =
@@ -93,11 +101,13 @@ impl Version {
                 style.cyan().apply_to(cur_version)
             ))?;
 
-            let new_version = ask_version(cur_version, None, stderr)?;
+            let version = ask_version(cur_version, None, stderr)?;
 
             for p in &same_pkgs {
-                new_versions.push((p.name.to_string(), new_version.clone(), cur_version));
+                new_versions.push((p.name.to_string(), version.clone(), cur_version));
             }
+
+            new_version = Some(version);
         }
 
         for p in &independent_pkgs {
@@ -105,6 +115,6 @@ impl Version {
             new_versions.push((p.name.to_string(), new_version, &p.version));
         }
 
-        confirm_versions(new_versions, stderr)
+        Ok((confirm_versions(new_versions, stderr)?, new_version))
     }
 }
