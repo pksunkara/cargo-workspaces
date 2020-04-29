@@ -1,7 +1,7 @@
-use crate::utils::INTERNAL_ERR;
+use crate::utils::{Error, INTERNAL_ERR};
 use lazy_static::lazy_static;
 use regex::Regex;
-use semver::Version;
+use semver::{Version, VersionReq};
 use std::collections::BTreeMap as Map;
 
 lazy_static! {
@@ -35,13 +35,12 @@ pub fn change_versions(
     manifest: String,
     pkg_name: &str,
     versions: &Map<String, Version>,
-) -> String {
+) -> Result<String, Error> {
     let mut context = Context::Beginning;
     let mut new_lines = vec![];
 
     for line in manifest.lines() {
         let trimmed = line.trim();
-        // println!("{}, context = {:?}", trimmed, context);
 
         if trimmed.starts_with("[package]") {
             context = Context::Package;
@@ -70,23 +69,29 @@ pub fn change_versions(
                 Context::Dependencies | Context::BuildDependencies => {
                     if let Some(caps) = DEP_DIRECT_VERSION.captures(line) {
                         if let Some(new_version) = versions.get(&caps[2]) {
-                            new_lines.push(format!("{}{}{}", &caps[1], new_version, &caps[4]));
-                            continue;
+                            if !VersionReq::parse(&caps[3])?.matches(new_version) {
+                                new_lines.push(format!("{}{}{}", &caps[1], new_version, &caps[4]));
+                                continue;
+                            }
                         }
                     }
 
                     if let Some(caps) = DEP_OBJ_VERSION.captures(line) {
                         if let Some(new_version) = versions.get(&caps[2]) {
-                            new_lines.push(format!("{}{}{}", &caps[1], new_version, &caps[4]));
-                            continue;
+                            if !VersionReq::parse(&caps[3])?.matches(new_version) {
+                                new_lines.push(format!("{}{}{}", &caps[1], new_version, &caps[4]));
+                                continue;
+                            }
                         }
                     }
                 }
                 Context::DependencyEntry(ref dep) | Context::BuildDependencyEntry(ref dep) => {
                     if let Some(new_version) = versions.get(dep) {
                         if let Some(caps) = VERSION.captures(line) {
-                            new_lines.push(format!("{}{}{}", &caps[1], new_version, &caps[3]));
-                            continue;
+                            if !VersionReq::parse(&caps[2])?.matches(new_version) {
+                                new_lines.push(format!("{}{}{}", &caps[1], new_version, &caps[3]));
+                                continue;
+                            }
                         }
                     }
                 }
@@ -97,7 +102,7 @@ pub fn change_versions(
         new_lines.push(line.to_string());
     }
 
-    new_lines.join("\n")
+    Ok(new_lines.join("\n"))
 }
 
 #[cfg(test)]
@@ -115,7 +120,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v),
+            change_versions(m, "this", &v).unwrap(),
             r#"
             [package]
             version = "0.3.0""#
@@ -133,7 +138,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v),
+            change_versions(m, "this", &v).unwrap(),
             r#"
             [package]
             version="0.3.0" # hello"#
@@ -151,7 +156,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v),
+            change_versions(m, "this", &v).unwrap(),
             r#"
             [package]
             "version"	=	"0.3.0""#
@@ -169,7 +174,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v),
+            change_versions(m, "this", &v).unwrap(),
             r#"
             [package]
             'version'='0.3.0'# hello"#
@@ -187,7 +192,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v),
+            change_versions(m, "this", &v).unwrap(),
             r#"
             [dependencies]
             this = "0.3.0" # hello"#
@@ -205,7 +210,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v),
+            change_versions(m, "this", &v).unwrap(),
             r#"
             [dependencies]
             this = { path = "../", version = "0.3.0" } # hello"#
@@ -224,7 +229,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v),
+            change_versions(m, "this", &v).unwrap(),
             r#"
             [dependencies.this]
             path = "../"

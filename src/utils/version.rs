@@ -28,15 +28,48 @@ impl VersionOpt {
             return Ok(stderr.write_line("Current HEAD is already released, skipping versioning")?);
         }
 
-        let pkgs = self
-            .change
-            .get_changed_pkgs(metadata, &change_data.since, false)?;
+        let (mut changed_p, mut unchanged_p) =
+            self.change
+                .get_changed_pkgs(metadata, &change_data.since, false)?;
 
-        if pkgs.0.is_empty() {
+        if changed_p.is_empty() {
             return Ok(stderr.write_line("No changes detected, skipping versioning")?);
         }
 
-        let (new_versions, new_version) = get_new_versions(&metadata, pkgs.0, stderr)?;
+        let mut new_version = None;
+        let mut new_versions = vec![];
+
+        while !changed_p.is_empty() {
+            get_new_versions(
+                &metadata,
+                changed_p,
+                &mut new_version,
+                &mut new_versions,
+                stderr,
+            )?;
+
+            let pkgs = unchanged_p.into_iter().partition::<Vec<_>, _>(|p| {
+                let pkg = metadata
+                    .packages
+                    .iter()
+                    .find(|x| x.name == p.name)
+                    .expect(INTERNAL_ERR);
+
+                pkg.dependencies.iter().any(|x| {
+                    if let Some(version) = new_versions.iter().find(|y| x.name == y.0).map(|y| &y.1)
+                    {
+                        !x.req.matches(version)
+                    } else {
+                        false
+                    }
+                })
+            });
+
+            changed_p = pkgs.0;
+            unchanged_p = pkgs.1;
+        }
+
+        let new_versions = confirm_versions(new_versions, stderr)?;
 
         for p in &metadata.packages {
             if new_versions.get(&p.name).is_none()
@@ -55,7 +88,7 @@ impl VersionOpt {
                         fs::read_to_string(&p.manifest_path)?,
                         &p.name,
                         &new_versions,
-                    )
+                    )?
                 ),
             )?;
         }
@@ -74,11 +107,10 @@ impl VersionOpt {
 fn get_new_versions(
     metadata: &Metadata,
     pkgs: Vec<Pkg>,
+    new_version: &mut Option<Version>,
+    new_versions: &mut Vec<(String, Version, Version)>,
     stderr: &Term,
-) -> Result<(Map<String, Version>, Option<Version>), Error> {
-    let mut new_version = None;
-    let mut new_versions = vec![];
-
+) -> Result<(), Error> {
     let (independent_pkgs, same_pkgs) = pkgs.into_iter().partition::<Vec<_>, _>(|p| p.independent);
 
     if !same_pkgs.is_empty() {
@@ -95,33 +127,37 @@ fn get_new_versions(
             .max()
             .expect(INTERNAL_ERR);
 
-        let style = Style::new().for_stderr();
+        if new_version.is_none() {
+            let style = Style::new().for_stderr();
 
-        stderr.write_line(&format!(
-            "{} {}",
-            style.clone().magenta().apply_to("current version"),
-            style.cyan().apply_to(cur_version)
-        ))?;
+            stderr.write_line(&format!(
+                "{} {}",
+                style.clone().magenta().apply_to("current version"),
+                style.cyan().apply_to(cur_version)
+            ))?;
 
-        let version = ask_version(cur_version, None, stderr)?;
-
-        for p in &same_pkgs {
-            new_versions.push((p.name.to_string(), version.clone(), cur_version));
+            *new_version = Some(ask_version(cur_version, None, stderr)?);
         }
 
-        new_version = Some(version);
+        for p in &same_pkgs {
+            new_versions.push((
+                p.name.to_string(),
+                new_version.as_ref().expect(INTERNAL_ERR).clone(),
+                cur_version.clone(),
+            ));
+        }
     }
 
     for p in &independent_pkgs {
         let new_version = ask_version(&p.version, Some(&p.name), stderr)?;
-        new_versions.push((p.name.to_string(), new_version, &p.version));
+        new_versions.push((p.name.to_string(), new_version, p.version.clone()));
     }
 
-    Ok((confirm_versions(new_versions, stderr)?, new_version))
+    Ok(())
 }
 
 fn confirm_versions(
-    versions: Vec<(String, Version, &Version)>,
+    versions: Vec<(String, Version, Version)>,
     term: &Term,
 ) -> Result<Map<String, Version>, Error> {
     let mut new_versions = Map::new();

@@ -1,6 +1,5 @@
 use console::{style, Style, Term};
 use std::io;
-use std::string::FromUtf8Error;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -36,13 +35,15 @@ pub enum Error {
     NotPushed(String, String),
 
     #[error("{0}")]
+    Semver(#[from] semver::ReqParseError),
+    #[error("{0}")]
     Glob(#[from] glob::PatternError),
     #[error("{0}")]
     Serde(#[from] serde_json::Error),
     #[error("{0}")]
     Io(#[from] io::Error),
     #[error("cannot convert command output to string, {0}")]
-    FromUtf8(#[from] FromUtf8Error),
+    FromUtf8(#[from] std::string::FromUtf8Error),
 }
 
 impl Error {

@@ -24,7 +24,7 @@ pub fn git<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String), Err
 #[derive(Debug, Clap)]
 pub struct GitOpt {
     /// Do not commit changes
-    #[clap(long, conflicts_with_all = &["allow-branch", "amend", "message", "no-git-tag", "tag-prefix", "no-independent-tags", "no-git-push", "git-remote"])]
+    #[clap(long, conflicts_with_all = &["allow-branch", "amend", "message", "no-git-tag", "tag-prefix", "no-individual-tags", "no-git-push", "git-remote"])]
     pub no_git_commit: bool,
 
     /// Specify which branches to allow from
@@ -37,14 +37,14 @@ pub struct GitOpt {
     #[clap(short, long)]
     pub message: Option<String>,
 
-    #[clap(long, conflicts_with_all = &["tag-prefix", "no-independent-tags"])]
+    #[clap(long, conflicts_with_all = &["tag-prefix", "no-individual-tags"])]
     pub no_git_tag: bool,
 
     #[clap(long, default_value = "v")]
     pub tag_prefix: String,
 
     #[clap(long)]
-    pub no_independent_tags: bool,
+    pub no_individual_tags: bool,
 
     /// Do not push commit to git remote
     #[clap(long, conflicts_with_all = &["git-remote"])]
@@ -160,9 +160,12 @@ impl GitOpt {
 
                 let mut msg = self.append_message(msg, new_versions);
 
-                if let Some(version) = new_version {
-                    msg = msg.replace("%v", &format!("{}", version));
-                }
+                msg = msg.replace(
+                    "%v",
+                    &new_version
+                        .as_ref()
+                        .map_or("independent packages".to_string(), |x| format!("{}", x)),
+                );
 
                 args.push(msg);
             }
@@ -178,7 +181,7 @@ impl GitOpt {
                     self.tag(root, &self.tag_prefix, version)?;
                 }
 
-                if !self.no_independent_tags {
+                if !self.no_individual_tags {
                     for (p, v) in new_versions {
                         self.tag(root, &format!("{}@", p), v)?;
                     }
