@@ -191,7 +191,7 @@ impl GitOpt {
                     ],
                 )?;
 
-                if !pushed.0.contains("") || !pushed.1.is_empty() {
+                if !pushed.0.is_empty() || !pushed.1.starts_with("To") {
                     return Err(Error::NotPushed(pushed.0, pushed.1));
                 }
             }
