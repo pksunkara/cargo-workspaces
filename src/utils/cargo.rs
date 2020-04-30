@@ -1,8 +1,10 @@
-use crate::utils::{Error, INTERNAL_ERR};
+use crate::utils::{debug, Error, INTERNAL_ERR};
 use lazy_static::lazy_static;
 use regex::Regex;
 use semver::{Version, VersionReq};
 use std::collections::BTreeMap as Map;
+use std::path::PathBuf;
+use std::process::Command;
 
 lazy_static! {
     static ref VERSION: Regex =
@@ -18,6 +20,24 @@ lazy_static! {
     static ref DEP_OBJ_VERSION: Regex =
         Regex::new(r#"^(\s*['"]?([0-9A-Za-z-_]+)['"]?\s*=\s*\{.*['"]?version['"]?\s*=\s*['"])([^'"]+)(['"].*}.*)$"#)
             .expect(INTERNAL_ERR);
+}
+
+pub fn cargo<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String), Error> {
+    debug!("cargo", args.clone().join(" "))?;
+
+    let output = Command::new("cargo")
+        .current_dir(root)
+        .args(args)
+        .output()
+        .map_err(|err| Error::Cargo {
+            err,
+            args: args.iter().map(|x| x.to_string()).collect(),
+        })?;
+
+    Ok((
+        String::from_utf8(output.stdout)?.trim().to_owned(),
+        String::from_utf8(output.stderr)?.trim().to_owned(),
+    ))
 }
 
 #[derive(Debug)]

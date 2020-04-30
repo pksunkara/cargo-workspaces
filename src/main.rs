@@ -64,6 +64,7 @@ fn main() {
     let mut cmd = MetadataCommand::new();
 
     cmd.features(CargoOpt::AllFeatures);
+    cmd.no_deps();
 
     if let Some(path) = opt.manifest_path {
         cmd.manifest_path(path);

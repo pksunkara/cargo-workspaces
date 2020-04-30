@@ -21,13 +21,18 @@ pub struct VersionOpt {
 }
 
 impl VersionOpt {
-    pub fn do_versioning(&self, metadata: &Metadata, stderr: &Term) -> Result<(), Error> {
+    pub fn do_versioning(
+        &self,
+        metadata: &Metadata,
+        stderr: &Term,
+    ) -> Result<Map<String, Version>, Error> {
         let branch = self.git.validate(&metadata.workspace_root)?;
 
         let change_data = ChangeData::new(metadata, &self.change)?;
 
         if change_data.count == "0" && !change_data.dirty {
-            return Ok(stderr.write_line("Current HEAD is already released, skipping versioning")?);
+            stderr.write_line("Current HEAD is already released, skipping versioning")?;
+            return Ok(Map::new());
         }
 
         let (mut changed_p, mut unchanged_p) =
@@ -35,7 +40,8 @@ impl VersionOpt {
                 .get_changed_pkgs(metadata, &change_data.since, false)?;
 
         if changed_p.is_empty() {
-            return Ok(stderr.write_line("No changes detected, skipping versioning")?);
+            stderr.write_line("No changes detected, skipping versioning")?;
+            return Ok(Map::new());
         }
 
         let mut new_version = None;
@@ -102,7 +108,7 @@ impl VersionOpt {
             branch,
         )?;
 
-        Ok(())
+        Ok(new_versions)
     }
 }
 

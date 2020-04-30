@@ -2,6 +2,7 @@ use console::{style, Style, Term};
 use lazy_static::lazy_static;
 use std::{
     io,
+    path::PathBuf,
     sync::atomic::{AtomicBool, Ordering},
 };
 use thiserror::Error;
@@ -59,9 +60,16 @@ pub enum Error {
     PackageNotFound { id: String },
     #[error("did not find any package")]
     EmptyWorkspace,
+    #[error("unable to verify package {0}\n\n{1}")]
+    Verify(PathBuf, String),
+    #[error("unable to publish package {0}\n\n{1}")]
+    Publish(PathBuf, String),
 
+    #[error("unable to run cargo command with args {args:?}, got {err}")]
+    Cargo { err: io::Error, args: Vec<String> },
     #[error("unable to run git command with args {args:?}, got {err}")]
     Git { err: io::Error, args: Vec<String> },
+
     #[error("not a git repository")]
     NotGit,
     #[error("no commits in this repository")]
