@@ -7,10 +7,11 @@ use regex::Regex;
 #[derive(Debug, Clap)]
 pub struct ChangeOpt {
     // TODO: ignore_changes, include_dirty
-    /// Include tags from merged branches when detecting changed packages
+    /// Include tags from merged branches
     #[clap(long)]
     pub include_merged_tags: bool,
 
+    /// Always include targeted crates
     #[clap(long, value_name = "pattern")]
     pub force: Option<String>,
 }

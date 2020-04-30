@@ -3,7 +3,7 @@ use cargo_metadata::Metadata;
 use clap::Clap;
 use console::Term;
 
-/// List local packages that have changed since the last tagged release
+/// List crates that have changed since the last tagged release
 #[derive(Debug, Clap)]
 pub struct Changed {
     #[clap(flatten)]

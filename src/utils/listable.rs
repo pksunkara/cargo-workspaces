@@ -18,7 +18,7 @@ pub struct ListOpt {
     #[clap(short, long)]
     pub long: bool,
 
-    /// Show private packages that are normally hidden
+    /// Show private crates that are normally hidden
     #[clap(short, long)]
     pub all: bool,
 

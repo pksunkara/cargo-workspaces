@@ -25,7 +25,7 @@ pub fn git<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String), Err
 
 #[derive(Debug, Clap)]
 pub struct GitOpt {
-    /// Do not commit changes
+    /// Do not commit version changes
     #[clap(long, conflicts_with_all = &["allow-branch", "amend", "message", "no-git-tag", "tag-prefix", "no-individual-tags", "no-git-push", "git-remote"])]
     pub no_git_commit: bool,
 
@@ -33,22 +33,28 @@ pub struct GitOpt {
     #[clap(long, default_value = "master", value_name = "pattern")]
     pub allow_branch: String,
 
+    /// Amend the existing commit, instead of generating a new one
     #[clap(long)]
     pub amend: bool,
 
+    /// Use a custom commit message when creating the version commit
     #[clap(short, long)]
     pub message: Option<String>,
 
+    /// Do not tag generated commit
     #[clap(long, conflicts_with_all = &["tag-prefix", "no-individual-tags"])]
     pub no_git_tag: bool,
 
-    #[clap(long, default_value = "v")]
-    pub tag_prefix: String,
-
+    /// Do not tag individual versions for crates
     #[clap(long)]
     pub no_individual_tags: bool,
 
-    /// Do not push commit to git remote
+    /// Customize the tag prefix (can be empty)
+    // TODO: allow_empty
+    #[clap(long, default_value = "v")]
+    pub tag_prefix: String,
+
+    /// Do not push generated commit and tags to git remote
     #[clap(long, conflicts_with_all = &["git-remote"])]
     pub no_git_push: bool,
 

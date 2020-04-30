@@ -3,6 +3,7 @@ use cargo_metadata::Metadata;
 use clap::Clap;
 use console::Term;
 
+/// Bump version of crates
 #[derive(Debug, Clap)]
 pub struct Version {
     #[clap(flatten)]

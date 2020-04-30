@@ -1,27 +1,26 @@
 use cargo_metadata::{CargoOpt, MetadataCommand};
 use clap::{AppSettings, Clap};
+use console::Term;
 
 mod changed;
+mod create;
+mod exec;
 mod list;
 mod publish;
 mod version;
 
 mod utils;
 
-use changed::Changed;
-use list::List;
-use publish::Publish;
-use version::Version;
-
-use console::Term;
-
 #[derive(Debug, Clap)]
 enum Subcommand {
+    // TODO: add
     #[clap(alias = "ls")]
-    List(List),
-    Changed(Changed),
-    Version(Version),
-    Publish(Publish),
+    List(list::List),
+    Changed(changed::Changed),
+    Version(version::Version),
+    Publish(publish::Publish),
+    Exec(exec::Exec),
+    Create(create::Create),
 }
 
 #[derive(Debug, Clap)]
@@ -32,11 +31,13 @@ enum Subcommand {
     replace("ll", &["list", "-l"])
 )]
 struct Opt {
-    #[clap(long)]
+    /// Path to workspace Cargo.toml
+    #[clap(long, value_name = "path")]
     manifest_path: Option<String>,
 
-    #[clap(long)]
-    debug: bool,
+    /// Verbose mode
+    #[clap(short)]
+    verbose: bool,
 
     #[clap(subcommand)]
     subcommand: Subcommand,
@@ -57,7 +58,7 @@ enum Cargo {
 fn main() {
     let Cargo::Workspaces(opt) = Cargo::parse();
 
-    if opt.debug {
+    if opt.verbose {
         utils::error::set_debug();
     }
 
@@ -79,6 +80,8 @@ fn main() {
         Subcommand::Changed(x) => x.run(metadata, &stdout, &stderr),
         Subcommand::Version(x) => x.run(metadata, &stdout, &stderr),
         Subcommand::Publish(x) => x.run(metadata, &stdout, &stderr),
+        Subcommand::Exec(x) => x.run(metadata, &stdout, &stderr),
+        Subcommand::Create(x) => x.run(metadata, &stdout, &stderr),
     }
     .err();
 

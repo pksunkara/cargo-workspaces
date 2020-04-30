@@ -5,11 +5,13 @@ use console::Term;
 use indexmap::IndexSet as Set;
 use std::{collections::BTreeMap as Map, path::PathBuf};
 
+/// Publish crates in the project
 #[derive(Clap, Debug)]
 pub struct Publish {
     #[clap(flatten)]
     version: VersionOpt,
 
+    /// Publish crates from the current commit without versioning
     #[clap(long)]
     from_git: bool,
 }

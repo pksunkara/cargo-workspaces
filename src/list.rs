@@ -3,7 +3,7 @@ use cargo_metadata::Metadata;
 use clap::Clap;
 use console::Term;
 
-/// List local packages
+/// List crates in the project
 #[derive(Debug, Clap)]
 pub struct List {
     #[clap(flatten)]
