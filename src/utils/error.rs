@@ -64,6 +64,8 @@ pub enum Error {
     Verify(String, String),
     #[error("unable to publish package {0}\n\n{1}")]
     Publish(String, String),
+    #[error("unable to create crate\n\n{0}")]
+    Create(String),
 
     #[error("unable to run cargo command with args {args:?}, got {err}")]
     Cargo { err: io::Error, args: Vec<String> },
