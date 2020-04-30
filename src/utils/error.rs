@@ -1,6 +1,55 @@
 use console::{style, Style, Term};
-use std::io;
+use lazy_static::lazy_static;
+use std::{
+    io,
+    sync::atomic::{AtomicBool, Ordering},
+};
 use thiserror::Error;
+
+lazy_static! {
+    pub static ref TERM_ERR: Term = Term::stderr();
+    static ref YELLOW: Style = Style::new().for_stderr().yellow();
+    pub static ref GREEN: Style = Style::new().for_stderr().green();
+    pub static ref MAGENTA: Style = Style::new().for_stderr().magenta();
+    static ref DEBUG: AtomicBool = AtomicBool::new(false);
+}
+
+pub fn get_debug() -> bool {
+    DEBUG.load(Ordering::Relaxed)
+}
+
+pub fn set_debug() {
+    DEBUG.store(true, Ordering::Relaxed);
+}
+
+macro_rules! _info {
+    ($desc:literal, $val:expr) => {
+        $crate::utils::error::TERM_ERR.write_line(&format!(
+            "{} {} {}",
+            $crate::utils::error::GREEN.apply_to("info"),
+            $crate::utils::error::MAGENTA.apply_to($desc),
+            $val
+        ))
+    };
+}
+
+macro_rules! _debug {
+    ($desc:literal, $val:expr) => {
+        if $crate::utils::error::get_debug() {
+            $crate::utils::error::TERM_ERR.write_line(&format!(
+                "{} {} {}",
+                $crate::utils::error::GREEN.apply_to("debug"),
+                $crate::utils::error::MAGENTA.apply_to($desc),
+                $val
+            ))
+        } else {
+            Ok(())
+        }
+    };
+}
+
+pub(crate) use _debug as debug;
+pub(crate) use _info as info;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -48,35 +97,32 @@ pub enum Error {
 
 impl Error {
     pub fn print_err(self) -> io::Result<()> {
-        let term = Term::stderr();
-        self.print(&term)
+        self.print(&TERM_ERR)
     }
 
     fn color(self) -> Self {
-        let yellow = Style::new().for_stderr().yellow();
-
         match self {
             Self::PackageNotInWorkspace { id, ws } => Self::PackageNotInWorkspace {
-                id: format!("{}", yellow.apply_to(id)),
-                ws: format!("{}", yellow.apply_to(ws)),
+                id: format!("{}", YELLOW.apply_to(id)),
+                ws: format!("{}", YELLOW.apply_to(ws)),
             },
             Self::PackageNotFound { id } => Self::PackageNotFound {
-                id: format!("{}", yellow.apply_to(id)),
+                id: format!("{}", YELLOW.apply_to(id)),
             },
             Self::NoRemote { remote, branch } => Self::NoRemote {
-                remote: format!("{}", yellow.apply_to(remote)),
-                branch: format!("{}", yellow.apply_to(branch)),
+                remote: format!("{}", YELLOW.apply_to(remote)),
+                branch: format!("{}", YELLOW.apply_to(branch)),
             },
             Self::BehindRemote { upstream, branch } => Self::BehindRemote {
-                upstream: format!("{}", yellow.apply_to(upstream)),
-                branch: format!("{}", yellow.apply_to(branch)),
+                upstream: format!("{}", YELLOW.apply_to(upstream)),
+                branch: format!("{}", YELLOW.apply_to(branch)),
             },
             Self::BranchNotAllowed { branch, pattern } => Self::BranchNotAllowed {
-                branch: format!("{}", yellow.apply_to(branch)),
-                pattern: format!("{}", yellow.apply_to(pattern)),
+                branch: format!("{}", YELLOW.apply_to(branch)),
+                pattern: format!("{}", YELLOW.apply_to(pattern)),
             },
             Self::NotTagged(tag, out, err) => {
-                Self::NotTagged(format!("{}", yellow.apply_to(tag)), out, err)
+                Self::NotTagged(format!("{}", YELLOW.apply_to(tag)), out, err)
             }
             _ => self,
         }

@@ -1,4 +1,4 @@
-use crate::utils::{Error, VersionOpt};
+use crate::utils::{info, Error, VersionOpt};
 use cargo_metadata::Metadata;
 use clap::Clap;
 use console::Term;
@@ -18,6 +18,10 @@ impl Publish {
             self.version.do_versioning(&metadata, stderr)?;
         }
 
+        info!("publish", "crates")?;
+        println!("{:#?}", metadata);
+
+        info!("success", "ok")?;
         Ok(())
     }
 }

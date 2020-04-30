@@ -1,7 +1,6 @@
-use crate::utils::{get_pkgs, git, Error, Pkg, INTERNAL_ERR};
+use crate::utils::{get_pkgs, git, info, Error, Pkg, INTERNAL_ERR};
 use cargo_metadata::Metadata;
 use clap::Clap;
-use console::{Style, Term};
 use glob::{Pattern, PatternError};
 use regex::Regex;
 
@@ -75,17 +74,7 @@ impl ChangeOpt {
         let pkgs = get_pkgs(&metadata, private)?;
 
         let pkgs = if let Some(since) = since {
-            let term = Term::stderr();
-            let style = Style::new().for_stderr();
-
-            term.write_line(&format!(
-                "{} {}",
-                style
-                    .clone()
-                    .magenta()
-                    .apply_to("looking for changes since"),
-                style.cyan().apply_to(since),
-            ))?;
+            info!("looking for changes since", since)?;
 
             let (changed_files, _) = git(
                 &metadata.workspace_root,

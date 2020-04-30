@@ -1,5 +1,5 @@
 mod changable;
-mod error;
+pub mod error;
 mod git;
 mod listable;
 mod pkg;
@@ -8,6 +8,7 @@ mod version;
 
 pub use changable::{ChangeData, ChangeOpt};
 pub use error::Error;
+pub(crate) use error::{debug, info};
 pub use git::{git, GitOpt};
 pub use listable::{ListOpt, Listable};
 pub use pkg::{get_pkgs, Pkg};

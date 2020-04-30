@@ -35,6 +35,9 @@ struct Opt {
     #[clap(long)]
     manifest_path: Option<String>,
 
+    #[clap(long)]
+    debug: bool,
+
     #[clap(subcommand)]
     subcommand: Subcommand,
 }
@@ -53,10 +56,14 @@ enum Cargo {
 
 fn main() {
     let Cargo::Workspaces(opt) = Cargo::parse();
+
+    if opt.debug {
+        utils::error::set_debug();
+    }
+
     let mut cmd = MetadataCommand::new();
 
     cmd.features(CargoOpt::AllFeatures);
-    cmd.no_deps();
 
     if let Some(path) = opt.manifest_path {
         cmd.manifest_path(path);

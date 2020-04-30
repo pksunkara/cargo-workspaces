@@ -1,4 +1,6 @@
-use crate::utils::{change_versions, ChangeData, ChangeOpt, Error, GitOpt, Pkg, INTERNAL_ERR};
+use crate::utils::{
+    change_versions, info, ChangeData, ChangeOpt, Error, GitOpt, Pkg, INTERNAL_ERR,
+};
 use cargo_metadata::Metadata;
 use clap::Clap;
 use console::{Style, Term};
@@ -128,13 +130,7 @@ fn get_new_versions(
             .expect(INTERNAL_ERR);
 
         if new_version.is_none() {
-            let style = Style::new().for_stderr();
-
-            stderr.write_line(&format!(
-                "{} {}",
-                style.clone().magenta().apply_to("current version"),
-                style.cyan().apply_to(cur_version)
-            ))?;
+            info!("current common version", cur_version)?;
 
             *new_version = Some(ask_version(cur_version, None, stderr)?);
         }

@@ -1,4 +1,4 @@
-use crate::utils::{Error, INTERNAL_ERR};
+use crate::utils::{debug, info, Error, INTERNAL_ERR};
 use clap::Clap;
 use glob::Pattern;
 use semver::Version;
@@ -6,6 +6,8 @@ use std::collections::BTreeMap as Map;
 use std::{path::PathBuf, process::Command};
 
 pub fn git<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String), Error> {
+    debug!("git", args.clone().join(" "))?;
+
     let output = Command::new("git")
         .current_dir(root)
         .args(args)
@@ -138,6 +140,8 @@ impl GitOpt {
         branch: Option<String>,
     ) -> Result<(), Error> {
         if !self.no_git_commit {
+            info!("version", "committing changes")?;
+
             let branch = branch.expect(INTERNAL_ERR);
             let added = git(root, &["add", "."])?;
 
@@ -178,6 +182,8 @@ impl GitOpt {
             }
 
             if !self.no_git_tag {
+                info!("version", "tagging")?;
+
                 if let Some(version) = new_version {
                     self.tag(root, &self.tag_prefix, version)?;
                 }
@@ -190,6 +196,8 @@ impl GitOpt {
             }
 
             if !self.no_git_push {
+                info!("git", "pushing")?;
+
                 let pushed = git(root, &["push", &self.git_remote, &branch])?;
 
                 if !pushed.0.is_empty() || !pushed.1.starts_with("To") {
