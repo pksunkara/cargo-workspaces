@@ -138,6 +138,7 @@ impl GitOpt {
         branch: Option<String>,
     ) -> Result<(), Error> {
         if !self.no_git_commit {
+            let branch = branch.expect(INTERNAL_ERR);
             let added = git(root, &["add", "."])?;
 
             if !added.0.is_empty() || !added.1.is_empty() {
@@ -172,7 +173,7 @@ impl GitOpt {
 
             let committed = git(root, &args.iter().map(|x| x.as_str()).collect::<Vec<_>>())?;
 
-            if !committed.0.contains("files changed") || !committed.1.is_empty() {
+            if !committed.0.contains(&branch) || !committed.1.is_empty() {
                 return Err(Error::NotCommitted(committed.0, committed.1));
             }
 
@@ -189,29 +190,14 @@ impl GitOpt {
             }
 
             if !self.no_git_push {
-                let pushed = git(
-                    root,
-                    &[
-                        "push",
-                        &self.git_remote,
-                        &branch.as_ref().expect(INTERNAL_ERR),
-                    ],
-                )?;
+                let pushed = git(root, &["push", &self.git_remote, &branch])?;
 
                 if !pushed.0.is_empty() || !pushed.1.starts_with("To") {
                     return Err(Error::NotPushed(pushed.0, pushed.1));
                 }
 
                 if !self.no_git_tag {
-                    let pushed = git(
-                        root,
-                        &[
-                            "push",
-                            "--tags",
-                            &self.git_remote,
-                            &branch.as_ref().expect(INTERNAL_ERR),
-                        ],
-                    )?;
+                    let pushed = git(root, &["push", "--tags", &self.git_remote, &branch])?;
 
                     if !pushed.0.is_empty() || !pushed.1.starts_with("To") {
                         return Err(Error::NotPushed(pushed.0, pushed.1));
