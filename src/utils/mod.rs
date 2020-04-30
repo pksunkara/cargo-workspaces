@@ -1,6 +1,6 @@
 mod cargo;
 mod changable;
-pub mod error;
+mod error;
 mod git;
 mod listable;
 mod pkg;
@@ -8,8 +8,8 @@ mod version;
 
 pub use cargo::{cargo, change_versions};
 pub use changable::{ChangeData, ChangeOpt};
-pub use error::Error;
 pub(crate) use error::{debug, info};
+pub use error::{get_debug, set_debug, Error, GREEN, MAGENTA, TERM_ERR, TERM_OUT};
 pub use git::{git, GitOpt};
 pub use listable::{ListOpt, Listable};
 pub use pkg::{get_pkgs, Pkg};

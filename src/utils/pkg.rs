@@ -1,6 +1,6 @@
-use crate::utils::{Error, ListOpt, Listable};
+use crate::utils::{Error, ListOpt, Listable, TERM_OUT};
 use cargo_metadata::{Metadata, PackageId};
-use console::{style, Term};
+use console::style;
 use semver::Version;
 use serde::Serialize;
 use serde_json::Value;
@@ -20,9 +20,9 @@ pub struct Pkg {
 }
 
 impl Listable for Vec<Pkg> {
-    fn list(&self, term: &Term, list: ListOpt) -> Result<(), Error> {
+    fn list(&self, list: ListOpt) -> Result<(), Error> {
         if list.json {
-            return self.json(term);
+            return self.json();
         }
 
         let first = self.iter().map(|x| x.name.len()).max().unwrap();
@@ -34,13 +34,13 @@ impl Listable for Vec<Pkg> {
         let third = self.iter().map(|x| max(1, x.path.len())).max().unwrap();
 
         for pkg in self {
-            term.write_str(&pkg.name)?;
+            TERM_OUT.write_str(&pkg.name)?;
             let mut width = first - pkg.name.len();
 
             if list.long {
                 let path = if pkg.path.is_empty() { "." } else { &pkg.path };
 
-                term.write_str(&format!(
+                TERM_OUT.write_str(&format!(
                     "{:f$} {}{:s$} {}",
                     "",
                     style(format!("v{}", pkg.version)).green(),
@@ -54,7 +54,7 @@ impl Listable for Vec<Pkg> {
             }
 
             if list.all && pkg.private {
-                term.write_str(&format!(
+                TERM_OUT.write_str(&format!(
                     "{:w$} ({})",
                     "",
                     style("PRIVATE").red(),
@@ -62,7 +62,7 @@ impl Listable for Vec<Pkg> {
                 ))?;
             }
 
-            term.write_line("")?;
+            TERM_OUT.write_line("")?;
         }
 
         Ok(())

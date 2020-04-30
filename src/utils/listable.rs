@@ -1,15 +1,14 @@
-use crate::utils::Result;
+use crate::utils::{Result, TERM_OUT};
 use clap::Clap;
-use console::Term;
 use serde::Serialize;
 
 pub trait Listable: Serialize {
-    fn json(&self, term: &Term) -> Result {
-        term.write_line(&serde_json::to_string_pretty(self)?)?;
+    fn json(&self) -> Result {
+        TERM_OUT.write_line(&serde_json::to_string_pretty(self)?)?;
         Ok(())
     }
 
-    fn list(&self, term: &Term, list: ListOpt) -> Result;
+    fn list(&self, list: ListOpt) -> Result;
 }
 
 #[derive(Debug, Clap)]

@@ -1,7 +1,6 @@
-use crate::utils::{ChangeData, ChangeOpt, ListOpt, Listable, Result};
+use crate::utils::{ChangeData, ChangeOpt, ListOpt, Listable, Result, TERM_ERR};
 use cargo_metadata::Metadata;
 use clap::Clap;
-use console::Term;
 
 /// List crates that have changed since the last tagged release
 #[derive(Debug, Clap)]
@@ -18,14 +17,14 @@ pub struct Changed {
 }
 
 impl Changed {
-    pub fn run(self, metadata: Metadata, stdout: &Term, stderr: &Term) -> Result {
+    pub fn run(self, metadata: Metadata) -> Result {
         let mut since = self.since.clone();
 
         if self.since.is_none() {
             let change_data = ChangeData::new(&metadata, &self.change)?;
 
             if change_data.count == "0" {
-                return Ok(stderr
+                return Ok(TERM_ERR
                     .write_line("Current HEAD is already released, skipping change detection")?);
             }
 
@@ -36,6 +35,6 @@ impl Changed {
             .change
             .get_changed_pkgs(&metadata, &since, self.list.all)?;
 
-        pkgs.0.list(stdout, self.list)
+        pkgs.0.list(self.list)
     }
 }

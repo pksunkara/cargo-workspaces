@@ -1,9 +1,9 @@
 use crate::utils::{
-    change_versions, info, ChangeData, ChangeOpt, Error, GitOpt, Pkg, INTERNAL_ERR,
+    change_versions, info, ChangeData, ChangeOpt, Error, GitOpt, Pkg, INTERNAL_ERR, TERM_ERR,
 };
 use cargo_metadata::Metadata;
 use clap::Clap;
-use console::{Style, Term};
+use console::Style;
 use dialoguer::{theme::ColorfulTheme, Confirm, Input, Select};
 use semver::{Identifier, Version};
 use std::collections::BTreeMap as Map;
@@ -21,17 +21,13 @@ pub struct VersionOpt {
 }
 
 impl VersionOpt {
-    pub fn do_versioning(
-        &self,
-        metadata: &Metadata,
-        stderr: &Term,
-    ) -> Result<Map<String, Version>, Error> {
+    pub fn do_versioning(&self, metadata: &Metadata) -> Result<Map<String, Version>, Error> {
         let branch = self.git.validate(&metadata.workspace_root)?;
 
         let change_data = ChangeData::new(metadata, &self.change)?;
 
         if change_data.count == "0" && !change_data.dirty {
-            stderr.write_line("Current HEAD is already released, skipping versioning")?;
+            TERM_ERR.write_line("Current HEAD is already released, skipping versioning")?;
             return Ok(Map::new());
         }
 
@@ -40,7 +36,7 @@ impl VersionOpt {
                 .get_changed_pkgs(metadata, &change_data.since, false)?;
 
         if changed_p.is_empty() {
-            stderr.write_line("No changes detected, skipping versioning")?;
+            TERM_ERR.write_line("No changes detected, skipping versioning")?;
             return Ok(Map::new());
         }
 
@@ -48,13 +44,7 @@ impl VersionOpt {
         let mut new_versions = vec![];
 
         while !changed_p.is_empty() {
-            get_new_versions(
-                &metadata,
-                changed_p,
-                &mut new_version,
-                &mut new_versions,
-                stderr,
-            )?;
+            get_new_versions(&metadata, changed_p, &mut new_version, &mut new_versions)?;
 
             let pkgs = unchanged_p.into_iter().partition::<Vec<_>, _>(|p| {
                 let pkg = metadata
@@ -77,7 +67,7 @@ impl VersionOpt {
             unchanged_p = pkgs.1;
         }
 
-        let new_versions = confirm_versions(new_versions, stderr)?;
+        let new_versions = confirm_versions(new_versions)?;
 
         for p in &metadata.packages {
             if new_versions.get(&p.name).is_none()
@@ -117,7 +107,6 @@ fn get_new_versions(
     pkgs: Vec<Pkg>,
     new_version: &mut Option<Version>,
     new_versions: &mut Vec<(String, Version, Version)>,
-    stderr: &Term,
 ) -> Result<(), Error> {
     let (independent_pkgs, same_pkgs) = pkgs.into_iter().partition::<Vec<_>, _>(|p| p.independent);
 
@@ -138,7 +127,7 @@ fn get_new_versions(
         if new_version.is_none() {
             info!("current common version", cur_version)?;
 
-            *new_version = Some(ask_version(cur_version, None, stderr)?);
+            *new_version = Some(ask_version(cur_version, None)?);
         }
 
         for p in &same_pkgs {
@@ -151,7 +140,7 @@ fn get_new_versions(
     }
 
     for p in &independent_pkgs {
-        let new_version = ask_version(&p.version, Some(&p.name), stderr)?;
+        let new_version = ask_version(&p.version, Some(&p.name))?;
         new_versions.push((p.name.to_string(), new_version, p.version.clone()));
     }
 
@@ -160,15 +149,14 @@ fn get_new_versions(
 
 fn confirm_versions(
     versions: Vec<(String, Version, Version)>,
-    term: &Term,
 ) -> Result<Map<String, Version>, Error> {
     let mut new_versions = Map::new();
     let style = Style::new().for_stderr();
 
-    term.write_line("\nChanges:")?;
+    TERM_ERR.write_line("\nChanges:")?;
 
     for v in versions {
-        term.write_line(&format!(
+        TERM_ERR.write_line(&format!(
             " - {}: {} => {}",
             style.clone().yellow().apply_to(&v.0),
             v.2,
@@ -177,13 +165,13 @@ fn confirm_versions(
         new_versions.insert(v.0, v.1);
     }
 
-    term.write_line("")?;
-    term.flush()?;
+    TERM_ERR.write_line("")?;
+    TERM_ERR.flush()?;
 
     let create = Confirm::with_theme(&ColorfulTheme::default())
         .with_prompt("Are you sure you want to create these versions?")
         .default(false)
-        .interact_on(term)?;
+        .interact_on(&TERM_ERR)?;
 
     if !create {
         exit(0);
@@ -192,11 +180,7 @@ fn confirm_versions(
     Ok(new_versions)
 }
 
-fn ask_version(
-    cur_version: &Version,
-    pkg_name: Option<&str>,
-    term: &Term,
-) -> Result<Version, Error> {
+fn ask_version(cur_version: &Version, pkg_name: Option<&str>) -> Result<Version, Error> {
     let mut items = version_items(cur_version);
 
     items.push(("Custom Prerelease".to_string(), None));
@@ -217,7 +201,7 @@ fn ask_version(
         ))
         .items(&items.iter().map(|x| &x.0).collect::<Vec<_>>())
         .default(0)
-        .interact_on(term)?;
+        .interact_on(&TERM_ERR)?;
 
     let new_version = if selected == 6 {
         let custom = custom_pre(&cur_version);
@@ -228,13 +212,13 @@ fn ask_version(
                 custom.0, custom.1
             ))
             .default(custom.0.to_string())
-            .interact_on(term)?;
+            .interact_on(&TERM_ERR)?;
 
         inc_preid(&cur_version, Identifier::AlphaNumeric(preid))
     } else if selected == 7 {
         Input::with_theme(&theme)
             .with_prompt("Enter a custom version")
-            .interact_on(term)?
+            .interact_on(&TERM_ERR)?
     } else {
         items
             .get(selected)

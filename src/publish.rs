@@ -1,7 +1,6 @@
 use crate::utils::{cargo, info, Error, VersionOpt, INTERNAL_ERR};
 use cargo_metadata::{DependencyKind, Metadata, Package};
 use clap::Clap;
-use console::Term;
 use indexmap::IndexSet as Set;
 use std::{collections::BTreeMap as Map, path::PathBuf};
 
@@ -17,10 +16,10 @@ pub struct Publish {
 }
 
 impl Publish {
-    pub fn run(self, metadata: Metadata, _: &Term, stderr: &Term) -> Result<(), Error> {
+    pub fn run(self, metadata: Metadata) -> Result<(), Error> {
         let pkgs = if !self.from_git {
             self.version
-                .do_versioning(&metadata, stderr)?
+                .do_versioning(&metadata)?
                 .iter()
                 .map(|x| {
                     metadata

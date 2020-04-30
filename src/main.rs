@@ -1,6 +1,6 @@
+use crate::utils::{TERM_ERR, TERM_OUT};
 use cargo_metadata::{CargoOpt, MetadataCommand};
 use clap::{AppSettings, Clap};
-use console::Term;
 
 mod changed;
 mod create;
@@ -59,7 +59,7 @@ fn main() {
     let Cargo::Workspaces(opt) = Cargo::parse();
 
     if opt.verbose {
-        utils::error::set_debug();
+        utils::set_debug();
     }
 
     let mut cmd = MetadataCommand::new();
@@ -72,23 +72,21 @@ fn main() {
     }
 
     let metadata = cmd.exec().unwrap();
-    let stdout = Term::stdout();
-    let stderr = Term::stderr();
 
     let err = match opt.subcommand {
-        Subcommand::List(x) => x.run(metadata, &stdout, &stderr),
-        Subcommand::Changed(x) => x.run(metadata, &stdout, &stderr),
-        Subcommand::Version(x) => x.run(metadata, &stdout, &stderr),
-        Subcommand::Publish(x) => x.run(metadata, &stdout, &stderr),
-        Subcommand::Exec(x) => x.run(metadata, &stdout, &stderr),
-        Subcommand::Create(x) => x.run(metadata, &stdout, &stderr),
+        Subcommand::List(x) => x.run(metadata),
+        Subcommand::Changed(x) => x.run(metadata),
+        Subcommand::Version(x) => x.run(metadata),
+        Subcommand::Publish(x) => x.run(metadata),
+        Subcommand::Exec(x) => x.run(metadata),
+        Subcommand::Create(x) => x.run(metadata),
     }
     .err();
 
     if let Some(err) = err {
-        err.print(&stderr).unwrap();
+        err.print_err().unwrap();
     }
 
-    stderr.flush().unwrap();
-    stdout.flush().unwrap();
+    TERM_ERR.flush().unwrap();
+    TERM_OUT.flush().unwrap();
 }

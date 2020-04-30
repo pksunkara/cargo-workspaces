@@ -8,6 +8,7 @@ use thiserror::Error;
 
 lazy_static! {
     pub static ref TERM_ERR: Term = Term::stderr();
+    pub static ref TERM_OUT: Term = Term::stdout();
     static ref YELLOW: Style = Style::new().for_stderr().yellow();
     pub static ref GREEN: Style = Style::new().for_stderr().green();
     pub static ref MAGENTA: Style = Style::new().for_stderr().magenta();
@@ -24,10 +25,10 @@ pub fn set_debug() {
 
 macro_rules! _info {
     ($desc:literal, $val:expr) => {
-        $crate::utils::error::TERM_ERR.write_line(&format!(
+        $crate::utils::TERM_ERR.write_line(&format!(
             "{} {} {}",
-            $crate::utils::error::GREEN.apply_to("info"),
-            $crate::utils::error::MAGENTA.apply_to($desc),
+            $crate::utils::GREEN.apply_to("info"),
+            $crate::utils::MAGENTA.apply_to($desc),
             $val
         ))
     };
@@ -35,11 +36,11 @@ macro_rules! _info {
 
 macro_rules! _debug {
     ($desc:literal, $val:expr) => {
-        if $crate::utils::error::get_debug() {
-            $crate::utils::error::TERM_ERR.write_line(&format!(
+        if $crate::utils::get_debug() {
+            $crate::utils::TERM_ERR.write_line(&format!(
                 "{} {} {}",
-                $crate::utils::error::GREEN.apply_to("debug"),
-                $crate::utils::error::MAGENTA.apply_to($desc),
+                $crate::utils::GREEN.apply_to("debug"),
+                $crate::utils::MAGENTA.apply_to($desc),
                 $val
             ))
         } else {
