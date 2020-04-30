@@ -2,7 +2,6 @@ use console::{style, Style, Term};
 use lazy_static::lazy_static;
 use std::{
     io,
-    path::PathBuf,
     sync::atomic::{AtomicBool, Ordering},
 };
 use thiserror::Error;
@@ -61,9 +60,9 @@ pub enum Error {
     #[error("did not find any package")]
     EmptyWorkspace,
     #[error("unable to verify package {0}\n\n{1}")]
-    Verify(PathBuf, String),
+    Verify(String, String),
     #[error("unable to publish package {0}\n\n{1}")]
-    Publish(PathBuf, String),
+    Publish(String, String),
 
     #[error("unable to run cargo command with args {args:?}, got {err}")]
     Cargo { err: io::Error, args: Vec<String> },
@@ -117,6 +116,8 @@ impl Error {
             Self::PackageNotFound { id } => Self::PackageNotFound {
                 id: format!("{}", YELLOW.apply_to(id)),
             },
+            Self::Verify(pkg, err) => Self::Verify(format!("{}", YELLOW.apply_to(pkg)), err),
+            Self::Publish(pkg, err) => Self::Publish(format!("{}", YELLOW.apply_to(pkg)), err),
             Self::NoRemote { remote, branch } => Self::NoRemote {
                 remote: format!("{}", YELLOW.apply_to(remote)),
                 branch: format!("{}", YELLOW.apply_to(branch)),

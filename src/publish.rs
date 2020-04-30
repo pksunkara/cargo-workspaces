@@ -3,7 +3,7 @@ use cargo_metadata::{DependencyKind, Metadata, Package};
 use clap::Clap;
 use console::Term;
 use indexmap::IndexSet as Set;
-use std::path::PathBuf;
+use std::{collections::BTreeMap as Map, path::PathBuf};
 
 #[derive(Clap, Debug)]
 pub struct Publish {
@@ -35,9 +35,11 @@ impl Publish {
 
         info!("publish", "verifying crates")?;
 
+        let mut names = Map::new();
         let mut visited = Set::new();
 
         for pkg in &pkgs {
+            names.insert(&pkg.manifest_path, &pkg.name);
             ins(&pkgs, pkg, &mut visited);
         }
 
@@ -54,13 +56,15 @@ impl Publish {
             )?;
 
             if !output.1.contains("Finished") {
-                return Err(Error::Verify(p.clone(), output.1));
+                return Err(Error::Verify(
+                    names.get(p).expect(INTERNAL_ERR).to_string(),
+                    output.1,
+                ));
             }
         }
 
         for p in &visited {
-            info!("publish", &p.to_string_lossy())?;
-
+            let name = names.get(p).expect(INTERNAL_ERR).to_string();
             let output = cargo(
                 &metadata.workspace_root,
                 &[
@@ -72,9 +76,11 @@ impl Publish {
                 ],
             )?;
 
-            if !output.1.contains("Finished") {
-                return Err(Error::Publish(p.clone(), output.1));
+            if !output.1.contains("Uploading") {
+                return Err(Error::Publish(name, output.1));
             }
+
+            info!("published", name)?;
         }
 
         info!("success", "ok")?;
