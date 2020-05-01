@@ -4,6 +4,7 @@ use clap::Clap;
 
 /// List crates in the project
 #[derive(Debug, Clap)]
+#[clap(alias = "ls")]
 pub struct List {
     #[clap(flatten)]
     list: ListOpt,

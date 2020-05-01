@@ -1,6 +1,7 @@
 use crate::utils::{TERM_ERR, TERM_OUT};
 use cargo_metadata::{CargoOpt, MetadataCommand};
 use clap::{AppSettings, Clap};
+use std::process::exit;
 
 mod changed;
 mod create;
@@ -14,7 +15,6 @@ mod utils;
 #[derive(Debug, Clap)]
 enum Subcommand {
     // TODO: add
-    #[clap(alias = "ls")]
     List(list::List),
     Changed(changed::Changed),
     Version(version::Version),
@@ -83,10 +83,15 @@ fn main() {
     }
     .err();
 
-    if let Some(err) = err {
-        err.print_err().unwrap();
-    }
+    let code = if let Some(error) = err {
+        error.print_err().unwrap();
+        1
+    } else {
+        0
+    };
 
     TERM_ERR.flush().unwrap();
     TERM_OUT.flush().unwrap();
+
+    exit(code)
 }

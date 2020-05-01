@@ -66,11 +66,16 @@ pub enum Error {
     Publish(String, String),
     #[error("unable to create crate\n\n{0}")]
     Create(String),
+    #[error("package {0}'s manifest has not parent directory")]
+    ManifestHasNoParent(String),
 
     #[error("unable to run cargo command with args {args:?}, got {err}")]
     Cargo { err: io::Error, args: Vec<String> },
     #[error("unable to run git command with args {args:?}, got {err}")]
     Git { err: io::Error, args: Vec<String> },
+
+    #[error("child command failed to exit successfully")]
+    Bail,
 
     #[error("not a git repository")]
     NotGit,
