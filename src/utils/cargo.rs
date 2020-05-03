@@ -74,6 +74,7 @@ pub fn change_versions(
     manifest: String,
     pkg_name: &str,
     versions: &Map<String, Version>,
+    exact: bool,
 ) -> Result<String, Error> {
     let mut context = Context::Beginning;
     let mut new_lines = vec![];
@@ -108,6 +109,11 @@ pub fn change_versions(
                 Context::Dependencies | Context::BuildDependencies => {
                     if let Some(caps) = DEP_DIRECT_VERSION.captures(line) {
                         if let Some(new_version) = versions.get(&caps[2]) {
+                            if exact {
+                                new_lines.push(format!("{}={}{}", &caps[1], new_version, &caps[4]));
+                                continue;
+                            }
+
                             if !VersionReq::parse(&caps[3])?.matches(new_version) {
                                 new_lines.push(format!("{}{}{}", &caps[1], new_version, &caps[4]));
                                 continue;
@@ -117,6 +123,11 @@ pub fn change_versions(
 
                     if let Some(caps) = DEP_OBJ_VERSION.captures(line) {
                         if let Some(new_version) = versions.get(&caps[2]) {
+                            if exact {
+                                new_lines.push(format!("{}={}{}", &caps[1], new_version, &caps[4]));
+                                continue;
+                            }
+
                             if !VersionReq::parse(&caps[3])?.matches(new_version) {
                                 new_lines.push(format!("{}{}{}", &caps[1], new_version, &caps[4]));
                                 continue;
@@ -127,6 +138,11 @@ pub fn change_versions(
                 Context::DependencyEntry(ref dep) | Context::BuildDependencyEntry(ref dep) => {
                     if let Some(new_version) = versions.get(dep) {
                         if let Some(caps) = VERSION.captures(line) {
+                            if exact {
+                                new_lines.push(format!("{}={}{}", &caps[1], new_version, &caps[3]));
+                                continue;
+                            }
+
                             if !VersionReq::parse(&caps[2])?.matches(new_version) {
                                 new_lines.push(format!("{}{}{}", &caps[1], new_version, &caps[3]));
                                 continue;
@@ -159,7 +175,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v).unwrap(),
+            change_versions(m, "this", &v, false).unwrap(),
             r#"
             [package]
             version = "0.3.0""#
@@ -177,7 +193,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v).unwrap(),
+            change_versions(m, "this", &v, false).unwrap(),
             r#"
             [package]
             version="0.3.0" # hello"#
@@ -195,7 +211,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v).unwrap(),
+            change_versions(m, "this", &v, false).unwrap(),
             r#"
             [package]
             "version"	=	"0.3.0""#
@@ -213,7 +229,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v).unwrap(),
+            change_versions(m, "this", &v, false).unwrap(),
             r#"
             [package]
             'version'='0.3.0'# hello"#
@@ -224,14 +240,14 @@ mod test {
     fn test_dependencies() {
         let m = r#"
             [dependencies]
-            this = ">=0.0.1" # hello"#
+            this = "0.0.1" # hello"#
             .to_string();
 
         let mut v = Map::new();
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v).unwrap(),
+            change_versions(m, "this", &v, false).unwrap(),
             r#"
             [dependencies]
             this = "0.3.0" # hello"#
@@ -242,14 +258,14 @@ mod test {
     fn test_dependencies_object() {
         let m = r#"
             [dependencies]
-            this = { path = "../", version = ">=0.0.1" } # hello"#
+            this = { path = "../", version = "0.0.1" } # hello"#
             .to_string();
 
         let mut v = Map::new();
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v).unwrap(),
+            change_versions(m, "this", &v, false).unwrap(),
             r#"
             [dependencies]
             this = { path = "../", version = "0.3.0" } # hello"#
@@ -261,18 +277,36 @@ mod test {
         let m = r#"
             [dependencies.this]
             path = "../"
-            version = ">=0.0.1" # hello"#
+            version = "0.0.1" # hello"#
             .to_string();
 
         let mut v = Map::new();
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v).unwrap(),
+            change_versions(m, "this", &v, false).unwrap(),
             r#"
             [dependencies.this]
             path = "../"
             version = "0.3.0" # hello"#
+        );
+    }
+
+    #[test]
+    fn test_exact() {
+        let m = r#"
+            [dependencies]
+            this = { path = "../", version = "0.0.1" } # hello"#
+            .to_string();
+
+        let mut v = Map::new();
+        v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
+
+        assert_eq!(
+            change_versions(m, "this", &v, true).unwrap(),
+            r#"
+            [dependencies]
+            this = { path = "../", version = "=0.3.0" } # hello"#
         );
     }
 }

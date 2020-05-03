@@ -67,7 +67,7 @@ impl Create {
 
         fs::write(
             &manifest,
-            change_versions(fs::read_to_string(&manifest)?, &name, &versions)?,
+            change_versions(fs::read_to_string(&manifest)?, &name, &versions, false)?,
         )?;
 
         info!("success", "ok")?;

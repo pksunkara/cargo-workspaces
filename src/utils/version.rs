@@ -17,7 +17,9 @@ pub struct VersionOpt {
 
     #[clap(flatten)]
     pub git: GitOpt,
-    // TODO: exact
+
+    #[clap(long)]
+    pub exact: bool,
 }
 
 impl VersionOpt {
@@ -86,6 +88,7 @@ impl VersionOpt {
                         fs::read_to_string(&p.manifest_path)?,
                         &p.name,
                         &new_versions,
+                        self.exact,
                     )?
                 ),
             )?;
