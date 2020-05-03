@@ -1,4 +1,4 @@
-use crate::utils::{Error, ListOpt, Listable, TERM_OUT};
+use crate::utils::{Error, ListOpt, Listable, INTERNAL_ERR, TERM_OUT};
 use cargo_metadata::{Metadata, PackageId};
 use console::style;
 use semver::Version;
@@ -25,13 +25,21 @@ impl Listable for Vec<Pkg> {
             return self.json();
         }
 
-        let first = self.iter().map(|x| x.name.len()).max().unwrap();
+        if self.is_empty() {
+            return Ok(());
+        }
+
+        let first = self.iter().map(|x| x.name.len()).max().expect(INTERNAL_ERR);
         let second = self
             .iter()
             .map(|x| x.version.to_string().len() + 1)
             .max()
-            .unwrap();
-        let third = self.iter().map(|x| max(1, x.path.len())).max().unwrap();
+            .expect(INTERNAL_ERR);
+        let third = self
+            .iter()
+            .map(|x| max(1, x.path.len()))
+            .max()
+            .expect(INTERNAL_ERR);
 
         for pkg in self {
             TERM_OUT.write_str(&pkg.name)?;

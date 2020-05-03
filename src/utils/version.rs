@@ -18,6 +18,7 @@ pub struct VersionOpt {
     #[clap(flatten)]
     pub git: GitOpt,
 
+    /// Specify inter dependency version numbers exactly with `=`
     #[clap(long)]
     pub exact: bool,
 }

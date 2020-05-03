@@ -6,14 +6,18 @@ use regex::Regex;
 
 #[derive(Debug, Clap)]
 pub struct ChangeOpt {
-    // TODO: ignore_changes, include_dirty
+    // TODO: include_dirty
     /// Include tags from merged branches
     #[clap(long)]
     pub include_merged_tags: bool,
 
-    /// Always include targeted crates
+    /// Always include targeted crates matched by glob
     #[clap(long, value_name = "pattern")]
     pub force: Option<String>,
+
+    /// Ignore changes in files matched by glob
+    #[clap(long, value_name = "pattern")]
+    pub ignore_changes: Option<String>,
 }
 
 #[derive(Debug, Default)]
@@ -88,6 +92,11 @@ impl ChangeOpt {
                 .clone()
                 .map(|x| Pattern::new(&x))
                 .map_or::<Result<_, PatternError>, _>(Ok(None), |x| Ok(x.ok()))?;
+            let ignore_changes = self
+                .ignore_changes
+                .clone()
+                .map(|x| Pattern::new(&x))
+                .map_or::<Result<_, PatternError>, _>(Ok(None), |x| Ok(x.ok()))?;
 
             pkgs.into_iter().partition(|p: &Pkg| {
                 if let Some(pattern) = &force {
@@ -96,7 +105,15 @@ impl ChangeOpt {
                     }
                 }
 
-                changed_files.iter().any(|f| f.starts_with(&p.path))
+                changed_files.iter().any(|f| {
+                    if let Some(pattern) = &ignore_changes {
+                        if pattern.matches(f) {
+                            return false;
+                        }
+                    }
+
+                    f.starts_with(&p.path)
+                })
             })
         } else {
             (pkgs, vec![])

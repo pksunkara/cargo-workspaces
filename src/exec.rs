@@ -7,6 +7,7 @@ use std::process::Command;
 #[derive(Debug, Clap)]
 #[clap(setting = AppSettings::TrailingVarArg)]
 pub struct Exec {
+    /// Continue executing command despite non-zero exit in a given crate
     #[clap(long)]
     no_bail: bool,
 
