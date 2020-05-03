@@ -3,8 +3,9 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use semver::{Version, VersionReq};
 use std::collections::BTreeMap as Map;
+use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 lazy_static! {
     static ref VERSION: Regex =
@@ -25,18 +26,36 @@ lazy_static! {
 pub fn cargo<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String), Error> {
     debug!("cargo", args.clone().join(" "))?;
 
-    let output = Command::new("cargo")
+    let mut output_stderr = vec![];
+    let mut child = Command::new("cargo")
         .current_dir(root)
         .args(args)
-        .output()
+        .stderr(Stdio::piped())
+        .spawn()
         .map_err(|err| Error::Cargo {
             err,
             args: args.iter().map(|x| x.to_string()).collect(),
         })?;
 
+    {
+        let stderr = child.stderr.as_mut().expect(INTERNAL_ERR);
+
+        for line in BufReader::new(stderr).lines() {
+            let line = line?;
+
+            eprintln!("{}", line);
+            output_stderr.push(line);
+        }
+    }
+
+    let output = child.wait_with_output().map_err(|err| Error::Cargo {
+        err,
+        args: args.iter().map(|x| x.to_string()).collect(),
+    })?;
+
     Ok((
         String::from_utf8(output.stdout)?.trim().to_owned(),
-        String::from_utf8(output.stderr)?.trim().to_owned(),
+        output_stderr.join("\n").trim().to_owned(),
     ))
 }
 

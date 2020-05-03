@@ -60,10 +60,8 @@ pub enum Error {
     PackageNotFound { id: String },
     #[error("did not find any package")]
     EmptyWorkspace,
-    #[error("unable to verify package {0}\n\n{1}")]
-    Verify(String, String),
-    #[error("unable to publish package {0}\n\n{1}")]
-    Publish(String, String),
+    #[error("unable to publish package {0}")]
+    Publish(String),
     #[error("unable to create crate\n\n{0}")]
     Create(String),
     #[error("package {0}'s manifest has not parent directory")]
@@ -124,8 +122,7 @@ impl Error {
             Self::PackageNotFound { id } => Self::PackageNotFound {
                 id: format!("{}", YELLOW.apply_to(id)),
             },
-            Self::Verify(pkg, err) => Self::Verify(format!("{}", YELLOW.apply_to(pkg)), err),
-            Self::Publish(pkg, err) => Self::Publish(format!("{}", YELLOW.apply_to(pkg)), err),
+            Self::Publish(pkg) => Self::Publish(format!("{}", YELLOW.apply_to(pkg))),
             Self::NoRemote { remote, branch } => Self::NoRemote {
                 remote: format!("{}", YELLOW.apply_to(remote)),
                 branch: format!("{}", YELLOW.apply_to(branch)),

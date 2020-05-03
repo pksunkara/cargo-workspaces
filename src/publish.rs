@@ -13,6 +13,10 @@ pub struct Publish {
     /// Publish crates from the current commit without versioning
     #[clap(long)]
     from_git: bool,
+
+    /// Allow skipping already published crate versions
+    #[clap(long)]
+    skip_published: bool,
 }
 
 impl Publish {
@@ -45,40 +49,22 @@ impl Publish {
         }
 
         for p in &visited {
-            let output = cargo(
-                &metadata.workspace_root,
-                &[
-                    "publish",
-                    "--dry-run",
-                    "--allow-dirty",
-                    "--manifest-path",
-                    &p.to_string_lossy(),
-                ],
-            )?;
-
-            if !output.1.contains("Finished") {
-                return Err(Error::Verify(
-                    names.get(p).expect(INTERNAL_ERR).to_string(),
-                    output.1,
-                ));
-            }
-        }
-
-        for p in &visited {
             let name = names.get(p).expect(INTERNAL_ERR).to_string();
             let output = cargo(
                 &metadata.workspace_root,
                 &[
                     "publish",
-                    "--no-verify",
                     "--allow-dirty",
                     "--manifest-path",
                     &p.to_string_lossy(),
                 ],
             )?;
 
-            if !output.1.contains("Uploading") {
-                return Err(Error::Publish(name, output.1));
+            if !output.1.contains("Uploading")
+                || (output.1.contains("error:")
+                    && !(self.skip_published && output.1.contains("is already uploaded")))
+            {
+                return Err(Error::Publish(name));
             }
 
             info!("published", name)?;
