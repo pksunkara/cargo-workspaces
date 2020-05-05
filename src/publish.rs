@@ -11,6 +11,7 @@ pub struct Publish {
     version: VersionOpt,
 
     /// Publish crates from the current commit without versioning
+    // TODO: conflicts_with = "version" (group)
     #[clap(long)]
     from_git: bool,
 
