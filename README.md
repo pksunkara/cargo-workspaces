@@ -6,6 +6,7 @@ Inspired by [Lerna](https://lerna.js.org/)
 A tool that optimizes the workflow around cargo workspaces with `git` and `cargo`.
 
 I made this to work on [clap](https://github.com/clap-rs/clap) and other projects that rely on workspaces.
+But this will also work on single crates because by default every individual crate is a workspace.
 
 1. [Installation](#installation)
 2. [Usage](#usage)
