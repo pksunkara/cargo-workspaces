@@ -22,6 +22,6 @@ pub struct ListOpt {
     pub all: bool,
 
     /// Show information as a JSON array
-    #[clap(long)]
+    #[clap(long, conflicts_with = "long")]
     pub json: bool,
 }

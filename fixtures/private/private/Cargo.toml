@@ -1,0 +1,10 @@
+[package]
+name = "private"
+version = "0.2.0"
+authors = ["Pavan Kumar Sunkara <pavan.sss1991@gmail.com>"]
+edition = "2018"
+publish = false
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
