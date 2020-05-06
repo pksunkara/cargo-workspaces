@@ -1,0 +1,14 @@
+---
+source: tests/list.rs
+expression: out
+---
+[
+  {
+    "name": "simple",
+    "version": "0.1.0-rc.0",
+    "location": "/Users/pksunkara/Coding/pksunkara/cargo-workspaces/fixtures/private/simple",
+    "private": false,
+    "independent": false
+  }
+]
+

@@ -1,0 +1,11 @@
+---
+source: tests/list.rs
+expression: err
+---
+error: The argument '--json' cannot be used with '--long'
+
+USAGE:
+    cargo workspaces list [FLAGS]
+
+For more information try --help
+

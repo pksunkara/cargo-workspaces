@@ -1,0 +1,6 @@
+---
+source: tests/list.rs
+expression: out
+---
+simple
+

@@ -1,0 +1,7 @@
+---
+source: tests/list.rs
+expression: out
+---
+private v0.2.0      private (PRIVATE)
+simple  v0.1.0-rc.0 simple
+

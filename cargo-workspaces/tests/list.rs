@@ -1,78 +1,33 @@
-use assert_cmd::Command;
-use std::str::from_utf8;
+mod utils;
+use insta::assert_snapshot;
 
 #[test]
 fn test_single() {
-    let output = Command::cargo_bin("cargo-ws")
-        .unwrap()
-        .current_dir("../fixtures/single")
-        .arg("ws")
-        .arg("ls")
-        .output()
-        .unwrap();
-    let out = from_utf8(&output.stdout).unwrap();
-
-    assert_eq!(out, "simple\n");
+    let out = utils::run_out("../fixtures/single", &["ws", "ls"]);
+    assert_snapshot!(out);
 }
 
 #[test]
 fn test_long() {
-    let output = Command::cargo_bin("cargo-ws")
-        .unwrap()
-        .current_dir("../fixtures/single")
-        .arg("ws")
-        .arg("ll")
-        .output()
-        .unwrap();
-    let out = from_utf8(&output.stdout).unwrap();
-
-    assert_eq!(out, "simple v0.1.0 simple\n");
+    let out = utils::run_out("../fixtures/single", &["ws", "ll"]);
+    assert_snapshot!(out);
 }
 
 #[test]
 fn test_all() {
-    let output = Command::cargo_bin("cargo-ws")
-        .unwrap()
-        .current_dir("../fixtures/private")
-        .arg("ws")
-        .arg("la")
-        .output()
-        .unwrap();
-    let out = from_utf8(&output.stdout).unwrap();
-
-    assert_eq!(out, "private (PRIVATE)\nsimple\n");
+    let out = utils::run_out("../fixtures/private", &["ws", "la"]);
+    assert_snapshot!(out);
 }
 
 #[test]
 fn test_long_all() {
-    let output = Command::cargo_bin("cargo-ws")
-        .unwrap()
-        .current_dir("../fixtures/private")
-        .arg("ws")
-        .arg("list")
-        .arg("--long")
-        .arg("--all")
-        .output()
-        .unwrap();
-    let out = from_utf8(&output.stdout).unwrap();
-
-    assert_eq!(
-        out,
-        "private v0.2.0      private (PRIVATE)\nsimple  v0.1.0-rc.0 simple\n"
-    );
+    let out = utils::run_out("../fixtures/private", &["ws", "list", "--long", "--all"]);
+    assert_snapshot!(out);
 }
 
 #[test]
 fn test_json() {
-    let output = Command::cargo_bin("cargo-ws")
-        .unwrap()
-        .current_dir("../fixtures/private")
-        .arg("ws")
-        .arg("list")
-        .arg("--json")
-        .output()
-        .unwrap();
-    let out = from_utf8(&output.stdout).unwrap();
+    let out = utils::run_out("../fixtures/private", &["ws", "list", "--json"]);
 
     assert!(out.contains(r#""name": "simple""#));
     assert!(out.contains(r#""version": "0.1.0-rc.0""#));
@@ -85,16 +40,7 @@ fn test_json() {
 
 #[test]
 fn test_json_all() {
-    let output = Command::cargo_bin("cargo-ws")
-        .unwrap()
-        .current_dir("../fixtures/private")
-        .arg("ws")
-        .arg("list")
-        .arg("--json")
-        .arg("--all")
-        .output()
-        .unwrap();
-    let out = from_utf8(&output.stdout).unwrap();
+    let out = utils::run_out("../fixtures/private", &["ws", "list", "--json", "--all"]);
 
     assert!(out.contains(r#""name": "simple""#));
     assert!(out.contains(r#""version": "0.1.0-rc.0""#));
@@ -107,20 +53,6 @@ fn test_json_all() {
 
 #[test]
 fn test_json_conflicts_with_long() {
-    let output = Command::cargo_bin("cargo-ws")
-        .unwrap()
-        .current_dir("../fixtures/private")
-        .arg("ws")
-        .arg("list")
-        .arg("--long")
-        .arg("--json")
-        .output()
-        .unwrap();
-    let out = from_utf8(&output.stdout).unwrap();
-    let err = from_utf8(&output.stderr).unwrap();
-
-    assert_eq!(
-        err,
-        "private v0.2.0      private (PRIVATE)\nsimple  v0.1.0-rc.0 simple\n"
-    );
+    let err = utils::run_err("../fixtures/private", &["ws", "list", "--long", "--json"]);
+    assert_snapshot!(err);
 }
