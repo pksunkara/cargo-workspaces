@@ -110,7 +110,10 @@ pub fn get_pkgs(metadata: &Metadata, all: bool) -> Result<Vec<Pkg>, Error> {
             }
 
             let loc = loc.unwrap().to_string_lossy();
-            let loc = loc.trim_end_matches("Cargo.toml").trim_end_matches("/");
+            let loc = loc
+                .trim_end_matches("Cargo.toml")
+                .trim_end_matches("/")
+                .trim_end_matches("\\");
 
             pkgs.push(Pkg {
                 id: pkg.id.clone(),
