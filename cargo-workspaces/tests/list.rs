@@ -14,6 +14,12 @@ fn test_long() {
 }
 
 #[test]
+fn test_long_root() {
+    let out = utils::run_out("../fixtures/root", &["ws", "ll"]);
+    assert_snapshot!(out);
+}
+
+#[test]
 fn test_all() {
     let out = utils::run_out("../fixtures/private", &["ws", "la"]);
     assert_snapshot!(out);

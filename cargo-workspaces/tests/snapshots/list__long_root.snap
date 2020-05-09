@@ -1,0 +1,6 @@
+---
+source: tests/list.rs
+expression: out
+---
+root v0.1.0 .
+
