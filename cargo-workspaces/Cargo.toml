@@ -6,6 +6,7 @@ edition = "2018"
 description = "Cargo workspace manager"
 repository = "https://github.com/pksunkara/cargo-workspaces"
 license = "MIT"
+readme = "README.md"
 
 [[bin]]
 name = "cargo-workspaces"

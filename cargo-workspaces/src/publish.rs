@@ -47,6 +47,8 @@ impl Publish {
             ins(&pkgs, pkg, &mut visited);
         }
 
+        // TODO: Allow verifying all packages first by doing `--dry-run`
+
         for p in &visited {
             let name = names.get(p).expect(INTERNAL_ERR).to_string();
             let output = cargo(
