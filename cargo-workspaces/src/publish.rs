@@ -39,8 +39,6 @@ impl Publish {
             metadata.packages
         };
 
-        info!("publish", "verifying crates")?;
-
         let mut names = Map::new();
         let mut visited = Set::new();
 
