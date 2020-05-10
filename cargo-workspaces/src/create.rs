@@ -57,7 +57,7 @@ impl Create {
         let created = cargo(&metadata.workspace_root, &args)?;
 
         if !created.1.contains("Created") {
-            return Err(Error::Create(created.1));
+            return Err(Error::Create);
         }
 
         let manifest = path.join("Cargo.toml");

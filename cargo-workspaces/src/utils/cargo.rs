@@ -1,4 +1,4 @@
-use crate::utils::{debug, Error, INTERNAL_ERR};
+use crate::utils::{debug, Error, INTERNAL_ERR, TERM_ERR};
 use lazy_static::lazy_static;
 use regex::Regex;
 use semver::{Version, VersionReq};
@@ -26,10 +26,17 @@ lazy_static! {
 pub fn cargo<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String), Error> {
     debug!("cargo", args.clone().join(" "))?;
 
+    let mut args = args.to_vec();
+
+    if TERM_ERR.features().colors_supported() {
+        args.push("--color");
+        args.push("always");
+    }
+
     let mut output_stderr = vec![];
     let mut child = Command::new("cargo")
         .current_dir(root)
-        .args(args)
+        .args(&args)
         .stderr(Stdio::piped())
         .spawn()
         .map_err(|err| Error::Cargo {

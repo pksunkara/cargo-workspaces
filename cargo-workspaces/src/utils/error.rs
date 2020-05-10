@@ -62,8 +62,8 @@ pub enum Error {
     EmptyWorkspace,
     #[error("unable to publish package {0}")]
     Publish(String),
-    #[error("unable to create crate\n\n{0}")]
-    Create(String),
+    #[error("unable to create crate")]
+    Create,
     #[error("package {0}'s manifest has not parent directory")]
     ManifestHasNoParent(String),
 
