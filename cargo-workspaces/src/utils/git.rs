@@ -23,10 +23,22 @@ pub fn git<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String), Err
     ))
 }
 
+fn validate_individual_tag_prefix(value: &str) -> Result<(), String> {
+    if !value.contains("%n") {
+        return Err("must contain '%n'\n".to_string());
+    }
+
+    Ok(())
+}
+
 #[derive(Debug, Clap)]
 pub struct GitOpt {
     /// Do not commit version changes
-    #[clap(long, conflicts_with_all = &["allow-branch", "amend", "message", "no-git-tag", "tag-prefix", "no-individual-tags", "no-git-push", "git-remote"])]
+    #[clap(long, conflicts_with_all = &[
+        "allow-branch", "amend", "message", "no-git-tag",
+        "tag-prefix", "individual-tag-prefix", "no-individual-tags",
+        "no-git-push", "git-remote"
+    ])]
     pub no_git_commit: bool,
 
     /// Specify which branches to allow from
@@ -38,21 +50,25 @@ pub struct GitOpt {
     pub amend: bool,
 
     /// Use a custom commit message when creating the version commit
-    #[clap(short, long)]
+    #[clap(short, long, conflicts_with_all = &["amend"])]
     pub message: Option<String>,
 
     /// Do not tag generated commit
-    #[clap(long, conflicts_with_all = &["tag-prefix", "no-individual-tags"])]
+    #[clap(long, conflicts_with_all = &["tag-prefix", "individual-tag-prefix", "no-individual-tags"])]
     pub no_git_tag: bool,
 
     /// Do not tag individual versions for crates
-    #[clap(long)]
+    #[clap(long, conflicts_with_all = &["individual-tag-prefix"])]
     pub no_individual_tags: bool,
 
-    /// Customize the tag prefix (can be empty)
+    /// Customize tag prefix (can be empty)
     // TODO: allow_empty
-    #[clap(long, default_value = "v")]
+    #[clap(long, default_value = "v", value_name = "prefix")]
     pub tag_prefix: String,
+
+    /// Customize prefix for individual tags (should contain `%n`)
+    #[clap(long, default_value = "%n@", value_name = "prefix", validator = validate_individual_tag_prefix)]
+    pub individual_tag_prefix: String,
 
     /// Do not push generated commit and tags to git remote
     #[clap(long, conflicts_with_all = &["git-remote"])]
@@ -197,7 +213,7 @@ impl GitOpt {
 
                 if !self.no_individual_tags {
                     for (p, v) in new_versions {
-                        let tag = format!("{}@{}", p, v);
+                        let tag = format!("{}{}", self.individual_tag_prefix.replace("%n", p), v);
                         self.tag(root, &tag, &tag)?;
                     }
                 }
