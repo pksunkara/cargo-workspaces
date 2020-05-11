@@ -140,12 +140,13 @@ FLAGS:
         --no-individual-tags     Do not tag individual versions for crates
 
 OPTIONS:
-        --allow-branch <pattern>      Specify which branches to allow from [default: master]
-        --force <pattern>             Always include targeted crates matched by glob
-        --git-remote <remote>         Push git changes to the specified remote [default: origin]
-        --ignore-changes <pattern>    Ignore changes in files matched by glob
-    -m, --message <message>           Use a custom commit message when creating the version commit
-        --tag-prefix <tag-prefix>     Customize the tag prefix (can be empty) [default: v]
+        --allow-branch <pattern>            Specify which branches to allow from [default: master]
+        --force <pattern>                   Always include targeted crates matched by glob
+        --git-remote <remote>               Push git changes to the specified remote [default: origin]
+        --ignore-changes <pattern>          Ignore changes in files matched by glob
+        --individual-tag-prefix <prefix>    Customize prefix for individual tags (should contain `%n`) [default: %n@]
+    -m, --message <message>                 Use a custom commit message when creating the version commit
+        --tag-prefix <prefix>               Customize tag prefix (can be empty) [default: v]
 ```
 
 #### Fixed or Independent
@@ -181,12 +182,13 @@ FLAGS:
         --skip-published         Allow skipping already published crate versions
 
 OPTIONS:
-        --allow-branch <pattern>      Specify which branches to allow from [default: master]
-        --force <pattern>             Always include targeted crates matched by glob
-        --git-remote <remote>         Push git changes to the specified remote [default: origin]
-        --ignore-changes <pattern>    Ignore changes in files matched by glob
-    -m, --message <message>           Use a custom commit message when creating the version commit
-        --tag-prefix <tag-prefix>     Customize the tag prefix (can be empty) [default: v]
+        --allow-branch <pattern>            Specify which branches to allow from [default: master]
+        --force <pattern>                   Always include targeted crates matched by glob
+        --git-remote <remote>               Push git changes to the specified remote [default: origin]
+        --ignore-changes <pattern>          Ignore changes in files matched by glob
+        --individual-tag-prefix <prefix>    Customize prefix for individual tags (should contain `%n`) [default: %n@]
+    -m, --message <message>                 Use a custom commit message when creating the version commit
+        --tag-prefix <prefix>               Customize tag prefix (can be empty) [default: v]
 ```
 
 <!-- omit in TOC -->
