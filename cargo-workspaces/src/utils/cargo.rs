@@ -1,4 +1,4 @@
-use crate::utils::{debug, Error, INTERNAL_ERR, TERM_ERR};
+use crate::utils::{debug, Error, Result, INTERNAL_ERR, TERM_ERR};
 use lazy_static::lazy_static;
 use regex::Regex;
 use semver::{Version, VersionReq};
@@ -23,7 +23,7 @@ lazy_static! {
             .expect(INTERNAL_ERR);
 }
 
-pub fn cargo<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String), Error> {
+pub fn cargo<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String)> {
     debug!("cargo", args.clone().join(" "))?;
 
     let mut args = args.to_vec();
@@ -82,7 +82,7 @@ pub fn change_versions(
     pkg_name: &str,
     versions: &Map<String, Version>,
     exact: bool,
-) -> Result<String, Error> {
+) -> Result<String> {
     let mut context = Context::Beginning;
     let mut new_lines = vec![];
 

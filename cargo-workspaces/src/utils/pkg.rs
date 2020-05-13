@@ -1,4 +1,4 @@
-use crate::utils::{Error, ListOpt, Listable, INTERNAL_ERR, TERM_OUT};
+use crate::utils::{Error, ListOpt, Listable, Result, INTERNAL_ERR, TERM_OUT};
 use cargo_metadata::{Metadata, PackageId};
 use console::style;
 use semver::Version;
@@ -20,7 +20,7 @@ pub struct Pkg {
 }
 
 impl Listable for Vec<Pkg> {
-    fn list(&self, list: ListOpt) -> Result<(), Error> {
+    fn list(&self, list: ListOpt) -> Result {
         if list.json {
             return self.json();
         }
@@ -89,7 +89,7 @@ fn is_independent(metadata: &Value) -> bool {
     false
 }
 
-pub fn get_pkgs(metadata: &Metadata, all: bool) -> Result<Vec<Pkg>, Error> {
+pub fn get_pkgs(metadata: &Metadata, all: bool) -> Result<Vec<Pkg>> {
     let mut pkgs = vec![];
 
     for id in &metadata.workspace_members {

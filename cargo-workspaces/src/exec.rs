@@ -1,4 +1,4 @@
-use crate::utils::{info, Error, INTERNAL_ERR};
+use crate::utils::{info, Error, Result, INTERNAL_ERR};
 use cargo_metadata::Metadata;
 use clap::{AppSettings, Clap};
 use std::process::Command;
@@ -16,7 +16,7 @@ pub struct Exec {
 }
 
 impl Exec {
-    pub fn run(&self, metadata: Metadata) -> Result<(), Error> {
+    pub fn run(&self, metadata: Metadata) -> Result {
         for p in &metadata.packages {
             let dir = p
                 .manifest_path

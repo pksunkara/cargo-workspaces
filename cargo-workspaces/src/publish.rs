@@ -1,4 +1,4 @@
-use crate::utils::{cargo, info, Error, VersionOpt, INTERNAL_ERR};
+use crate::utils::{cargo, info, Error, Result, VersionOpt, INTERNAL_ERR};
 use cargo_metadata::{DependencyKind, Metadata, Package};
 use clap::Clap;
 use indexmap::IndexSet as Set;
@@ -21,7 +21,7 @@ pub struct Publish {
 }
 
 impl Publish {
-    pub fn run(self, metadata: Metadata) -> Result<(), Error> {
+    pub fn run(self, metadata: Metadata) -> Result {
         let pkgs = if !self.from_git {
             self.version
                 .do_versioning(&metadata)?

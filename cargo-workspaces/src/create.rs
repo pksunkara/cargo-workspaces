@@ -1,4 +1,4 @@
-use crate::utils::{cargo, change_versions, info, Error, INTERNAL_ERR, TERM_ERR};
+use crate::utils::{cargo, change_versions, info, Error, Result, INTERNAL_ERR, TERM_ERR};
 use cargo_metadata::Metadata;
 use clap::Clap;
 use dialoguer::{theme::ColorfulTheme, Input, Select};
@@ -13,7 +13,7 @@ pub struct Create {
 }
 
 impl Create {
-    pub fn run(&self, metadata: Metadata) -> Result<(), Error> {
+    pub fn run(&self, metadata: Metadata) -> Result {
         let theme = ColorfulTheme::default();
         let path = &metadata.workspace_root.join(&self.path);
         let strpath = path.to_string_lossy().to_string();

@@ -1,5 +1,5 @@
 use crate::utils::{
-    change_versions, info, ChangeData, ChangeOpt, Error, GitOpt, Pkg, INTERNAL_ERR, TERM_ERR,
+    change_versions, info, ChangeData, ChangeOpt, GitOpt, Pkg, Result, INTERNAL_ERR, TERM_ERR,
 };
 use cargo_metadata::Metadata;
 use clap::Clap;
@@ -24,7 +24,7 @@ pub struct VersionOpt {
 }
 
 impl VersionOpt {
-    pub fn do_versioning(&self, metadata: &Metadata) -> Result<Map<String, Version>, Error> {
+    pub fn do_versioning(&self, metadata: &Metadata) -> Result<Map<String, Version>> {
         let branch = self.git.validate(&metadata.workspace_root)?;
 
         let change_data = ChangeData::new(metadata, &self.change)?;
@@ -111,7 +111,7 @@ fn get_new_versions(
     pkgs: Vec<Pkg>,
     new_version: &mut Option<Version>,
     new_versions: &mut Vec<(String, Version, Version)>,
-) -> Result<(), Error> {
+) -> Result {
     let (independent_pkgs, same_pkgs) = pkgs.into_iter().partition::<Vec<_>, _>(|p| p.independent);
 
     if !same_pkgs.is_empty() {
@@ -151,9 +151,7 @@ fn get_new_versions(
     Ok(())
 }
 
-fn confirm_versions(
-    versions: Vec<(String, Version, Version)>,
-) -> Result<Map<String, Version>, Error> {
+fn confirm_versions(versions: Vec<(String, Version, Version)>) -> Result<Map<String, Version>> {
     let mut new_versions = Map::new();
     let style = Style::new().for_stderr();
 
@@ -184,7 +182,7 @@ fn confirm_versions(
     Ok(new_versions)
 }
 
-fn ask_version(cur_version: &Version, pkg_name: Option<&str>) -> Result<Version, Error> {
+fn ask_version(cur_version: &Version, pkg_name: Option<&str>) -> Result<Version> {
     let mut items = version_items(cur_version);
 
     items.push(("Custom Prerelease".to_string(), None));

@@ -1,4 +1,4 @@
-use crate::utils::{info, Error, VersionOpt};
+use crate::utils::{info, Result, VersionOpt};
 use cargo_metadata::Metadata;
 use clap::Clap;
 
@@ -10,7 +10,7 @@ pub struct Version {
 }
 
 impl Version {
-    pub fn run(self, metadata: Metadata) -> Result<(), Error> {
+    pub fn run(self, metadata: Metadata) -> Result {
         self.version.do_versioning(&metadata)?;
 
         info!("success", "ok")?;

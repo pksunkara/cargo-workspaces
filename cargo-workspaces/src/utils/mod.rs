@@ -15,6 +15,6 @@ pub use listable::{ListOpt, Listable};
 pub use pkg::{get_pkgs, Pkg};
 pub use version::VersionOpt;
 
-pub type Result = std::result::Result<(), Error>;
+pub type Result<T = ()> = std::result::Result<T, Error>;
 
 pub const INTERNAL_ERR: &'static str = "Internal error message. Please create an issue on https://github.com/pksunkara/cargo-workspaces";
