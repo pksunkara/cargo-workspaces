@@ -187,7 +187,9 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false).unwrap(),
+            change_versions(m, "this", &v, false)
+                .unwrap()
+                .replace("\r\n", "\n"),
             r#"
             [package]
             version = "0.3.0""#
@@ -205,7 +207,9 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false).unwrap(),
+            change_versions(m, "this", &v, false)
+                .unwrap()
+                .replace("\r\n", "\n"),
             r#"
             [package]
             version="0.3.0" # hello"#
@@ -223,7 +227,9 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false).unwrap(),
+            change_versions(m, "this", &v, false)
+                .unwrap()
+                .replace("\r\n", "\n"),
             r#"
             [package]
             "version"	=	"0.3.0""#
@@ -241,7 +247,9 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false).unwrap(),
+            change_versions(m, "this", &v, false)
+                .unwrap()
+                .replace("\r\n", "\n"),
             r#"
             [package]
             'version'='0.3.0'# hello"#
@@ -259,7 +267,9 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false).unwrap(),
+            change_versions(m, "this", &v, false)
+                .unwrap()
+                .replace("\r\n", "\n"),
             r#"
             [dependencies]
             this = "0.3.0" # hello"#
@@ -277,7 +287,9 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false).unwrap(),
+            change_versions(m, "this", &v, false)
+                .unwrap()
+                .replace("\r\n", "\n"),
             r#"
             [dependencies]
             this = { path = "../", version = "0.3.0" } # hello"#
@@ -296,7 +308,9 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false).unwrap(),
+            change_versions(m, "this", &v, false)
+                .unwrap()
+                .replace("\r\n", "\n"),
             r#"
             [dependencies.this]
             path = "../"
@@ -315,7 +329,9 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, true).unwrap(),
+            change_versions(m, "this", &v, true)
+                .unwrap()
+                .replace("\r\n", "\n"),
             r#"
             [dependencies]
             this = { path = "../", version = "=0.3.0" } # hello"#

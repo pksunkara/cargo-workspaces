@@ -71,7 +71,12 @@ impl Publish {
             let name = names.get(p).expect(INTERNAL_ERR).to_string();
             let output = cargo(
                 &metadata.workspace_root,
-                &["publish", "--manifest-path", &p.to_string_lossy()],
+                &[
+                    "publish",
+                    "--no-verify",
+                    "--manifest-path",
+                    &p.to_string_lossy(),
+                ],
             )?;
 
             if !output.1.contains("Uploading")
