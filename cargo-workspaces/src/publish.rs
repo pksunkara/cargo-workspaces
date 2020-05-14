@@ -47,7 +47,6 @@ impl Publish {
             ins(&pkgs, pkg, &mut visited);
         }
 
-        // TODO: Allow verifying all packages first by doing `--dry-run`
         info!("publish", "verifying crates")?;
 
         for p in &visited {
