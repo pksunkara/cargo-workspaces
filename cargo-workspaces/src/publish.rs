@@ -48,6 +48,7 @@ impl Publish {
         }
 
         // TODO: Allow verifying all packages first by doing `--dry-run`
+        info!("publish", "verifying crates")?;
 
         for p in &visited {
             let name = names.get(p).expect(INTERNAL_ERR).to_string();
@@ -55,10 +56,22 @@ impl Publish {
                 &metadata.workspace_root,
                 &[
                     "publish",
-                    "--allow-dirty",
+                    "--dry-run",
                     "--manifest-path",
                     &p.to_string_lossy(),
                 ],
+            )?;
+
+            if !output.1.contains("aborting upload due to dry run") || output.1.contains("error:") {
+                return Err(Error::Verify(name));
+            }
+        }
+
+        for p in &visited {
+            let name = names.get(p).expect(INTERNAL_ERR).to_string();
+            let output = cargo(
+                &metadata.workspace_root,
+                &["publish", "--manifest-path", &p.to_string_lossy()],
             )?;
 
             if !output.1.contains("Uploading")

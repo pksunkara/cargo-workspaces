@@ -60,6 +60,8 @@ pub enum Error {
     PackageNotFound { id: String },
     #[error("did not find any package")]
     EmptyWorkspace,
+    #[error("unable to verify package {0}")]
+    Verify(String),
     #[error("unable to publish package {0}")]
     Publish(String),
     #[error("unable to create crate")]
@@ -122,6 +124,7 @@ impl Error {
             Self::PackageNotFound { id } => Self::PackageNotFound {
                 id: format!("{}", YELLOW.apply_to(id)),
             },
+            Self::Verify(pkg) => Self::Verify(format!("{}", YELLOW.apply_to(pkg))),
             Self::Publish(pkg) => Self::Publish(format!("{}", YELLOW.apply_to(pkg))),
             Self::NoRemote { remote, branch } => Self::NoRemote {
                 remote: format!("{}", YELLOW.apply_to(remote)),
