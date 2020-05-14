@@ -7,6 +7,11 @@ use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
+#[cfg(windows)]
+const LINE_ENDING: &'static str = "\r\n";
+#[cfg(not(windows))]
+const LINE_ENDING: &'static str = "\n";
+
 lazy_static! {
     static ref VERSION: Regex =
         Regex::new(r#"^(\s*['"]?version['"]?\s*=\s*['"])([^'"]+)(['"].*)$"#)
@@ -164,7 +169,7 @@ pub fn change_versions(
         new_lines.push(line.to_string());
     }
 
-    Ok(new_lines.join("\n"))
+    Ok(new_lines.join(LINE_ENDING))
 }
 
 #[cfg(test)]
