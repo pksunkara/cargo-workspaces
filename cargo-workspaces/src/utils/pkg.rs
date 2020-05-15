@@ -94,7 +94,8 @@ pub fn get_pkgs(metadata: &Metadata, all: bool) -> Result<Vec<Pkg>> {
 
     for id in &metadata.workspace_members {
         if let Some(pkg) = metadata.packages.iter().find(|x| x.id == *id) {
-            let private = pkg.publish.is_some() && pkg.publish.as_ref().unwrap().is_empty();
+            let private =
+                pkg.publish.is_some() && pkg.publish.as_ref().expect(INTERNAL_ERR).is_empty();
 
             if !all && private {
                 continue;
@@ -109,7 +110,7 @@ pub fn get_pkgs(metadata: &Metadata, all: bool) -> Result<Vec<Pkg>> {
                 });
             }
 
-            let loc = loc.unwrap().to_string_lossy();
+            let loc = loc.expect(INTERNAL_ERR).to_string_lossy();
             let loc = loc
                 .trim_end_matches("Cargo.toml")
                 .trim_end_matches("/")

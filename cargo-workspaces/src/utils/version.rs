@@ -18,6 +18,10 @@ pub struct VersionOpt {
     #[clap(flatten)]
     pub git: GitOpt,
 
+    /// Also do versioning for private crates (will not be published)
+    #[clap(short, long)]
+    pub all: bool,
+
     /// Specify inter dependency version numbers exactly with `=`
     #[clap(long)]
     pub exact: bool,
@@ -36,7 +40,7 @@ impl VersionOpt {
 
         let (mut changed_p, mut unchanged_p) =
             self.change
-                .get_changed_pkgs(metadata, &change_data.since, false)?;
+                .get_changed_pkgs(metadata, &change_data.since, self.all)?;
 
         if changed_p.is_empty() {
             TERM_ERR.write_line("No changes detected, skipping versioning")?;

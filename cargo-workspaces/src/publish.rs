@@ -47,6 +47,19 @@ impl Publish {
             ins(&pkgs, pkg, &mut visited);
         }
 
+        // Filter out private packages
+        let visited = visited
+            .into_iter()
+            .filter(|x| {
+                if let Some(pkg) = pkgs.iter().find(|p| p.manifest_path == *x) {
+                    return !pkg.publish.is_some()
+                        || !pkg.publish.as_ref().expect(INTERNAL_ERR).is_empty();
+                }
+
+                false
+            })
+            .collect::<Set<_>>();
+
         info!("publish", "verifying crates")?;
 
         for p in &visited {
