@@ -131,6 +131,7 @@ USAGE:
     cargo workspaces version [FLAGS] [OPTIONS]
 
 FLAGS:
+    -a, --all                    Also do versioning for private crates (will not be published)
         --amend                  Amend the existing commit, instead of generating a new one
         --exact                  Specify inter dependency version numbers exactly with `=`
     -h, --help                   Prints help information
@@ -171,6 +172,7 @@ USAGE:
     cargo workspaces publish [FLAGS] [OPTIONS]
 
 FLAGS:
+    -a, --all                    Also do versioning for private crates (will not be published)
         --amend                  Amend the existing commit, instead of generating a new one
         --exact                  Specify inter dependency version numbers exactly with `=`
         --from-git               Publish crates from the current commit without versioning
