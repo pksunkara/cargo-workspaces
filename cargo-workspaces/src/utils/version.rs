@@ -11,7 +11,35 @@ use std::fs;
 use std::process::exit;
 
 #[derive(Debug, Clap)]
+pub enum Bump {
+    Major,
+    Minor,
+    Patch,
+    Premajor,
+    Preminor,
+    Prepatch,
+}
+
+impl Bump {
+    pub fn selected(&self) -> usize {
+        match self {
+            Bump::Major => 2,
+            Bump::Minor => 1,
+            Bump::Patch => 0,
+            Bump::Premajor => 5,
+            Bump::Preminor => 4,
+            Bump::Prepatch => 3,
+        }
+    }
+}
+
+#[derive(Debug, Clap)]
 pub struct VersionOpt {
+    /// Increment all versions by the given explicit
+    /// semver keyword while skipping the prompts for them
+    #[clap(arg_enum)]
+    pub bump: Option<Bump>,
+
     #[clap(flatten)]
     pub change: ChangeOpt,
 
@@ -25,6 +53,10 @@ pub struct VersionOpt {
     /// Specify inter dependency version numbers exactly with `=`
     #[clap(long)]
     pub exact: bool,
+
+    /// Skip all confirmation prompts
+    #[clap(short, long)]
+    pub yes: bool,
 }
 
 impl VersionOpt {
@@ -51,7 +83,7 @@ impl VersionOpt {
         let mut new_versions = vec![];
 
         while !changed_p.is_empty() {
-            get_new_versions(&metadata, changed_p, &mut new_version, &mut new_versions)?;
+            self.get_new_versions(&metadata, changed_p, &mut new_version, &mut new_versions)?;
 
             let pkgs = unchanged_p.into_iter().partition::<Vec<_>, _>(|p| {
                 let pkg = metadata
@@ -74,7 +106,7 @@ impl VersionOpt {
             unchanged_p = pkgs.1;
         }
 
-        let new_versions = confirm_versions(new_versions)?;
+        let new_versions = self.confirm_versions(new_versions)?;
 
         for p in &metadata.packages {
             if new_versions.get(&p.name).is_none()
@@ -108,133 +140,143 @@ impl VersionOpt {
 
         Ok(new_versions)
     }
-}
 
-fn get_new_versions(
-    metadata: &Metadata,
-    pkgs: Vec<Pkg>,
-    new_version: &mut Option<Version>,
-    new_versions: &mut Vec<(String, Version, Version)>,
-) -> Result {
-    let (independent_pkgs, same_pkgs) = pkgs.into_iter().partition::<Vec<_>, _>(|p| p.independent);
+    fn get_new_versions(
+        &self,
+        metadata: &Metadata,
+        pkgs: Vec<Pkg>,
+        new_version: &mut Option<Version>,
+        new_versions: &mut Vec<(String, Version, Version)>,
+    ) -> Result {
+        let (independent_pkgs, same_pkgs) =
+            pkgs.into_iter().partition::<Vec<_>, _>(|p| p.independent);
 
-    if !same_pkgs.is_empty() {
-        let cur_version = same_pkgs
-            .iter()
-            .map(|p| {
-                &metadata
-                    .packages
-                    .iter()
-                    .find(|x| x.id == p.id)
-                    .expect(INTERNAL_ERR)
-                    .version
-            })
-            .max()
-            .expect(INTERNAL_ERR);
+        if !same_pkgs.is_empty() {
+            let cur_version = same_pkgs
+                .iter()
+                .map(|p| {
+                    &metadata
+                        .packages
+                        .iter()
+                        .find(|x| x.id == p.id)
+                        .expect(INTERNAL_ERR)
+                        .version
+                })
+                .max()
+                .expect(INTERNAL_ERR);
 
-        if new_version.is_none() {
-            info!("current common version", cur_version)?;
+            if new_version.is_none() {
+                info!("current common version", cur_version)?;
 
-            *new_version = Some(ask_version(cur_version, None)?);
+                *new_version = Some(self.ask_version(cur_version, None)?);
+            }
+
+            for p in &same_pkgs {
+                new_versions.push((
+                    p.name.to_string(),
+                    new_version.as_ref().expect(INTERNAL_ERR).clone(),
+                    cur_version.clone(),
+                ));
+            }
         }
 
-        for p in &same_pkgs {
-            new_versions.push((
-                p.name.to_string(),
-                new_version.as_ref().expect(INTERNAL_ERR).clone(),
-                cur_version.clone(),
-            ));
+        for p in &independent_pkgs {
+            let new_version = self.ask_version(&p.version, Some(&p.name))?;
+            new_versions.push((p.name.to_string(), new_version, p.version.clone()));
         }
+
+        Ok(())
     }
 
-    for p in &independent_pkgs {
-        let new_version = ask_version(&p.version, Some(&p.name))?;
-        new_versions.push((p.name.to_string(), new_version, p.version.clone()));
+    fn confirm_versions(
+        &self,
+        versions: Vec<(String, Version, Version)>,
+    ) -> Result<Map<String, Version>> {
+        let mut new_versions = Map::new();
+        let style = Style::new().for_stderr();
+
+        TERM_ERR.write_line("\nChanges:")?;
+
+        for v in versions {
+            TERM_ERR.write_line(&format!(
+                " - {}: {} => {}",
+                style.clone().yellow().apply_to(&v.0),
+                v.2,
+                style.clone().cyan().apply_to(&v.1),
+            ))?;
+            new_versions.insert(v.0, v.1);
+        }
+
+        TERM_ERR.write_line("")?;
+        TERM_ERR.flush()?;
+
+        let create = self.yes
+            || Confirm::with_theme(&ColorfulTheme::default())
+                .with_prompt("Are you sure you want to create these versions?")
+                .default(false)
+                .interact_on(&TERM_ERR)?;
+
+        if !create {
+            exit(0);
+        }
+
+        Ok(new_versions)
     }
 
-    Ok(())
-}
+    fn ask_version(&self, cur_version: &Version, pkg_name: Option<&str>) -> Result<Version> {
+        let mut items = version_items(cur_version);
 
-fn confirm_versions(versions: Vec<(String, Version, Version)>) -> Result<Map<String, Version>> {
-    let mut new_versions = Map::new();
-    let style = Style::new().for_stderr();
+        items.push(("Custom Prerelease".to_string(), None));
+        items.push(("Custom Version".to_string(), None));
 
-    TERM_ERR.write_line("\nChanges:")?;
+        let prompt = if let Some(name) = pkg_name {
+            format!("for {} ", name)
+        } else {
+            "".to_string()
+        };
 
-    for v in versions {
-        TERM_ERR.write_line(&format!(
-            " - {}: {} => {}",
-            style.clone().yellow().apply_to(&v.0),
-            v.2,
-            style.clone().cyan().apply_to(&v.1),
-        ))?;
-        new_versions.insert(v.0, v.1);
+        let theme = ColorfulTheme::default();
+
+        let selected = if let Some(bump) = &self.bump {
+            bump.selected()
+        } else {
+            Select::with_theme(&theme)
+                .with_prompt(&format!(
+                    "Select a new version {}(currently {})",
+                    prompt, cur_version
+                ))
+                .items(&items.iter().map(|x| &x.0).collect::<Vec<_>>())
+                .default(0)
+                .interact_on(&TERM_ERR)?
+        };
+
+        let new_version = if selected == 6 {
+            let custom = custom_pre(&cur_version);
+
+            let preid = Input::with_theme(&theme)
+                .with_prompt(&format!(
+                    "Enter a prerelease identifier (default: '{}', yielding {})",
+                    custom.0, custom.1
+                ))
+                .default(custom.0.to_string())
+                .interact_on(&TERM_ERR)?;
+
+            inc_preid(&cur_version, Identifier::AlphaNumeric(preid))
+        } else if selected == 7 {
+            Input::with_theme(&theme)
+                .with_prompt("Enter a custom version")
+                .interact_on(&TERM_ERR)?
+        } else {
+            items
+                .get(selected)
+                .expect(INTERNAL_ERR)
+                .clone()
+                .1
+                .expect(INTERNAL_ERR)
+        };
+
+        Ok(new_version)
     }
-
-    TERM_ERR.write_line("")?;
-    TERM_ERR.flush()?;
-
-    let create = Confirm::with_theme(&ColorfulTheme::default())
-        .with_prompt("Are you sure you want to create these versions?")
-        .default(false)
-        .interact_on(&TERM_ERR)?;
-
-    if !create {
-        exit(0);
-    }
-
-    Ok(new_versions)
-}
-
-fn ask_version(cur_version: &Version, pkg_name: Option<&str>) -> Result<Version> {
-    let mut items = version_items(cur_version);
-
-    items.push(("Custom Prerelease".to_string(), None));
-    items.push(("Custom Version".to_string(), None));
-
-    let prompt = if let Some(name) = pkg_name {
-        format!("for {} ", name)
-    } else {
-        "".to_string()
-    };
-
-    let theme = ColorfulTheme::default();
-
-    let selected = Select::with_theme(&theme)
-        .with_prompt(&format!(
-            "Select a new version {}(currently {})",
-            prompt, cur_version
-        ))
-        .items(&items.iter().map(|x| &x.0).collect::<Vec<_>>())
-        .default(0)
-        .interact_on(&TERM_ERR)?;
-
-    let new_version = if selected == 6 {
-        let custom = custom_pre(&cur_version);
-
-        let preid = Input::with_theme(&theme)
-            .with_prompt(&format!(
-                "Enter a prerelease identifier (default: '{}', yielding {})",
-                custom.0, custom.1
-            ))
-            .default(custom.0.to_string())
-            .interact_on(&TERM_ERR)?;
-
-        inc_preid(&cur_version, Identifier::AlphaNumeric(preid))
-    } else if selected == 7 {
-        Input::with_theme(&theme)
-            .with_prompt("Enter a custom version")
-            .interact_on(&TERM_ERR)?
-    } else {
-        items
-            .get(selected)
-            .expect(INTERNAL_ERR)
-            .clone()
-            .1
-            .expect(INTERNAL_ERR)
-    };
-
-    Ok(new_version)
 }
 
 fn inc_pre(pre: &[Identifier]) -> Vec<Identifier> {
