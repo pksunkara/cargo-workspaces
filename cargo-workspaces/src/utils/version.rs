@@ -1,5 +1,6 @@
 use crate::utils::{
-    change_versions, info, ChangeData, ChangeOpt, GitOpt, Pkg, Result, INTERNAL_ERR, TERM_ERR,
+    cargo, change_versions, info, ChangeData, ChangeOpt, Error, GitOpt, Pkg, Result, INTERNAL_ERR,
+    TERM_ERR,
 };
 use cargo_metadata::Metadata;
 use clap::Clap;
@@ -129,6 +130,14 @@ impl VersionOpt {
                     )?
                 ),
             )?;
+        }
+
+        for (pkg, _) in &new_versions {
+            let output = cargo(&metadata.workspace_root, &["update", "-p", pkg])?;
+
+            if output.1.contains("error:") {
+                return Err(Error::Update);
+            }
         }
 
         self.git.commit(

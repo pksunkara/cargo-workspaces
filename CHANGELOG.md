@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.1.9
+
+#### Enhancements
+* Update Cargo.lock for the versioned packages
+
+## 0.1.8
+
+#### Enhancements
+* Improved CI usage by implementing prompt skipping
+
+## 0.1.7
+
+#### Enhancements
+* Allow versioning for private packages
+
+## 0.1.5
+
+#### Bug Fixes
+* Verify all the crates first before publishing
+* Fixed windows LF issues with git
+
 ## 0.1.4
 
 #### Enhancements
