@@ -128,7 +128,11 @@ You can influence the above steps with the flags and options for this command.
 
 ```
 USAGE:
-    cargo workspaces version [FLAGS] [OPTIONS]
+    cargo workspaces version [FLAGS] [OPTIONS] [bump]
+
+ARGS:
+    <bump>    Increment all versions by the given explicit semver keyword while skipping the prompts for them
+              [possible values: major, minor, patch, premajor, preminor, prepatch]
 
 FLAGS:
     -a, --all                    Also do versioning for private crates (will not be published)
@@ -140,6 +144,7 @@ FLAGS:
         --no-git-push            Do not push generated commit and tags to git remote
         --no-git-tag             Do not tag generated commit
         --no-individual-tags     Do not tag individual versions for crates
+    -y, --yes                    Skip all confirmation prompts
 
 OPTIONS:
         --allow-branch <pattern>            Specify which branches to allow from [default: master]
@@ -169,7 +174,11 @@ this command runs [version](#version) first. If you do not want that to happen, 
 
 ```
 USAGE:
-    cargo workspaces publish [FLAGS] [OPTIONS]
+    cargo workspaces publish [FLAGS] [OPTIONS] [bump]
+
+ARGS:
+    <bump>    Increment all versions by the given explicit semver keyword while skipping the prompts for them
+              [possible values: major, minor, patch, premajor, preminor, prepatch]
 
 FLAGS:
     -a, --all                    Also do versioning for private crates (will not be published)
@@ -183,6 +192,7 @@ FLAGS:
         --no-git-tag             Do not tag generated commit
         --no-individual-tags     Do not tag individual versions for crates
         --skip-published         Allow skipping already published crate versions
+    -y, --yes                    Skip all confirmation prompts
 
 OPTIONS:
         --allow-branch <pattern>            Specify which branches to allow from [default: master]
