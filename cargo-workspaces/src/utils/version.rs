@@ -72,7 +72,7 @@ impl VersionOpt {
 
         let change_data = ChangeData::new(metadata, &self.change)?;
 
-        if change_data.count == "0" && !change_data.dirty {
+        if self.change.force.is_none() && change_data.count == "0" && !change_data.dirty {
             TERM_ERR.write_line("Current HEAD is already released, skipping versioning")?;
             return Ok(Map::new());
         }

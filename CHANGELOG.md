@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+
+### Enhancements
+* Don't complain about no changes when force option is specified during versioning
+
 ## 0.2.0
 
 #### Breaking
