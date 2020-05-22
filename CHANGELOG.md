@@ -5,6 +5,9 @@
 #### Breaking
 * Improved the next version determination for prereleases
 
+#### Enhancements
+* Added prerelease identifier selection option for versioning
+
 ## 0.1.9
 
 #### Enhancements

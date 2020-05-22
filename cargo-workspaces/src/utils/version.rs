@@ -41,6 +41,10 @@ pub struct VersionOpt {
     #[clap(arg_enum)]
     pub bump: Option<Bump>,
 
+    /// Specify prerelease identifier
+    #[clap(long)]
+    pub pre_id: Option<String>,
+
     #[clap(flatten)]
     pub change: ChangeOpt,
 
@@ -55,7 +59,7 @@ pub struct VersionOpt {
     #[clap(long)]
     pub exact: bool,
 
-    /// Skip all confirmation prompts
+    /// Skip confirmation prompt
     #[clap(short, long)]
     pub yes: bool,
 }
@@ -233,7 +237,7 @@ impl VersionOpt {
     }
 
     fn ask_version(&self, cur_version: &Version, pkg_name: Option<&str>) -> Result<Version> {
-        let mut items = version_items(cur_version);
+        let mut items = version_items(cur_version, &self.pre_id);
 
         items.push(("Custom Prerelease".to_string(), None));
         items.push(("Custom Version".to_string(), None));
@@ -262,13 +266,17 @@ impl VersionOpt {
         let new_version = if selected == 6 {
             let custom = custom_pre(&cur_version);
 
-            let preid = Input::with_theme(&theme)
-                .with_prompt(&format!(
-                    "Enter a prerelease identifier (default: '{}', yielding {})",
-                    custom.0, custom.1
-                ))
-                .default(custom.0.to_string())
-                .interact_on(&TERM_ERR)?;
+            let preid = if let Some(preid) = &self.pre_id {
+                preid.clone()
+            } else {
+                Input::with_theme(&theme)
+                    .with_prompt(&format!(
+                        "Enter a prerelease identifier (default: '{}', yielding {})",
+                        custom.0, custom.1
+                    ))
+                    .default(custom.0.to_string())
+                    .interact_on(&TERM_ERR)?
+            };
 
             inc_preid(&cur_version, Identifier::AlphaNumeric(preid))
         } else if selected == 7 {
@@ -288,14 +296,18 @@ impl VersionOpt {
     }
 }
 
-fn inc_pre(pre: &[Identifier]) -> Vec<Identifier> {
+fn inc_pre(pre: &[Identifier], preid: &Option<String>) -> Vec<Identifier> {
     match pre.get(0) {
         Some(Identifier::AlphaNumeric(id)) => {
             vec![Identifier::AlphaNumeric(id.clone()), Identifier::Numeric(0)]
         }
         Some(Identifier::Numeric(_)) => vec![Identifier::Numeric(0)],
         None => vec![
-            Identifier::AlphaNumeric("alpha".to_string()),
+            Identifier::AlphaNumeric(
+                preid
+                    .as_ref()
+                    .map_or_else(|| "alpha".to_string(), |x| x.clone()),
+            ),
             Identifier::Numeric(0),
         ],
     }
@@ -386,7 +398,7 @@ fn inc_major(mut cur_version: Version) -> Version {
     cur_version
 }
 
-fn version_items(cur_version: &Version) -> Vec<(String, Option<Version>)> {
+fn version_items(cur_version: &Version, preid: &Option<String>) -> Vec<(String, Option<Version>)> {
     let mut items = vec![];
 
     let v = inc_patch(cur_version.clone());
@@ -400,17 +412,17 @@ fn version_items(cur_version: &Version) -> Vec<(String, Option<Version>)> {
 
     let mut v = cur_version.clone();
     v.increment_patch();
-    v.pre = inc_pre(&cur_version.pre);
+    v.pre = inc_pre(&cur_version.pre, preid);
     items.push((format!("Prepatch ({})", &v), Some(v)));
 
     let mut v = cur_version.clone();
     v.increment_minor();
-    v.pre = inc_pre(&cur_version.pre);
+    v.pre = inc_pre(&cur_version.pre, preid);
     items.push((format!("Preminor ({})", &v), Some(v)));
 
     let mut v = cur_version.clone();
     v.increment_major();
-    v.pre = inc_pre(&cur_version.pre);
+    v.pre = inc_pre(&cur_version.pre, preid);
     items.push((format!("Premajor ({})", &v), Some(v)));
 
     items

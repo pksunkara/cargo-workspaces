@@ -144,7 +144,7 @@ FLAGS:
         --no-git-push            Do not push generated commit and tags to git remote
         --no-git-tag             Do not tag generated commit
         --no-individual-tags     Do not tag individual versions for crates
-    -y, --yes                    Skip all confirmation prompts
+    -y, --yes                    Skip confirmation prompt
 
 OPTIONS:
         --allow-branch <pattern>            Specify which branches to allow from [default: master]
