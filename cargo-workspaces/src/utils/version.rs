@@ -356,19 +356,46 @@ fn custom_pre(cur_version: &Version) -> (Identifier, Version) {
     (id.clone(), inc_preid(cur_version, id))
 }
 
+fn inc_patch(mut cur_version: Version) -> Version {
+    if !cur_version.pre.is_empty() {
+        cur_version.pre.clear();
+    } else {
+        cur_version.increment_patch();
+    }
+
+    cur_version
+}
+
+fn inc_minor(mut cur_version: Version) -> Version {
+    if !cur_version.pre.is_empty() && cur_version.patch == 0 {
+        cur_version.pre.clear();
+    } else {
+        cur_version.increment_minor();
+    }
+
+    cur_version
+}
+
+fn inc_major(mut cur_version: Version) -> Version {
+    if !cur_version.pre.is_empty() && cur_version.patch == 0 && cur_version.minor == 0 {
+        cur_version.pre.clear();
+    } else {
+        cur_version.increment_major();
+    }
+
+    cur_version
+}
+
 fn version_items(cur_version: &Version) -> Vec<(String, Option<Version>)> {
     let mut items = vec![];
 
-    let mut v = cur_version.clone();
-    v.increment_patch();
+    let v = inc_patch(cur_version.clone());
     items.push((format!("Patch ({})", &v), Some(v)));
 
-    let mut v = cur_version.clone();
-    v.increment_minor();
+    let v = inc_minor(cur_version.clone());
     items.push((format!("Minor ({})", &v), Some(v)));
 
-    let mut v = cur_version.clone();
-    v.increment_major();
+    let v = inc_major(cur_version.clone());
     items.push((format!("Major ({})", &v), Some(v)));
 
     let mut v = cur_version.clone();
@@ -392,6 +419,84 @@ fn version_items(cur_version: &Version) -> Vec<(String, Option<Version>)> {
 #[cfg(test)]
 mod test_super {
     use super::*;
+
+    #[test]
+    fn test_inc_patch() {
+        let v = inc_patch(Version::parse("0.7.2").unwrap());
+        assert_eq!(v.to_string(), "0.7.3");
+    }
+
+    #[test]
+    fn test_inc_patch_on_prepatch() {
+        let v = inc_patch(Version::parse("0.7.2-rc.0").unwrap());
+        assert_eq!(v.to_string(), "0.7.2");
+    }
+
+    #[test]
+    fn test_inc_patch_on_preminor() {
+        let v = inc_patch(Version::parse("0.7.0-rc.0").unwrap());
+        assert_eq!(v.to_string(), "0.7.0");
+    }
+
+    #[test]
+    fn test_inc_patch_on_premajor() {
+        let v = inc_patch(Version::parse("1.0.0-rc.0").unwrap());
+        assert_eq!(v.to_string(), "1.0.0");
+    }
+
+    #[test]
+    fn test_inc_minor() {
+        let v = inc_minor(Version::parse("0.7.2").unwrap());
+        assert_eq!(v.to_string(), "0.8.0");
+    }
+
+    #[test]
+    fn test_inc_minor_on_prepatch() {
+        let v = inc_minor(Version::parse("0.7.2-rc.0").unwrap());
+        assert_eq!(v.to_string(), "0.8.0");
+    }
+
+    #[test]
+    fn test_inc_minor_on_preminor() {
+        let v = inc_minor(Version::parse("0.7.0-rc.0").unwrap());
+        assert_eq!(v.to_string(), "0.7.0");
+    }
+
+    #[test]
+    fn test_inc_minor_on_premajor() {
+        let v = inc_minor(Version::parse("1.0.0-rc.0").unwrap());
+        assert_eq!(v.to_string(), "1.0.0");
+    }
+
+    #[test]
+    fn test_inc_major() {
+        let v = inc_major(Version::parse("0.7.2").unwrap());
+        assert_eq!(v.to_string(), "1.0.0");
+    }
+
+    #[test]
+    fn test_inc_major_on_prepatch() {
+        let v = inc_major(Version::parse("0.7.2-rc.0").unwrap());
+        assert_eq!(v.to_string(), "1.0.0");
+    }
+
+    #[test]
+    fn test_inc_major_on_preminor() {
+        let v = inc_major(Version::parse("0.7.0-rc.0").unwrap());
+        assert_eq!(v.to_string(), "1.0.0");
+    }
+
+    #[test]
+    fn test_inc_major_on_premajor_with_patch() {
+        let v = inc_major(Version::parse("1.0.1-rc.0").unwrap());
+        assert_eq!(v.to_string(), "2.0.0");
+    }
+
+    #[test]
+    fn test_inc_major_on_premajor() {
+        let v = inc_major(Version::parse("1.0.0-rc.0").unwrap());
+        assert_eq!(v.to_string(), "1.0.0");
+    }
 
     #[test]
     fn test_inc_preid() {

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0
+
+#### Breaking
+* Improved the next version determination for prereleases
+
 ## 0.1.9
 
 #### Enhancements
