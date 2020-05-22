@@ -7,6 +7,7 @@
 
 #### Enhancements
 * Added prerelease identifier selection option for versioning
+* Added prerelease option to skipping prompt
 
 ## 0.1.9
 

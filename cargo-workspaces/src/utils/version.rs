@@ -19,6 +19,7 @@ pub enum Bump {
     Premajor,
     Preminor,
     Prepatch,
+    Prerelease,
 }
 
 impl Bump {
@@ -30,6 +31,7 @@ impl Bump {
             Bump::Premajor => 5,
             Bump::Preminor => 4,
             Bump::Prepatch => 3,
+            Bump::Prerelease => 6,
         }
     }
 }
@@ -42,7 +44,7 @@ pub struct VersionOpt {
     pub bump: Option<Bump>,
 
     /// Specify prerelease identifier
-    #[clap(long)]
+    #[clap(long, value_name = "identifier")]
     pub pre_id: Option<String>,
 
     #[clap(flatten)]

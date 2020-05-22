@@ -132,7 +132,7 @@ USAGE:
 
 ARGS:
     <bump>    Increment all versions by the given explicit semver keyword while skipping the prompts for them
-              [possible values: major, minor, patch, premajor, preminor, prepatch]
+              [possible values: major, minor, patch, premajor, preminor, prepatch, prerelease]
 
 FLAGS:
     -a, --all                    Also do versioning for private crates (will not be published)
@@ -153,6 +153,7 @@ OPTIONS:
         --ignore-changes <pattern>          Ignore changes in files matched by glob
         --individual-tag-prefix <prefix>    Customize prefix for individual tags (should contain `%n`) [default: %n@]
     -m, --message <message>                 Use a custom commit message when creating the version commit
+        --pre-id <identifier>               Specify prerelease identifier
         --tag-prefix <prefix>               Customize tag prefix (can be empty) [default: v]
 ```
 
@@ -178,7 +179,7 @@ USAGE:
 
 ARGS:
     <bump>    Increment all versions by the given explicit semver keyword while skipping the prompts for them
-              [possible values: major, minor, patch, premajor, preminor, prepatch]
+              [possible values: major, minor, patch, premajor, preminor, prepatch, prerelease]
 
 FLAGS:
     -a, --all                    Also do versioning for private crates (will not be published)
@@ -192,7 +193,7 @@ FLAGS:
         --no-git-tag             Do not tag generated commit
         --no-individual-tags     Do not tag individual versions for crates
         --skip-published         Allow skipping already published crate versions
-    -y, --yes                    Skip all confirmation prompts
+    -y, --yes                    Skip confirmation prompt
 
 OPTIONS:
         --allow-branch <pattern>            Specify which branches to allow from [default: master]
@@ -201,6 +202,7 @@ OPTIONS:
         --ignore-changes <pattern>          Ignore changes in files matched by glob
         --individual-tag-prefix <prefix>    Customize prefix for individual tags (should contain `%n`) [default: %n@]
     -m, --message <message>                 Use a custom commit message when creating the version commit
+        --pre-id <identifier>               Specify prerelease identifier
         --tag-prefix <prefix>               Customize tag prefix (can be empty) [default: v]
 ```
 
