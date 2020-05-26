@@ -4,7 +4,10 @@ use console::style;
 use semver::Version;
 use serde::Serialize;
 use serde_json::Value;
-use std::{cmp::max, path::PathBuf};
+use std::{
+    cmp::max,
+    path::{Path, PathBuf},
+};
 
 #[derive(Serialize, Debug, Clone, Ord, Eq, PartialOrd, PartialEq)]
 pub struct Pkg {
@@ -14,7 +17,7 @@ pub struct Pkg {
     pub version: Version,
     pub location: PathBuf,
     #[serde(skip)]
-    pub path: String,
+    pub path: PathBuf,
     pub private: bool,
     pub independent: bool,
 }
@@ -37,7 +40,7 @@ impl Listable for Vec<Pkg> {
             .expect(INTERNAL_ERR);
         let third = self
             .iter()
-            .map(|x| max(1, x.path.len()))
+            .map(|x| max(1, x.path.as_os_str().len()))
             .max()
             .expect(INTERNAL_ERR);
 
@@ -46,19 +49,23 @@ impl Listable for Vec<Pkg> {
             let mut width = first - pkg.name.len();
 
             if list.long {
-                let path = if pkg.path.is_empty() { "." } else { &pkg.path };
+                let path = if pkg.path.as_os_str().is_empty() {
+                    Path::new(".")
+                } else {
+                    pkg.path.as_path()
+                };
 
                 TERM_OUT.write_str(&format!(
                     "{:f$} {}{:s$} {}",
                     "",
                     style(format!("v{}", pkg.version)).green(),
                     "",
-                    style(path).black().bright(),
+                    style(path.display()).black().bright(),
                     f = width,
                     s = second - pkg.version.to_string().len() - 1,
                 ))?;
 
-                width = third - pkg.path.len();
+                width = third - pkg.path.as_os_str().len();
             }
 
             if list.all && pkg.private {
@@ -110,18 +117,19 @@ pub fn get_pkgs(metadata: &Metadata, all: bool) -> Result<Vec<Pkg>> {
                 });
             }
 
-            let loc = loc.expect(INTERNAL_ERR).to_string_lossy();
-            let loc = loc
-                .trim_end_matches("Cargo.toml")
-                .trim_end_matches("/")
-                .trim_end_matches("\\");
+            let loc = loc.expect(INTERNAL_ERR);
+            let loc = if loc.is_file() {
+                loc.parent().expect(INTERNAL_ERR)
+            } else {
+                loc
+            };
 
             pkgs.push(Pkg {
                 id: pkg.id.clone(),
                 name: pkg.name.clone(),
                 version: pkg.version.clone(),
                 location: metadata.workspace_root.join(loc),
-                path: loc.to_string(),
+                path: loc.into(),
                 private,
                 independent: is_independent(&pkg.metadata),
             });
