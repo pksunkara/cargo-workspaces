@@ -3,6 +3,7 @@ use cargo_metadata::Metadata;
 use clap::Clap;
 use glob::{Pattern, PatternError};
 use regex::Regex;
+use std::path::Path;
 
 #[derive(Debug, Clap)]
 pub struct ChangeOpt {
@@ -86,7 +87,7 @@ impl ChangeOpt {
                 &["diff", "--name-only", "--relative", since],
             )?;
 
-            let changed_files = changed_files.split("\n").collect::<Vec<_>>();
+            let changed_files = changed_files.split("\n").map(Path::new).collect::<Vec<_>>();
             let force = self
                 .force
                 .clone()
@@ -107,7 +108,7 @@ impl ChangeOpt {
 
                 changed_files.iter().any(|f| {
                     if let Some(pattern) = &ignore_changes {
-                        if pattern.matches(f) {
+                        if pattern.matches(f.to_str().expect(INTERNAL_ERR)) {
                             return false;
                         }
                     }
