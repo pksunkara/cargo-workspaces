@@ -7,10 +7,8 @@ use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
-#[cfg(windows)]
-const LINE_ENDING: &'static str = "\r\n";
-#[cfg(not(windows))]
-const LINE_ENDING: &'static str = "\n";
+const CRLF: &'static str = "\r\n";
+const LF: &'static str = "\n";
 
 lazy_static! {
     static ref VERSION: Regex =
@@ -169,7 +167,7 @@ pub fn change_versions(
         new_lines.push(line.to_string());
     }
 
-    Ok(new_lines.join(LINE_ENDING))
+    Ok(new_lines.join(if manifest.contains(CRLF) { CRLF } else { LF }))
 }
 
 #[cfg(test)]
@@ -187,9 +185,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false)
-                .unwrap()
-                .replace("\r\n", "\n"),
+            change_versions(m, "this", &v, false).unwrap(),
             r#"
             [package]
             version = "0.3.0""#
@@ -207,9 +203,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false)
-                .unwrap()
-                .replace("\r\n", "\n"),
+            change_versions(m, "this", &v, false).unwrap(),
             r#"
             [package]
             version="0.3.0" # hello"#
@@ -227,9 +221,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false)
-                .unwrap()
-                .replace("\r\n", "\n"),
+            change_versions(m, "this", &v, false).unwrap(),
             r#"
             [package]
             "version"	=	"0.3.0""#
@@ -247,9 +239,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false)
-                .unwrap()
-                .replace("\r\n", "\n"),
+            change_versions(m, "this", &v, false).unwrap(),
             r#"
             [package]
             'version'='0.3.0'# hello"#
@@ -267,9 +257,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false)
-                .unwrap()
-                .replace("\r\n", "\n"),
+            change_versions(m, "this", &v, false).unwrap(),
             r#"
             [dependencies]
             this = "0.3.0" # hello"#
@@ -287,9 +275,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false)
-                .unwrap()
-                .replace("\r\n", "\n"),
+            change_versions(m, "this", &v, false).unwrap(),
             r#"
             [dependencies]
             this = { path = "../", version = "0.3.0" } # hello"#
@@ -308,9 +294,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false)
-                .unwrap()
-                .replace("\r\n", "\n"),
+            change_versions(m, "this", &v, false).unwrap(),
             r#"
             [dependencies.this]
             path = "../"
@@ -329,9 +313,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, true)
-                .unwrap()
-                .replace("\r\n", "\n"),
+            change_versions(m, "this", &v, true).unwrap(),
             r#"
             [dependencies]
             this = { path = "../", version = "=0.3.0" } # hello"#
