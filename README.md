@@ -192,7 +192,8 @@ FLAGS:
         --no-git-push            Do not push generated commit and tags to git remote
         --no-git-tag             Do not tag generated commit
         --no-individual-tags     Do not tag individual versions for crates
-        --skip-published         Allow skipping already published crate versions
+        --no-verify              Skip crate verification (not recommended)
+        --skip-published         Skip already published crate versions
     -y, --yes                    Skip confirmation prompt
 
 OPTIONS:

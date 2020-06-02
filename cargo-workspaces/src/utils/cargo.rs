@@ -1,11 +1,16 @@
-use crate::utils::{debug, Error, Result, INTERNAL_ERR, TERM_ERR};
+use crate::utils::{debug, info, Error, Result, INTERNAL_ERR, TERM_ERR};
+use crates_index::Index;
 use lazy_static::lazy_static;
 use regex::Regex;
 use semver::{Version, VersionReq};
-use std::collections::BTreeMap as Map;
-use std::io::{BufRead, BufReader};
-use std::path::PathBuf;
-use std::process::{Command, Stdio};
+use std::{
+    collections::BTreeMap as Map,
+    io::{BufRead, BufReader},
+    path::PathBuf,
+    process::{Command, Stdio},
+    thread::sleep,
+    time::{Duration, Instant},
+};
 
 const CRLF: &'static str = "\r\n";
 const LF: &'static str = "\n";
@@ -168,6 +173,42 @@ pub fn change_versions(
     }
 
     Ok(new_lines.join(if manifest.contains(CRLF) { CRLF } else { LF }))
+}
+
+pub fn check_index(name: &str, version: &str) -> Result<()> {
+    let index = Index::new_cargo_default();
+    let now = Instant::now();
+    let sleep_time = Duration::from_secs(2);
+    let timeout = Duration::from_secs(300);
+    let mut logged = false;
+
+    loop {
+        if let Err(e) = index.update() {
+            Error::IndexUpdate(e).print_err()?;
+        }
+
+        let crate_data = index.crate_(name);
+        let published = crate_data
+            .iter()
+            .flat_map(|c| c.versions().iter())
+            .find(|v| v.version() == version)
+            .is_some();
+
+        if published {
+            break;
+        } else if timeout < now.elapsed() {
+            return Err(Error::PublishTimeout);
+        }
+
+        if !logged {
+            info!("waiting", "...")?;
+            logged = true;
+        }
+
+        sleep(sleep_time);
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]

@@ -1,4 +1,4 @@
-use crate::utils::{cargo, info, Error, Result, VersionOpt, INTERNAL_ERR};
+use crate::utils::{cargo, check_index, info, Error, Result, VersionOpt, INTERNAL_ERR};
 use cargo_metadata::{DependencyKind, Metadata, Package};
 use clap::Clap;
 use indexmap::IndexSet as Set;
@@ -15,9 +15,13 @@ pub struct Publish {
     #[clap(long)]
     from_git: bool,
 
-    /// Allow skipping already published crate versions
+    /// Skip already published crate versions
     #[clap(long)]
     skip_published: bool,
+
+    /// Skip crate verification (not recommended)
+    #[clap(long)]
+    no_verify: bool,
 }
 
 impl Publish {
@@ -27,23 +31,30 @@ impl Publish {
                 .do_versioning(&metadata)?
                 .iter()
                 .map(|x| {
-                    metadata
-                        .packages
-                        .iter()
-                        .find(|y| x.0 == &y.name)
-                        .expect(INTERNAL_ERR)
-                        .clone()
+                    (
+                        metadata
+                            .packages
+                            .iter()
+                            .find(|y| x.0 == &y.name)
+                            .expect(INTERNAL_ERR)
+                            .clone(),
+                        x.1.to_string(),
+                    )
                 })
-                .collect()
+                .collect::<Vec<_>>()
         } else {
-            metadata.packages
+            metadata
+                .packages
+                .iter()
+                .map(|x| (x.clone(), x.version.to_string()))
+                .collect()
         };
 
         let mut names = Map::new();
         let mut visited = Set::new();
 
-        for pkg in &pkgs {
-            names.insert(&pkg.manifest_path, &pkg.name);
+        for (pkg, version) in &pkgs {
+            names.insert(&pkg.manifest_path, (pkg, version));
             ins(&pkgs, pkg, &mut visited);
         }
 
@@ -51,7 +62,7 @@ impl Publish {
         let visited = visited
             .into_iter()
             .filter(|x| {
-                if let Some(pkg) = pkgs.iter().find(|p| p.manifest_path == *x) {
+                if let Some((pkg, _)) = pkgs.iter().find(|(p, _)| p.manifest_path == *x) {
                     return !pkg.publish.is_some()
                         || !pkg.publish.as_ref().expect(INTERNAL_ERR).is_empty();
                 }
@@ -60,42 +71,31 @@ impl Publish {
             })
             .collect::<Set<_>>();
 
-        info!("publish", "verifying crates")?;
-
         for p in &visited {
-            let name = names.get(p).expect(INTERNAL_ERR).to_string();
-            let output = cargo(
-                &metadata.workspace_root,
-                &[
-                    "publish",
-                    "--dry-run",
-                    "--manifest-path",
-                    &p.to_string_lossy(),
-                ],
-            )?;
+            let (pkg, version) = names.get(p).expect(INTERNAL_ERR);
+            let name = pkg.name.clone();
+            let path = p.to_string_lossy();
+            let mut args = vec!["publish"];
 
-            if !output.1.contains("aborting upload due to dry run") || output.1.contains("error:") {
-                return Err(Error::Verify(name));
+            if self.no_verify {
+                args.push("--no-verify");
             }
-        }
 
-        for p in &visited {
-            let name = names.get(p).expect(INTERNAL_ERR).to_string();
-            let output = cargo(
-                &metadata.workspace_root,
-                &[
-                    "publish",
-                    "--no-verify",
-                    "--manifest-path",
-                    &p.to_string_lossy(),
-                ],
-            )?;
+            args.push("--manifest-path");
+            args.push(&path);
+
+            let output = cargo(&metadata.workspace_root, &args)?;
 
             if !output.1.contains("Uploading")
                 || (output.1.contains("error:")
                     && !(self.skip_published && output.1.contains("is already uploaded")))
             {
                 return Err(Error::Publish(name));
+            }
+
+            // TODO: How to update index for non crates.io
+            if pkg.publish.is_none() {
+                check_index(&name, version)?;
             }
 
             info!("published", name)?;
@@ -106,7 +106,7 @@ impl Publish {
     }
 }
 
-fn ins(pkgs: &[Package], pkg: &Package, visited: &mut Set<PathBuf>) {
+fn ins(pkgs: &[(Package, String)], pkg: &Package, visited: &mut Set<PathBuf>) {
     if visited.contains(&pkg.manifest_path) {
         return;
     }
@@ -114,7 +114,7 @@ fn ins(pkgs: &[Package], pkg: &Package, visited: &mut Set<PathBuf>) {
     for d in &pkg.dependencies {
         match d.kind {
             DependencyKind::Normal | DependencyKind::Build => {
-                if let Some(dep) = pkgs.iter().find(|p| d.name == p.name) {
+                if let Some((dep, _)) = pkgs.iter().find(|(p, _)| d.name == p.name) {
                     ins(pkgs, dep, visited);
                 }
             }

@@ -70,6 +70,10 @@ pub enum Error {
     Create,
     #[error("package {0}'s manifest has not parent directory")]
     ManifestHasNoParent(String),
+    #[error("unable to update crate index, got {0}")]
+    IndexUpdate(crates_index::Error),
+    #[error("")]
+    PublishTimeout,
 
     #[error("unable to run cargo command with args {args:?}, got {err}")]
     Cargo { err: io::Error, args: Vec<String> },

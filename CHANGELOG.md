@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.2.4
+
+### Bug Fixes
+* Verify each crate during publishing only and not before
+* Wait for crates-index to be up to date before publishing the next package
+
+### Enhancements
+* Added option to skip verification
+
+## 0.2.3
+
+### Bug Fixes
+* Improve detection of LF
+
+## 0.2.2
+
+### Bug Fixes
+* Improve change detection on windows
+
 ## 0.2.1
 
 ### Enhancements
