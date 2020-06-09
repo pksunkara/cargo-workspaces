@@ -195,7 +195,7 @@ pub fn check_index(name: &str, version: &str) -> Result<()> {
             .is_some();
 
         if published {
-            match git(
+            if let Err(e) = git(
                 &index.path().to_owned(),
                 &[
                     "fetch",
@@ -203,13 +203,9 @@ pub fn check_index(name: &str, version: &str) -> Result<()> {
                     "refs/heads/master:refs/remotes/origin/master",
                 ],
             ) {
-                Ok((out, err)) => {
-                    println!("updating index\nout\n{}\nerr\n{}", out, err);
-                    break;
-                }
-                Err(e) => {
-                    e.print_err()?;
-                }
+                e.print_err()?;
+            } else {
+                break;
             }
         } else if timeout < now.elapsed() {
             return Err(Error::PublishTimeout);
