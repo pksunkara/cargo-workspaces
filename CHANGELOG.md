@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.5
+
+### Bug Fixes
+* Fix issue with crates-index not being up to date even after refreshing
+
 ## 0.2.4
 
 ### Bug Fixes
