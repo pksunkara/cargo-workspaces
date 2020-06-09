@@ -1,4 +1,4 @@
-use crate::utils::{debug, info, Error, Result, INTERNAL_ERR, TERM_ERR};
+use crate::utils::{debug, git, info, Error, Result, INTERNAL_ERR, TERM_ERR};
 use crates_index::Index;
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -195,7 +195,18 @@ pub fn check_index(name: &str, version: &str) -> Result<()> {
             .is_some();
 
         if published {
-            break;
+            if let Err(e) = git(
+                &index.path().to_owned(),
+                &[
+                    "fetch",
+                    "https://github.com/rust-lang/crates.io-index",
+                    "refs/heads/master:refs/remotes/origin/master",
+                ],
+            ) {
+                e.print_err()?;
+            } else {
+                break;
+            }
         } else if timeout < now.elapsed() {
             return Err(Error::PublishTimeout);
         }
