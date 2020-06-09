@@ -205,6 +205,7 @@ pub fn check_index(name: &str, version: &str) -> Result<()> {
             ) {
                 Ok((out, err)) => {
                     println!("updating index\nout\n{}\nerr\n{}", out, err);
+                    break;
                 }
                 Err(e) => {
                     e.print_err()?;
