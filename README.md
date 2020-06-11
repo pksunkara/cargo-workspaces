@@ -128,11 +128,12 @@ You can influence the above steps with the flags and options for this command.
 
 ```
 USAGE:
-    cargo workspaces version [FLAGS] [OPTIONS] [bump]
+    cargo workspaces version [FLAGS] [OPTIONS] [ARGS]
 
 ARGS:
-    <bump>    Increment all versions by the given explicit semver keyword while skipping the prompts for them
-              [possible values: major, minor, patch, premajor, preminor, prepatch, prerelease]
+    <bump>      Increment all versions by the given explicit semver keyword while skipping the prompts for them
+                [possible values: major, minor, patch, premajor, preminor, prepatch, prerelease, custom]
+    <custom>    Specify custom version value when 'bump' is set to 'custom'
 
 FLAGS:
     -a, --all                    Also do versioning for private crates (will not be published)
@@ -175,11 +176,12 @@ this command runs [version](#version) first. If you do not want that to happen, 
 
 ```
 USAGE:
-    cargo workspaces publish [FLAGS] [OPTIONS] [bump]
+    cargo workspaces publish [FLAGS] [OPTIONS] [ARGS]
 
 ARGS:
-    <bump>    Increment all versions by the given explicit semver keyword while skipping the prompts for them
-              [possible values: major, minor, patch, premajor, preminor, prepatch, prerelease]
+    <bump>      Increment all versions by the given explicit semver keyword while skipping the prompts for them
+                [possible values: major, minor, patch, premajor, preminor, prepatch, prerelease, custom]
+    <custom>    Specify custom version value when 'bump' is set to 'custom'
 
 FLAGS:
     -a, --all                    Also do versioning for private crates (will not be published)

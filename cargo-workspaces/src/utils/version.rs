@@ -20,6 +20,7 @@ pub enum Bump {
     Preminor,
     Prepatch,
     Prerelease,
+    Custom,
 }
 
 impl Bump {
@@ -32,6 +33,7 @@ impl Bump {
             Bump::Preminor => 4,
             Bump::Prepatch => 3,
             Bump::Prerelease => 6,
+            Bump::Custom => 7,
         }
     }
 }
@@ -42,6 +44,10 @@ pub struct VersionOpt {
     /// semver keyword while skipping the prompts for them
     #[clap(arg_enum)]
     pub bump: Option<Bump>,
+
+    /// Specify custom version value when 'bump' is set to 'custom'
+    #[clap(required_if("bump", "custom"))]
+    pub custom: Option<Version>,
 
     /// Specify prerelease identifier
     #[clap(long, value_name = "identifier")]
@@ -282,9 +288,13 @@ impl VersionOpt {
 
             inc_preid(&cur_version, Identifier::AlphaNumeric(preid))
         } else if selected == 7 {
-            Input::with_theme(&theme)
-                .with_prompt("Enter a custom version")
-                .interact_on(&TERM_ERR)?
+            if let Some(version) = &self.custom {
+                version.clone()
+            } else {
+                Input::with_theme(&theme)
+                    .with_prompt("Enter a custom version")
+                    .interact_on(&TERM_ERR)?
+            }
         } else {
             items
                 .get(selected)

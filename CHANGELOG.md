@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.9
+
+### Enhancements
+* Added custom option to skipping prompt
+
 ## 0.2.8
 
 ### Bug Fixes
