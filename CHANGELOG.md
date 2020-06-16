@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.10
+
+### Bug Fixes
+* Improve tag pushing to work with followTags config
+
 ## 0.2.9
 
 ### Enhancements

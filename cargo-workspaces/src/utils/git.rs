@@ -222,18 +222,10 @@ impl GitOpt {
             if !self.no_git_push {
                 info!("git", "pushing")?;
 
-                let pushed = git(root, &["push", &self.git_remote, &branch])?;
+                let pushed = git(root, &["push", "--follow-tags", &self.git_remote, &branch])?;
 
                 if !pushed.0.is_empty() || !pushed.1.starts_with("To") {
                     return Err(Error::NotPushed(pushed.0, pushed.1));
-                }
-
-                if !self.no_git_tag {
-                    let pushed = git(root, &["push", "--tags", &self.git_remote, &branch])?;
-
-                    if !pushed.0.is_empty() || !pushed.1.starts_with("To") {
-                        return Err(Error::NotPushed(pushed.0, pushed.1));
-                    }
                 }
             }
         }
