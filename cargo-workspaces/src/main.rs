@@ -8,6 +8,7 @@ mod create;
 mod exec;
 mod list;
 mod publish;
+mod rename;
 mod version;
 
 mod utils;
@@ -21,6 +22,7 @@ enum Subcommand {
     Publish(publish::Publish),
     Exec(exec::Exec),
     Create(create::Create),
+    Rename(rename::Rename),
 }
 
 #[derive(Debug, Clap)]
@@ -80,6 +82,7 @@ fn main() {
         Subcommand::Publish(x) => x.run(metadata),
         Subcommand::Exec(x) => x.run(metadata),
         Subcommand::Create(x) => x.run(metadata),
+        Subcommand::Rename(x) => x.run(metadata),
     }
     .err();
 

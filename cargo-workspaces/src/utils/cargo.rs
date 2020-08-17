@@ -1,7 +1,7 @@
 use crate::utils::{debug, git, info, Error, Result, INTERNAL_ERR, TERM_ERR};
 use crates_index::Index;
 use lazy_static::lazy_static;
-use regex::Regex;
+use regex::{Captures, Regex};
 use semver::{Version, VersionReq};
 use std::{
     collections::BTreeMap as Map,
@@ -19,6 +19,8 @@ lazy_static! {
     static ref VERSION: Regex =
         Regex::new(r#"^(\s*['"]?version['"]?\s*=\s*['"])([^'"]+)(['"].*)$"#)
             .expect(INTERNAL_ERR);
+    static ref PACKAGE: Regex =
+        Regex::new(r#"^(\s*['"]?package['"]?\s*=\s*['"])([0-9A-Za-z-_]+)(['"].*)$"#).expect(INTERNAL_ERR);
     static ref DEP_ENTRY: Regex =
         Regex::new(r#"^\[dependencies.([0-9A-Za-z-_]+)]"#).expect(INTERNAL_ERR);
     static ref BUILD_DEP_ENTRY: Regex =
@@ -28,6 +30,12 @@ lazy_static! {
             .expect(INTERNAL_ERR);
     static ref DEP_OBJ_VERSION: Regex =
         Regex::new(r#"^(\s*['"]?([0-9A-Za-z-_]+)['"]?\s*=\s*\{.*['"]?version['"]?\s*=\s*['"])([^'"]+)(['"].*}.*)$"#)
+            .expect(INTERNAL_ERR);
+    static ref DEP_OBJ_RENAME_VERSION: Regex =
+        Regex::new(r#"^(\s*['"]?([0-9A-Za-z-_]+)['"]?\s*=\s*\{.*['"]?version['"]?\s*=\s*['"])([^'"]+)(['"].*['"]?package['"]?\s*=\s*['"]([0-9A-Za-z-_]+)['"].*}.*)$"#)
+            .expect(INTERNAL_ERR);
+    static ref DEP_OBJ_RENAME_BEFORE_VERSION: Regex =
+        Regex::new(r#"^(\s*['"]?[0-9A-Za-z-_]+['"]?\s*=\s*\{.*['"]?package['"]?\s*=\s*['"]([0-9A-Za-z-_]+)['"].*['"]?version['"]?\s*=\s*['"])([^'"]+)(['"].*}.*)$"#)
             .expect(INTERNAL_ERR);
 }
 
@@ -85,6 +93,24 @@ enum Context {
     DontCare,
 }
 
+fn edit_version(
+    caps: Captures,
+    new_lines: &mut Vec<String>,
+    versions: &Map<String, Version>,
+    exact: bool,
+    version_index: usize,
+) -> Result<()> {
+    if let Some(new_version) = versions.get(&caps[version_index]) {
+        if exact {
+            new_lines.push(format!("{}={}{}", &caps[1], new_version, &caps[4]));
+        } else if !VersionReq::parse(&caps[3])?.matches(new_version) {
+            new_lines.push(format!("{}{}{}", &caps[1], new_version, &caps[4]));
+        }
+    }
+
+    Ok(())
+}
+
 pub fn change_versions(
     manifest: String,
     pkg_name: &str,
@@ -96,6 +122,7 @@ pub fn change_versions(
 
     for line in manifest.lines() {
         let trimmed = line.trim();
+        let count = new_lines.len();
 
         if trimmed.starts_with("[package]") {
             context = Context::Package;
@@ -111,43 +138,23 @@ pub fn change_versions(
             context = Context::DontCare;
         } else {
             // TODO: Support `package.version` like stuff (with quotes) at beginning
-
             match context {
                 Context::Package => {
                     if let Some(new_version) = versions.get(pkg_name) {
                         if let Some(caps) = VERSION.captures(line) {
                             new_lines.push(format!("{}{}{}", &caps[1], new_version, &caps[3]));
-                            continue;
                         }
                     }
                 }
                 Context::Dependencies | Context::BuildDependencies => {
                     if let Some(caps) = DEP_DIRECT_VERSION.captures(line) {
-                        if let Some(new_version) = versions.get(&caps[2]) {
-                            if exact {
-                                new_lines.push(format!("{}={}{}", &caps[1], new_version, &caps[4]));
-                                continue;
-                            }
-
-                            if !VersionReq::parse(&caps[3])?.matches(new_version) {
-                                new_lines.push(format!("{}{}{}", &caps[1], new_version, &caps[4]));
-                                continue;
-                            }
-                        }
-                    }
-
-                    if let Some(caps) = DEP_OBJ_VERSION.captures(line) {
-                        if let Some(new_version) = versions.get(&caps[2]) {
-                            if exact {
-                                new_lines.push(format!("{}={}{}", &caps[1], new_version, &caps[4]));
-                                continue;
-                            }
-
-                            if !VersionReq::parse(&caps[3])?.matches(new_version) {
-                                new_lines.push(format!("{}{}{}", &caps[1], new_version, &caps[4]));
-                                continue;
-                            }
-                        }
+                        edit_version(caps, &mut new_lines, &versions, exact, 2)?;
+                    } else if let Some(caps) = DEP_OBJ_RENAME_VERSION.captures(line) {
+                        edit_version(caps, &mut new_lines, &versions, exact, 5)?;
+                    } else if let Some(caps) = DEP_OBJ_RENAME_BEFORE_VERSION.captures(line) {
+                        edit_version(caps, &mut new_lines, &versions, exact, 2)?;
+                    } else if let Some(caps) = DEP_OBJ_VERSION.captures(line) {
+                        edit_version(caps, &mut new_lines, &versions, exact, 2)?;
                     }
                 }
                 Context::DependencyEntry(ref dep) | Context::BuildDependencyEntry(ref dep) => {
@@ -155,12 +162,8 @@ pub fn change_versions(
                         if let Some(caps) = VERSION.captures(line) {
                             if exact {
                                 new_lines.push(format!("{}={}{}", &caps[1], new_version, &caps[3]));
-                                continue;
-                            }
-
-                            if !VersionReq::parse(&caps[2])?.matches(new_version) {
+                            } else if !VersionReq::parse(&caps[2])?.matches(new_version) {
                                 new_lines.push(format!("{}{}{}", &caps[1], new_version, &caps[3]));
-                                continue;
                             }
                         }
                     }
@@ -169,7 +172,9 @@ pub fn change_versions(
             }
         }
 
-        new_lines.push(line.to_string());
+        if new_lines.len() == count {
+            new_lines.push(line.to_string());
+        }
     }
 
     Ok(new_lines.join(if manifest.contains(CRLF) { CRLF } else { LF }))
@@ -335,6 +340,42 @@ mod test {
     }
 
     #[test]
+    fn test_dependencies_object_renamed() {
+        let m = r#"
+            [dependencies]
+            this2 = { path = "../", version = "0.0.1", package = "this" } # hello"#
+            .to_string();
+
+        let mut v = Map::new();
+        v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
+
+        assert_eq!(
+            change_versions(m, "this", &v, false).unwrap(),
+            r#"
+            [dependencies]
+            this2 = { path = "../", version = "0.3.0", package = "this" } # hello"#
+        );
+    }
+
+    #[test]
+    fn test_dependencies_object_renamed_before_version() {
+        let m = r#"
+            [dependencies]
+            this2 = { path = "../", package = "this", version = "0.0.1" } # hello"#
+            .to_string();
+
+        let mut v = Map::new();
+        v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
+
+        assert_eq!(
+            change_versions(m, "this", &v, false).unwrap(),
+            r#"
+            [dependencies]
+            this2 = { path = "../", package = "this", version = "0.3.0" } # hello"#
+        );
+    }
+
+    #[test]
     fn test_dependency_table() {
         let m = r#"
             [dependencies.this]
@@ -353,6 +394,29 @@ mod test {
             version = "0.3.0" # hello"#
         );
     }
+
+    // #[test]
+    // fn test_dependency_table_renamed() {
+    //     // TODO: Not correct when `package` key exists
+    //     let m = r#"
+    //         [dependencies.this2]
+    //         path = "../"
+    //         version = "0.0.1" # hello"
+    //         package = "this"#
+    //         .to_string();
+
+    //     let mut v = Map::new();
+    //     v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
+
+    //     assert_eq!(
+    //         change_versions(m, "this", &v, false).unwrap(),
+    //         r#"
+    //         [dependencies.this2]
+    //         path = "../"
+    //         version = "0.3.0" # hello"
+    //         package = "this"#
+    //     );
+    // }
 
     #[test]
     fn test_exact() {
