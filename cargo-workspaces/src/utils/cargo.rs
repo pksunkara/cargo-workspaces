@@ -88,8 +88,6 @@ enum Context {
     Package,
     Dependencies,
     DependencyEntry(String),
-    BuildDependencies,
-    BuildDependencyEntry(String),
     DontCare,
 }
 
@@ -111,61 +109,44 @@ fn edit_version(
     Ok(())
 }
 
-pub fn change_versions(
+fn parse<P, D, DE>(
     manifest: String,
     pkg_name: &str,
-    versions: &Map<String, Version>,
-    exact: bool,
-) -> Result<String> {
+    package_f: P,
+    dependencies_f: D,
+    dependency_entries_f: DE,
+) -> Result<String>
+where
+    P: Fn(&str, &mut Vec<String>) -> Result,
+    D: Fn(&str, &mut Vec<String>) -> Result,
+    DE: Fn(&str, &str, &mut Vec<String>) -> Result<Option<Context>>,
+{
     let mut context = Context::Beginning;
     let mut new_lines = vec![];
 
     for line in manifest.lines() {
         let trimmed = line.trim();
         let count = new_lines.len();
-
         if trimmed.starts_with("[package]") {
             context = Context::Package;
         } else if trimmed.starts_with("[dependencies]") {
             context = Context::Dependencies;
         } else if trimmed.starts_with("[build-dependencies]") {
-            context = Context::BuildDependencies;
+            context = Context::Dependencies;
         } else if let Some(caps) = DEP_ENTRY.captures(trimmed) {
             context = Context::DependencyEntry(caps[1].to_string());
         } else if let Some(caps) = BUILD_DEP_ENTRY.captures(trimmed) {
-            context = Context::BuildDependencyEntry(caps[1].to_string());
+            context = Context::DependencyEntry(caps[1].to_string());
         } else if trimmed.starts_with("[") {
             context = Context::DontCare;
         } else {
             // TODO: Support `package.version` like stuff (with quotes) at beginning
             match context {
-                Context::Package => {
-                    if let Some(new_version) = versions.get(pkg_name) {
-                        if let Some(caps) = VERSION.captures(line) {
-                            new_lines.push(format!("{}{}{}", &caps[1], new_version, &caps[3]));
-                        }
-                    }
-                }
-                Context::Dependencies | Context::BuildDependencies => {
-                    if let Some(caps) = DEP_DIRECT_VERSION.captures(line) {
-                        edit_version(caps, &mut new_lines, &versions, exact, 2)?;
-                    } else if let Some(caps) = DEP_OBJ_RENAME_VERSION.captures(line) {
-                        edit_version(caps, &mut new_lines, &versions, exact, 5)?;
-                    } else if let Some(caps) = DEP_OBJ_RENAME_BEFORE_VERSION.captures(line) {
-                        edit_version(caps, &mut new_lines, &versions, exact, 2)?;
-                    } else if let Some(caps) = DEP_OBJ_VERSION.captures(line) {
-                        edit_version(caps, &mut new_lines, &versions, exact, 2)?;
-                    }
-                }
-                Context::DependencyEntry(ref dep) | Context::BuildDependencyEntry(ref dep) => {
-                    if let Some(new_version) = versions.get(dep) {
-                        if let Some(caps) = VERSION.captures(line) {
-                            if exact {
-                                new_lines.push(format!("{}={}{}", &caps[1], new_version, &caps[3]));
-                            } else if !VersionReq::parse(&caps[2])?.matches(new_version) {
-                                new_lines.push(format!("{}{}{}", &caps[1], new_version, &caps[3]));
-                            }
-                        }
+                Context::Package => package_f(line, &mut new_lines)?,
+                Context::Dependencies => dependencies_f(line, &mut new_lines)?,
+                Context::DependencyEntry(ref dep) => {
+                    if let Some(new_context) = dependency_entries_f(dep, line, &mut new_lines)? {
+                        context = new_context;
                     }
                 }
                 _ => {}
@@ -178,6 +159,63 @@ pub fn change_versions(
     }
 
     Ok(new_lines.join(if manifest.contains(CRLF) { CRLF } else { LF }))
+}
+
+pub fn rename_packages(
+    manifest: String,
+    pkg_name: &str,
+    renames: &Map<String, String>,
+) -> Result<String> {
+    Ok("".to_string())
+}
+
+pub fn change_versions(
+    manifest: String,
+    pkg_name: &str,
+    versions: &Map<String, Version>,
+    exact: bool,
+) -> Result<String> {
+    parse(
+        manifest,
+        pkg_name,
+        |line, new_lines| {
+            if let Some(new_version) = versions.get(pkg_name) {
+                if let Some(caps) = VERSION.captures(line) {
+                    new_lines.push(format!("{}{}{}", &caps[1], new_version, &caps[3]));
+                }
+            }
+
+            Ok(())
+        },
+        |line, new_lines| {
+            if let Some(caps) = DEP_DIRECT_VERSION.captures(line) {
+                edit_version(caps, new_lines, &versions, exact, 2)?;
+            } else if let Some(caps) = DEP_OBJ_RENAME_VERSION.captures(line) {
+                edit_version(caps, new_lines, &versions, exact, 5)?;
+            } else if let Some(caps) = DEP_OBJ_RENAME_BEFORE_VERSION.captures(line) {
+                edit_version(caps, new_lines, &versions, exact, 2)?;
+            } else if let Some(caps) = DEP_OBJ_VERSION.captures(line) {
+                edit_version(caps, new_lines, &versions, exact, 2)?;
+            }
+
+            Ok(())
+        },
+        |dep, line, new_lines| {
+            if let Some(caps) = PACKAGE.captures(line) {
+                return Ok(Some(Context::DependencyEntry(caps[2].to_string())));
+            } else if let Some(caps) = VERSION.captures(line) {
+                if let Some(new_version) = versions.get(dep) {
+                    if exact {
+                        new_lines.push(format!("{}={}{}", &caps[1], new_version, &caps[3]));
+                    } else if !VersionReq::parse(&caps[2])?.matches(new_version) {
+                        new_lines.push(format!("{}{}{}", &caps[1], new_version, &caps[3]));
+                    }
+                }
+            }
+
+            Ok(None)
+        },
+    )
 }
 
 pub fn check_index(name: &str, version: &str) -> Result<()> {
@@ -417,6 +455,28 @@ mod test {
     //         package = "this"#
     //     );
     // }
+
+    #[test]
+    fn test_dependency_table_renamed_before_version() {
+        let m = r#"
+            [dependencies.this2]
+            path = "../"
+            package = "this"
+            version = "0.0.1" # hello"#
+            .to_string();
+
+        let mut v = Map::new();
+        v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
+
+        assert_eq!(
+            change_versions(m, "this", &v, false).unwrap(),
+            r#"
+            [dependencies.this2]
+            path = "../"
+            package = "this"
+            version = "0.3.0" # hello"#
+        );
+    }
 
     #[test]
     fn test_exact() {

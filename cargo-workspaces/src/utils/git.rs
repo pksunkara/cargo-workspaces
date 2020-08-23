@@ -1,4 +1,4 @@
-use crate::utils::{debug, info, Error, INTERNAL_ERR};
+use crate::utils::{debug, info, validate_value_containing_name, Error, INTERNAL_ERR};
 use clap::Clap;
 use glob::Pattern;
 use semver::Version;
@@ -21,14 +21,6 @@ pub fn git<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String), Err
         String::from_utf8(output.stdout)?.trim().to_owned(),
         String::from_utf8(output.stderr)?.trim().to_owned(),
     ))
-}
-
-fn validate_individual_tag_prefix(value: &str) -> Result<(), String> {
-    if !value.contains("%n") {
-        return Err("must contain '%n'\n".to_string());
-    }
-
-    Ok(())
 }
 
 #[derive(Debug, Clap)]
@@ -67,7 +59,7 @@ pub struct GitOpt {
     pub tag_prefix: String,
 
     /// Customize prefix for individual tags (should contain `%n`)
-    #[clap(long, default_value = "%n@", value_name = "prefix", validator = validate_individual_tag_prefix)]
+    #[clap(long, default_value = "%n@", value_name = "prefix", validator = validate_value_containing_name)]
     pub individual_tag_prefix: String,
 
     /// Do not push generated commit and tags to git remote
