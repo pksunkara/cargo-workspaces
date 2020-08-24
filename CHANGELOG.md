@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.11
+
+### Bug Fixes
+* Support cases where dependencies are renamed
+
+### Enhancements
+* Added rename subcommand
+
 ## 0.2.10
 
 ### Bug Fixes

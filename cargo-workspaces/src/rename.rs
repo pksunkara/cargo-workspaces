@@ -22,7 +22,6 @@ pub struct Rename {
 
 impl Rename {
     pub fn run(self, metadata: Metadata) -> Result<(), Error> {
-        println!("{:#?}", metadata);
         let pkgs = get_pkgs(&metadata, self.all)?;
 
         let ignore = self
@@ -44,8 +43,6 @@ impl Rename {
 
             rename_map.insert(pkg.name, new_name);
         }
-
-        println!("{:#?}", rename_map);
 
         for pkg in &metadata.packages {
             if rename_map.contains_key(&pkg.name)
