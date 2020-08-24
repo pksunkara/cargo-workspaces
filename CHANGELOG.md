@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.12
+
+### Enhancements
+* Allow dirty working directories to be published
+
 ## 0.2.11
 
 ### Bug Fixes

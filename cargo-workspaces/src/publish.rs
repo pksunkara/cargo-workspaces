@@ -22,6 +22,10 @@ pub struct Publish {
     /// Skip crate verification (not recommended)
     #[clap(long)]
     no_verify: bool,
+
+    /// Allow dirty working directories to be published
+    #[clap(long)]
+    allow_dirty: bool,
 }
 
 impl Publish {
@@ -79,6 +83,10 @@ impl Publish {
 
             if self.no_verify {
                 args.push("--no-verify");
+            }
+
+            if self.allow_dirty {
+                args.push("--allow-dirty");
             }
 
             args.push("--manifest-path");
