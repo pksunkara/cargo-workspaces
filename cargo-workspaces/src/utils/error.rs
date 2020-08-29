@@ -68,6 +68,8 @@ pub enum Error {
     Update,
     #[error("unable to create crate")]
     Create,
+    #[error("unable to initialize workspace: {0}")]
+    Init(String),
     #[error("package {0}'s manifest has not parent directory")]
     ManifestHasNoParent(String),
     #[error("unable to update crate index, got {0}")]

@@ -6,6 +6,7 @@ use std::process::exit;
 mod changed;
 mod create;
 mod exec;
+mod init;
 mod list;
 mod publish;
 mod rename;
@@ -23,6 +24,7 @@ enum Subcommand {
     Exec(exec::Exec),
     Create(create::Create),
     Rename(rename::Rename),
+    Init(init::Init),
 }
 
 #[derive(Debug, Clap)]
@@ -64,25 +66,30 @@ fn main() {
         utils::set_debug();
     }
 
-    let mut cmd = MetadataCommand::new();
+    let err = if let Subcommand::Init(ref init) = opt.subcommand {
+        init.run()
+    } else {
+        let mut cmd = MetadataCommand::new();
 
-    cmd.features(CargoOpt::AllFeatures);
-    cmd.no_deps();
+        cmd.features(CargoOpt::AllFeatures);
+        cmd.no_deps();
 
-    if let Some(path) = opt.manifest_path {
-        cmd.manifest_path(path);
-    }
+        if let Some(path) = opt.manifest_path {
+            cmd.manifest_path(path);
+        }
 
-    let metadata = cmd.exec().unwrap();
+        let metadata = cmd.exec().unwrap();
 
-    let err = match opt.subcommand {
-        Subcommand::List(x) => x.run(metadata),
-        Subcommand::Changed(x) => x.run(metadata),
-        Subcommand::Version(x) => x.run(metadata),
-        Subcommand::Publish(x) => x.run(metadata),
-        Subcommand::Exec(x) => x.run(metadata),
-        Subcommand::Create(x) => x.run(metadata),
-        Subcommand::Rename(x) => x.run(metadata),
+        match opt.subcommand {
+            Subcommand::List(x) => x.run(metadata),
+            Subcommand::Changed(x) => x.run(metadata),
+            Subcommand::Version(x) => x.run(metadata),
+            Subcommand::Publish(x) => x.run(metadata),
+            Subcommand::Exec(x) => x.run(metadata),
+            Subcommand::Create(x) => x.run(metadata),
+            Subcommand::Rename(x) => x.run(metadata),
+            _ => unreachable!(),
+        }
     }
     .err();
 
