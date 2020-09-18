@@ -1,5 +1,5 @@
-use crate::utils::{debug, git, info, Error, Result, INTERNAL_ERR, TERM_ERR};
-use crates_index::Index;
+use crate::utils::{debug, info, Error, Result, INTERNAL_ERR, TERM_ERR};
+use crates_index::BareIndex;
 use lazy_static::lazy_static;
 use regex::{Captures, Regex};
 use semver::{Version, VersionReq};
@@ -310,18 +310,28 @@ pub fn change_versions(
 }
 
 pub fn check_index(name: &str, version: &str) -> Result<()> {
-    let index = Index::new_cargo_default();
+    let index = BareIndex::new_cargo_default();
     let now = Instant::now();
     let sleep_time = Duration::from_secs(2);
     let timeout = Duration::from_secs(300);
     let mut logged = false;
 
     loop {
-        if let Err(e) = index.update() {
-            Error::IndexUpdate(e).print_err()?;
-        }
+        let crate_data = match index.open_or_clone() {
+            Ok(mut bare_index) => {
+                if let Err(e) = bare_index.retrieve() {
+                    Error::IndexUpdate(e).print_err()?;
+                    None
+                } else {
+                    bare_index.crate_(name)
+                }
+            }
+            Err(e) => {
+                Error::IndexUpdate(e).print_err()?;
+                None
+            }
+        };
 
-        let crate_data = index.crate_(name);
         let published = crate_data
             .iter()
             .flat_map(|c| c.versions().iter())
@@ -329,18 +339,7 @@ pub fn check_index(name: &str, version: &str) -> Result<()> {
             .is_some();
 
         if published {
-            if let Err(e) = git(
-                &index.path().to_owned(),
-                &[
-                    "fetch",
-                    "https://github.com/rust-lang/crates.io-index",
-                    "refs/heads/master:refs/remotes/origin/master",
-                ],
-            ) {
-                e.print_err()?;
-            } else {
-                break;
-            }
+            break;
         } else if timeout < now.elapsed() {
             return Err(Error::PublishTimeout);
         }
@@ -694,7 +693,7 @@ mod test {
             [dependencies.this]
             path = "../"
             version = "0.0.1" # hello
-package = "ra_this""#
+            package = "ra_this""#
         );
     }
 
