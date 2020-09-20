@@ -46,7 +46,7 @@ pub struct VersionOpt {
     pub bump: Option<Bump>,
 
     /// Specify custom version value when 'bump' is set to 'custom'
-    #[clap(required_if("bump", "custom"))]
+    #[clap(required_if_eq("bump", "custom"))]
     pub custom: Option<Version>,
 
     /// Specify prerelease identifier
