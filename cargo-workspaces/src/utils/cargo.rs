@@ -693,7 +693,7 @@ mod test {
             [dependencies.this]
             path = "../"
             version = "0.0.1" # hello
-            package = "ra_this""#
+package = "ra_this""#
         );
     }
 
