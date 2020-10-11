@@ -1,8 +1,8 @@
-use crate::utils::{cargo, check_index, info, Error, Result, VersionOpt, INTERNAL_ERR};
-use cargo_metadata::{DependencyKind, Metadata, Package};
+use crate::utils::{cargo, check_index, info, ins, Error, Result, VersionOpt, INTERNAL_ERR};
+use cargo_metadata::Metadata;
 use clap::Clap;
 use indexmap::IndexSet as Set;
-use std::{collections::BTreeMap as Map, path::PathBuf};
+use std::collections::BTreeMap as Map;
 
 /// Publish crates in the project
 #[derive(Clap, Debug)]
@@ -112,23 +112,4 @@ impl Publish {
         info!("success", "ok")?;
         Ok(())
     }
-}
-
-fn ins(pkgs: &[(Package, String)], pkg: &Package, visited: &mut Set<PathBuf>) {
-    if visited.contains(&pkg.manifest_path) {
-        return;
-    }
-
-    for d in &pkg.dependencies {
-        match d.kind {
-            DependencyKind::Normal | DependencyKind::Build => {
-                if let Some((dep, _)) = pkgs.iter().find(|(p, _)| d.name == p.name) {
-                    ins(pkgs, dep, visited);
-                }
-            }
-            _ => {}
-        }
-    }
-
-    visited.insert(pkg.manifest_path.clone());
 }
