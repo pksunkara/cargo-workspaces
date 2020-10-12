@@ -1,0 +1,6 @@
+---
+source: tests/exec.rs
+expression: err
+---
+info success ok
+

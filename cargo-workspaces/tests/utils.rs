@@ -1,7 +1,8 @@
+#![allow(dead_code)]
 use assert_cmd::Command;
 use std::str::from_utf8;
 
-fn run(dir: &str, args: &[&str]) -> (String, String) {
+pub fn run(dir: &str, args: &[&str]) -> (String, String) {
     let output = Command::cargo_bin("cargo-ws")
         .unwrap()
         .current_dir(dir)

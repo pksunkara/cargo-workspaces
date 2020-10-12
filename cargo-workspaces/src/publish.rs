@@ -1,8 +1,7 @@
-use crate::utils::{cargo, check_index, info, ins, Error, Result, VersionOpt, INTERNAL_ERR};
+use crate::utils::{cargo, check_index, dag, info, Error, Result, VersionOpt, INTERNAL_ERR};
 use cargo_metadata::Metadata;
 use clap::Clap;
 use indexmap::IndexSet as Set;
-use std::collections::BTreeMap as Map;
 
 /// Publish crates in the project
 #[derive(Clap, Debug)]
@@ -54,13 +53,7 @@ impl Publish {
                 .collect()
         };
 
-        let mut names = Map::new();
-        let mut visited = Set::new();
-
-        for (pkg, version) in &pkgs {
-            names.insert(&pkg.manifest_path, (pkg, version));
-            ins(&pkgs, pkg, &mut visited);
-        }
+        let (names, visited) = dag(&pkgs);
 
         // Filter out private packages
         let visited = visited

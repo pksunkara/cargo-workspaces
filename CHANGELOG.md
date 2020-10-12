@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.13
+
+### Enhancements
+* Executing a command now follows DAG order of the dependencies.
+
 ## 0.2.12
 
 ### Enhancements

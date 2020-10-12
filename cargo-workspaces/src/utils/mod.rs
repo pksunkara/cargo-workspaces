@@ -1,18 +1,18 @@
 mod cargo;
 mod changable;
+mod dag;
 mod error;
 mod git;
-mod ins;
 mod listable;
 mod pkg;
 mod version;
 
 pub use cargo::{cargo, change_versions, check_index, rename_packages};
 pub use changable::{ChangeData, ChangeOpt};
+pub use dag::dag;
 pub(crate) use error::{debug, info};
 pub use error::{get_debug, set_debug, Error, GREEN, MAGENTA, TERM_ERR, TERM_OUT};
 pub use git::{git, GitOpt};
-pub use ins::ins;
 pub use listable::{ListOpt, Listable};
 pub use pkg::{get_pkgs, Pkg};
 pub use version::VersionOpt;
