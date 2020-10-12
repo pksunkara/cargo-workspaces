@@ -1,6 +1,8 @@
-use crate::utils::{info, Error, Result, INTERNAL_ERR};
+use crate::utils::{info, ins, Error, Result, INTERNAL_ERR};
 use cargo_metadata::Metadata;
 use clap::{AppSettings, Clap};
+use indexmap::IndexSet as Set;
+use std::collections::BTreeMap as Map;
 use std::process::Command;
 
 /// Execute an arbitrary command in each crate
@@ -17,11 +19,27 @@ pub struct Exec {
 
 impl Exec {
     pub fn run(&self, metadata: Metadata) -> Result {
-        for p in &metadata.packages {
-            let dir = p
+        let mut names = Map::new();
+        let mut visited = Set::new();
+
+        let pkgs = metadata
+            .packages
+            .iter()
+            .map(|x| (x.clone(), x.version.to_string()))
+            .collect::<Vec<_>>();
+
+        for (pkg, version) in &pkgs {
+            names.insert(&pkg.manifest_path, (pkg, version));
+            ins(&pkgs, pkg, &mut visited);
+        }
+
+        for p in &visited {
+            let (pkg, _) = names.get(p).expect(INTERNAL_ERR);
+
+            let dir = pkg
                 .manifest_path
                 .parent()
-                .ok_or(Error::ManifestHasNoParent(p.name.clone()))?;
+                .ok_or(Error::ManifestHasNoParent(pkg.name.clone()))?;
 
             let status = Command::new(self.args.get(0).expect(INTERNAL_ERR))
                 .args(&self.args[1..])
