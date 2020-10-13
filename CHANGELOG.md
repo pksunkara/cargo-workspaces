@@ -2,6 +2,9 @@
 
 ## 0.2.13
 
+### Bug Fixes
+* Allow tag prefix to be actually empty.
+
 ### Enhancements
 * Executing a command now follows DAG order of the dependencies.
 

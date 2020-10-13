@@ -1,6 +1,6 @@
 [package]
 name = "cargo-workspaces"
-version = "0.2.13"
+version = "0.2.14"
 authors = ["Pavan Kumar Sunkara <pavan.sss1991@gmail.com>"]
 edition = "2018"
 description = "Cargo workspace manager"
@@ -21,7 +21,7 @@ test = false
 lto = "thin"
 
 [dependencies]
-clap = "=3.0.0-beta.2"
+clap = { version = "=3.0.0-beta.2", features = ["wrap_help"] }
 cargo_metadata = "0.9"
 semver = "0.9"
 serde = { version = "1.0.106", features = ["derive"] }
