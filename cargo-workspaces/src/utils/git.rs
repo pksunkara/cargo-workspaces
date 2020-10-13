@@ -54,8 +54,7 @@ pub struct GitOpt {
     pub no_individual_tags: bool,
 
     /// Customize tag prefix (can be empty)
-    // TODO: allow_empty
-    #[clap(long, default_value = "v", value_name = "prefix")]
+    #[clap(long, default_value = "v", value_name = "prefix", settings = &[clap::ArgSettings::AllowEmptyValues])]
     pub tag_prefix: String,
 
     /// Customize prefix for individual tags (should contain `%n`)
