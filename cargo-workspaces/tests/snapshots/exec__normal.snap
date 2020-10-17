@@ -1,29 +1,6 @@
 ---
 source: tests/exec.rs
-expression: out
+expression: err
 ---
-[package]
-name = "dep1"
-version = "0.1.0"
-authors = ["Pavan Kumar Sunkara <pavan.sss1991@gmail.com>"]
-edition = "2018"
-
-[dependencies]
-[package]
-name = "dep2"
-version = "0.1.0"
-authors = ["Pavan Kumar Sunkara <pavan.sss1991@gmail.com>"]
-edition = "2018"
-
-[dependencies]
-pre_dep1 = { version = "0.1.0", path = "../dep1", package = "dep1" }
-[package]
-name = "top"
-version = "0.1.0"
-authors = ["Pavan Kumar Sunkara <pavan.sss1991@gmail.com>"]
-edition = "2018"
-
-[dependencies]
-dep = { version = "0.1.0", path = "../dep1", package = "dep1" }
-dep2 = { version = "0.1.0", path = "../dep2" }
+info success ok
 

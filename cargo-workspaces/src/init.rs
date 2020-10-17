@@ -1,8 +1,11 @@
 use crate::utils::{info, Error, Result};
+
 use cargo_metadata::MetadataCommand;
 use clap::Clap;
+use dunce::canonicalize;
 use glob::glob;
-use std::{collections::HashSet, fs, path::PathBuf};
+
+use std::{collections::HashSet, fs::write, path::PathBuf};
 
 /// Initializes a new cargo workspace
 #[derive(Debug, Clap)]
@@ -42,7 +45,7 @@ impl Init {
             workspace_roots.insert(metadata.workspace_root);
         }
 
-        let ws = fs::canonicalize(&self.path)?;
+        let ws = canonicalize(&self.path)?;
 
         let mut content = "[workspace]\nmembers = [".to_string();
 
@@ -52,6 +55,7 @@ impl Init {
             .collect();
 
         members.sort();
+
         if !members.is_empty() {
             content.push_str("\n");
         }
@@ -59,9 +63,10 @@ impl Init {
         members
             .into_iter()
             .for_each(|m| content.push_str(&format!("    \"{}\",\n", m.display())));
+
         content.push_str("]\n");
 
-        fs::write(cargo_toml, content)?;
+        write(cargo_toml, content)?;
 
         info!("initialized", self.path.display())?;
         Ok(())

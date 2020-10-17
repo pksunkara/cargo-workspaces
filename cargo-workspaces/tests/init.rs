@@ -16,23 +16,18 @@ fn test_with_manifest() {
 
 #[test]
 fn test_normal() {
+    let manifest = "../fixtures/normal/Cargo.toml";
+    let backup = "../fixtures/normal/Cargo.toml.bak";
+
     // Rename Cargo.toml
-    rename(
-        "../fixtures/normal/Cargo.toml",
-        "../fixtures/normal/Cargo.toml.bak",
-    )
-    .unwrap();
+    rename(manifest, backup).unwrap();
 
     let err = utils::run_err("../fixtures/normal", &["ws", "init"]);
     assert_snapshot!(err);
 
-    let manifest = read_to_string("../fixtures/normal/Cargo.toml").unwrap();
-    assert_snapshot!(manifest);
+    let data = read_to_string(manifest).unwrap();
+    assert_snapshot!(data);
 
     // Rename Cargo.toml
-    rename(
-        "../fixtures/normal/Cargo.toml.bak",
-        "../fixtures/normal/Cargo.toml",
-    )
-    .unwrap();
+    rename(backup, manifest).unwrap();
 }
