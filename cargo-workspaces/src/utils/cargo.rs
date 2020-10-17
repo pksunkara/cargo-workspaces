@@ -1,8 +1,10 @@
 use crate::utils::{debug, info, Error, Result, INTERNAL_ERR, TERM_ERR};
+
 use crates_index::BareIndex;
 use lazy_static::lazy_static;
 use regex::{Captures, Regex};
 use semver::{Version, VersionReq};
+
 use std::{
     collections::BTreeMap as Map,
     io::{BufRead, BufReader},
@@ -358,175 +360,185 @@ pub fn check_index(name: &str, version: &str) -> Result<()> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use indoc::indoc;
 
     #[test]
     fn test_version() {
-        let m = r#"
+        let m = indoc! {r#"
             [package]
-            version = "0.1.0""#
-            .to_string();
+            version = "0.1.0"
+        "#};
 
         let mut v = Map::new();
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false).unwrap(),
-            r#"
-            [package]
-            version = "0.3.0""#
+            change_versions(m.into(), "this", &v, false).unwrap(),
+            indoc! {r#"
+                [package]
+                version = "0.3.0""#
+            }
         );
     }
 
     #[test]
     fn test_version_comments() {
-        let m = r#"
+        let m = indoc! {r#"
             [package]
-            version="0.1.0" # hello"#
-            .to_string();
+            version="0.1.0" # hello
+        "#};
 
         let mut v = Map::new();
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false).unwrap(),
-            r#"
-            [package]
-            version="0.3.0" # hello"#
+            change_versions(m.into(), "this", &v, false).unwrap(),
+            indoc! {r#"
+                [package]
+                version="0.3.0" # hello"#
+            }
         );
     }
 
     #[test]
     fn test_version_quotes() {
-        let m = r#"
+        let m = indoc! {r#"
             [package]
-            "version"	=	"0.1.0""#
-            .to_string();
+            "version"	=	"0.1.0"
+        "#};
 
         let mut v = Map::new();
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false).unwrap(),
-            r#"
-            [package]
-            "version"	=	"0.3.0""#
+            change_versions(m.into(), "this", &v, false).unwrap(),
+            indoc! {r#"
+                [package]
+                "version"	=	"0.3.0""#
+            }
         );
     }
 
     #[test]
     fn test_version_single_quotes() {
-        let m = r#"
+        let m = indoc! {r#"
             [package]
-            'version'='0.1.0'# hello"#
-            .to_string();
+            'version'='0.1.0'# hello
+        "#};
 
         let mut v = Map::new();
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false).unwrap(),
-            r#"
-            [package]
-            'version'='0.3.0'# hello"#
+            change_versions(m.into(), "this", &v, false).unwrap(),
+            indoc! {r#"
+                [package]
+                'version'='0.3.0'# hello"#
+            }
         );
     }
 
     #[test]
     fn test_version_dependencies() {
-        let m = r#"
+        let m = indoc! {r#"
             [dependencies]
-            this = "0.0.1" # hello"#
-            .to_string();
+            this = "0.0.1" # hello
+        "#};
 
         let mut v = Map::new();
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false).unwrap(),
-            r#"
-            [dependencies]
-            this = "0.3.0" # hello"#
+            change_versions(m.into(), "this", &v, false).unwrap(),
+            indoc! {r#"
+                [dependencies]
+                this = "0.3.0" # hello"#
+            }
         );
     }
 
     #[test]
     fn test_version_dependencies_object() {
-        let m = r#"
+        let m = indoc! {r#"
             [dependencies]
-            this = { path = "../", version = "0.0.1" } # hello"#
-            .to_string();
+            this = { path = "../", version = "0.0.1" } # hello
+        "#};
 
         let mut v = Map::new();
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false).unwrap(),
-            r#"
-            [dependencies]
-            this = { path = "../", version = "0.3.0" } # hello"#
+            change_versions(m.into(), "this", &v, false).unwrap(),
+            indoc! {r#"
+                [dependencies]
+                this = { path = "../", version = "0.3.0" } # hello"#
+            }
         );
     }
 
     #[test]
     fn test_version_dependencies_object_renamed() {
-        let m = r#"
+        let m = indoc! {r#"
             [dependencies]
-            this2 = { path = "../", version = "0.0.1", package = "this" } # hello"#
-            .to_string();
+            this2 = { path = "../", version = "0.0.1", package = "this" } # hello
+        "#};
 
         let mut v = Map::new();
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false).unwrap(),
-            r#"
-            [dependencies]
-            this2 = { path = "../", version = "0.3.0", package = "this" } # hello"#
+            change_versions(m.into(), "this", &v, false).unwrap(),
+            indoc! {r#"
+                [dependencies]
+                this2 = { path = "../", version = "0.3.0", package = "this" } # hello"#
+            }
         );
     }
 
     #[test]
     fn test_version_dependencies_object_renamed_before_version() {
-        let m = r#"
+        let m = indoc! {r#"
             [dependencies]
-            this2 = { path = "../", package = "this", version = "0.0.1" } # hello"#
-            .to_string();
+            this2 = { path = "../", package = "this", version = "0.0.1" } # hello
+        "#};
 
         let mut v = Map::new();
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false).unwrap(),
-            r#"
-            [dependencies]
-            this2 = { path = "../", package = "this", version = "0.3.0" } # hello"#
+            change_versions(m.into(), "this", &v, false).unwrap(),
+            indoc! {r#"
+                [dependencies]
+                this2 = { path = "../", package = "this", version = "0.3.0" } # hello"#
+            }
         );
     }
 
     #[test]
     fn test_version_dependency_table() {
-        let m = r#"
+        let m = indoc! {r#"
             [dependencies.this]
             path = "../"
-            version = "0.0.1" # hello"#
-            .to_string();
+            version = "0.0.1" # hello
+        "#};
 
         let mut v = Map::new();
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false).unwrap(),
-            r#"
-            [dependencies.this]
-            path = "../"
-            version = "0.3.0" # hello"#
+            change_versions(m.into(), "this", &v, false).unwrap(),
+            indoc! {r#"
+                [dependencies.this]
+                path = "../"
+                version = "0.3.0" # hello"#
+            }
         );
     }
 
     // #[test]
     // fn test_dependency_table_renamed() {
     //     // TODO: Not correct when `package` key exists
-    //     let m = r#"
+    //     let m = indoc! {r#"
     //         [dependencies.this2]
     //         path = "../"
     //         version = "0.0.1" # hello"
@@ -548,196 +560,206 @@ mod test {
 
     #[test]
     fn test_version_dependency_table_renamed_before_version() {
-        let m = r#"
+        let m = indoc! {r#"
             [dependencies.this2]
             path = "../"
             package = "this"
-            version = "0.0.1" # hello"#
-            .to_string();
+            version = "0.0.1" # hello
+        "#};
 
         let mut v = Map::new();
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, false).unwrap(),
-            r#"
-            [dependencies.this2]
-            path = "../"
-            package = "this"
-            version = "0.3.0" # hello"#
+            change_versions(m.into(), "this", &v, false).unwrap(),
+            indoc! {r#"
+                [dependencies.this2]
+                path = "../"
+                package = "this"
+                version = "0.3.0" # hello"#
+            }
         );
     }
 
     #[test]
     fn test_exact() {
-        let m = r#"
+        let m = indoc! {r#"
             [dependencies]
-            this = { path = "../", version = "0.0.1" } # hello"#
-            .to_string();
+            this = { path = "../", version = "0.0.1" } # hello
+        "#};
 
         let mut v = Map::new();
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m, "this", &v, true).unwrap(),
-            r#"
-            [dependencies]
-            this = { path = "../", version = "=0.3.0" } # hello"#
+            change_versions(m.into(), "this", &v, true).unwrap(),
+            indoc! {r#"
+                [dependencies]
+                this = { path = "../", version = "=0.3.0" } # hello"#
+            }
         );
     }
 
     #[test]
     fn test_name() {
-        let m = r#"
+        let m = indoc! {r#"
             [package]
-            name = "this""#
-            .to_string();
+            name = "this"
+        "#};
 
         let mut v = Map::new();
         v.insert("this".to_string(), "ra_this".to_string());
 
         assert_eq!(
-            rename_packages(m, "this", &v).unwrap(),
-            r#"
-            [package]
-            name = "ra_this""#
+            rename_packages(m.into(), "this", &v).unwrap(),
+            indoc! {r#"
+                [package]
+                name = "ra_this""#
+            }
         );
     }
 
     #[test]
     fn test_name_dependencies() {
-        let m = r#"
+        let m = indoc! {r#"
             [dependencies]
-            this = "0.0.1" # hello"#
-            .to_string();
+            this = "0.0.1" # hello
+        "#};
 
         let mut v = Map::new();
         v.insert("this".to_string(), "ra_this".to_string());
 
         assert_eq!(
-            rename_packages(m, "this", &v).unwrap(),
-            r#"
-            [dependencies]
-            this = { version = "0.0.1", package = "ra_this" } # hello"#
+            rename_packages(m.into(), "this", &v).unwrap(),
+            indoc! {r#"
+                [dependencies]
+                this = { version = "0.0.1", package = "ra_this" } # hello"#
+            }
         );
     }
 
     #[test]
     fn test_name_dependencies_object() {
-        let m = r#"
+        let m = indoc! {r#"
             [dependencies]
-            this = { path = "../", version = "0.0.1" } # hello"#
-            .to_string();
+            this = { path = "../", version = "0.0.1" } # hello
+        "#};
 
         let mut v = Map::new();
         v.insert("this".to_string(), "ra_this".to_string());
 
         assert_eq!(
-            rename_packages(m, "this", &v).unwrap(),
-            r#"
-            [dependencies]
-            this = { path = "../", version = "0.0.1", package = "ra_this" } # hello"#
+            rename_packages(m.into(), "this", &v).unwrap(),
+            indoc! {r#"
+                [dependencies]
+                this = { path = "../", version = "0.0.1", package = "ra_this" } # hello"#
+            }
         );
     }
 
     #[test]
     fn test_name_dependencies_object_renamed() {
-        let m = r#"
+        let m = indoc! {r#"
             [dependencies]
-            this2 = { path = "../", version = "0.0.1", package = "this" } # hello"#
-            .to_string();
+            this2 = { path = "../", version = "0.0.1", package = "this" } # hello
+        "#};
 
         let mut v = Map::new();
         v.insert("this".to_string(), "ra_this".to_string());
 
         assert_eq!(
-            rename_packages(m, "this", &v).unwrap(),
-            r#"
-            [dependencies]
-            this2 = { path = "../", version = "0.0.1", package = "ra_this" } # hello"#
+            rename_packages(m.into(), "this", &v).unwrap(),
+            indoc! {r#"
+                [dependencies]
+                this2 = { path = "../", version = "0.0.1", package = "ra_this" } # hello"#
+            }
         );
     }
 
     #[test]
     fn test_name_dependencies_object_renamed_before_version() {
-        let m = r#"
+        let m = indoc! {r#"
             [dependencies]
-            this2 = { path = "../", package = "this", version = "0.0.1" } # hello"#
-            .to_string();
+            this2 = { path = "../", package = "this", version = "0.0.1" } # hello
+        "#};
 
         let mut v = Map::new();
         v.insert("this".to_string(), "ra_this".to_string());
 
         assert_eq!(
-            rename_packages(m, "this", &v).unwrap(),
-            r#"
-            [dependencies]
-            this2 = { path = "../", package = "ra_this", version = "0.0.1" } # hello"#
+            rename_packages(m.into(), "this", &v).unwrap(),
+            indoc! {r#"
+                [dependencies]
+                this2 = { path = "../", package = "ra_this", version = "0.0.1" } # hello"#
+            }
         );
     }
 
     #[test]
     fn test_name_dependency_table() {
-        let m = r#"
+        let m = indoc! {r#"
             [dependencies.this]
             path = "../"
-            version = "0.0.1" # hello"#
-            .to_string();
+            version = "0.0.1" # hello
+        "#};
 
         let mut v = Map::new();
         v.insert("this".to_string(), "ra_this".to_string());
 
         assert_eq!(
-            rename_packages(m, "this", &v).unwrap(),
-            r#"
-            [dependencies.this]
-            path = "../"
-            version = "0.0.1" # hello
-package = "ra_this""#
+            rename_packages(m.into(), "this", &v).unwrap(),
+            indoc! {r#"
+                [dependencies.this]
+                path = "../"
+                version = "0.0.1" # hello
+                package = "ra_this""#
+            }
         );
     }
 
     #[test]
     fn test_name_dependency_table_renamed() {
-        let m = r#"
+        let m = indoc! {r#"
             [dependencies.this2]
             path = "../"
             version = "0.0.1" # hello"
-            package = "this""#
-            .to_string();
+            package = "this"
+        "#};
 
         let mut v = Map::new();
         v.insert("this".to_string(), "ra_this".to_string());
 
         assert_eq!(
-            rename_packages(m, "this", &v).unwrap(),
-            r#"
-            [dependencies.this2]
-            path = "../"
-            version = "0.0.1" # hello"
-            package = "ra_this""#
+            rename_packages(m.into(), "this", &v).unwrap(),
+            indoc! {r#"
+                [dependencies.this2]
+                path = "../"
+                version = "0.0.1" # hello"
+                package = "ra_this""#
+            }
         );
     }
 
     #[test]
     fn test_name_dependency_table_renamed_before_version() {
-        let m = r#"
+        let m = indoc! {r#"
             [dependencies.this2]
             path = "../"
             package = "this"
-            version = "0.0.1" # hello"#
-            .to_string();
+            version = "0.0.1" # hello
+        "#};
 
         let mut v = Map::new();
         v.insert("this".to_string(), "ra_this".to_string());
 
         assert_eq!(
-            rename_packages(m, "this", &v).unwrap(),
-            r#"
-            [dependencies.this2]
-            path = "../"
-            package = "ra_this"
-            version = "0.0.1" # hello"#
+            rename_packages(m.into(), "this", &v).unwrap(),
+            indoc! {r#"
+                [dependencies.this2]
+                path = "../"
+                package = "ra_this"
+                version = "0.0.1" # hello"#
+            }
         );
     }
 }

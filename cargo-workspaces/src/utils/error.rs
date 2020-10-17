@@ -1,10 +1,11 @@
 use console::{style, Style, Term};
 use lazy_static::lazy_static;
+use thiserror::Error;
+
 use std::{
     io,
     sync::atomic::{AtomicBool, Ordering},
 };
-use thiserror::Error;
 
 lazy_static! {
     pub static ref TERM_ERR: Term = Term::stderr();

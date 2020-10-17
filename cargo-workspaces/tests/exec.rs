@@ -1,4 +1,5 @@
 mod utils;
+#[cfg(unix)]
 use insta::assert_snapshot;
 
 #[cfg(unix)]
