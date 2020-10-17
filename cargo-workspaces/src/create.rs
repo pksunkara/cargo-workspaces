@@ -70,6 +70,8 @@ impl Create {
             change_versions(fs::read_to_string(&manifest)?, &name, &versions, false)?,
         )?;
 
+        // TODO: If none of the globs in workspace `members` match, add a new entry
+
         info!("success", "ok")?;
         Ok(())
     }

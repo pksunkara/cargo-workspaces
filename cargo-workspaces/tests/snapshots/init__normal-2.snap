@@ -1,0 +1,10 @@
+---
+source: tests/init.rs
+expression: manifest
+---
+[workspace]
+members = [
+    "dep1",
+    "dep2",
+    "top",
+]

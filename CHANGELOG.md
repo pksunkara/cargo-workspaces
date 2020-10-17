@@ -1,6 +1,11 @@
 # Changelog
 
-## 0.2.13
+## 0.2.15
+
+### Enhancements
+* Added init subcommand
+
+## 0.2.14
 
 ### Bug Fixes
 * Allow tag prefix to be actually empty.

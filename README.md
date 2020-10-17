@@ -11,13 +11,14 @@ But this will also work on single crates because by default every individual cra
 
 1. [Installation](#installation)
 2. [Usage](#usage)
-   1. [Create](#create)
-   2. [List](#list)
-   3. [Changed](#changed)
-   4. [Exec](#exec)
-   5. [Version](#version)
+   1. [Init](#init)
+   2. [Create](#create)
+   3. [List](#list)
+   4. [Changed](#changed)
+   5. [Exec](#exec)
+   6. [Version](#version)
       1. [Fixed or Independent](#fixed-or-independent)
-   6. [Publish](#publish)
+   7. [Publish](#publish)
 3. [Changelog](#changelog)
 
 ## Installation
@@ -33,6 +34,22 @@ The installed tool can be called by `cargo workspaces` or `cargo ws`. Both of th
 You can use `cargo ws help` or `cargo ws help <subcmd>` anytime to understand allowed options.
 
 The basic commands available for this tool are given below. Assuming you run them inside a cargo workspace.
+
+### Init
+
+Initializes a new cargo workspace in the given directory. Creates `Cargo.toml` if it does not exist and
+fills the `members` with the all the crates that can be found in that directory.
+
+```
+USAGE:
+    cargo workspaces init [path]
+
+ARGS:
+    <path>    Path to the workspace root [default: .]
+
+FLAGS:
+    -h, --help    Prints help information
+```
 
 ### Create
 
