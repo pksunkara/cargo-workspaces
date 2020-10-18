@@ -542,19 +542,20 @@ mod test {
     //         [dependencies.this2]
     //         path = "../"
     //         version = "0.0.1" # hello"
-    //         package = "this""#
-    //         .to_string();
+    //         package = "this"
+    //     "#};
 
     //     let mut v = Map::new();
     //     v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
     //     assert_eq!(
     //         change_versions(m, "this", &v, false).unwrap(),
-    //         r#"
-    //         [dependencies.this2]
-    //         path = "../"
-    //         version = "0.3.0" # hello"
-    //         package = "this""#
+    //         indoc! {r#"
+    //             [dependencies.this2]
+    //             path = "../"
+    //             version = "0.3.0" # hello"
+    //             package = "this""#
+    //         }
     //     );
     // }
 
