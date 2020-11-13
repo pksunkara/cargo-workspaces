@@ -224,6 +224,7 @@ OPTIONS:
     -m, --message <message>                 Use a custom commit message when creating the version commit
         --pre-id <identifier>               Specify prerelease identifier
         --tag-prefix <prefix>               Customize tag prefix (can be empty) [default: v]
+        --token <token>                     The token to use for publishing
 ```
 
 <!-- omit in TOC -->
