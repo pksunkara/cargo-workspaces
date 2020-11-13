@@ -25,6 +25,10 @@ pub struct Publish {
     /// Allow dirty working directories to be published
     #[clap(long)]
     allow_dirty: bool,
+
+    /// The token to use for publishing
+    #[clap(long)]
+    token: Option<String>,
 }
 
 impl Publish {
@@ -80,6 +84,11 @@ impl Publish {
 
             if self.allow_dirty {
                 args.push("--allow-dirty");
+            }
+
+            if let Some(ref token) = self.token {
+                args.push("--token");
+                args.push(token);
             }
 
             args.push("--manifest-path");
