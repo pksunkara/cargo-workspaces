@@ -1,4 +1,4 @@
-use crate::utils::{debug, info, Error, Result, INTERNAL_ERR, TERM_ERR};
+use crate::utils::{debug, get_debug, info, Error, Result, INTERNAL_ERR, TERM_ERR};
 
 use crates_index::BareIndex;
 use lazy_static::lazy_static;
@@ -64,7 +64,14 @@ pub fn cargo<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String)> {
         args.push("always");
     }
 
-    let mut output_stderr = vec![];
+    if get_debug() {
+        args.push("-v");
+    }
+
+    let args_text = args.iter().map(|x| x.to_string()).collect::<Vec<_>>();
+
+    let mut stderr_lines = vec![];
+
     let mut child = Command::new("cargo")
         .current_dir(root)
         .args(&args)
@@ -72,7 +79,7 @@ pub fn cargo<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String)> {
         .spawn()
         .map_err(|err| Error::Cargo {
             err,
-            args: args.iter().map(|x| x.to_string()).collect(),
+            args: args_text.clone(),
         })?;
 
     {
@@ -82,18 +89,24 @@ pub fn cargo<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String)> {
             let line = line?;
 
             eprintln!("{}", line);
-            output_stderr.push(line);
+            stderr_lines.push(line);
         }
     }
 
     let output = child.wait_with_output().map_err(|err| Error::Cargo {
         err,
-        args: args.iter().map(|x| x.to_string()).collect(),
+        args: args_text,
     })?;
 
+    let output_stdout = String::from_utf8(output.stdout)?;
+    let output_stderr = stderr_lines.join("\n");
+
+    debug!("cargo stderr", output_stderr)?;
+    debug!("cargo stdout", output_stdout)?;
+
     Ok((
-        String::from_utf8(output.stdout)?.trim().to_owned(),
-        output_stderr.join("\n").trim().to_owned(),
+        output_stdout.trim().to_owned(),
+        output_stderr.trim().to_owned(),
     ))
 }
 

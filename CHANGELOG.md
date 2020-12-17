@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.16
+
+### Enhancements
+* Forward verbose to cargo where possible
+
 ## 0.2.15
 
 ### Enhancements
