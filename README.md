@@ -158,6 +158,7 @@ FLAGS:
         --exact                  Specify inter dependency version numbers exactly with `=`
     -h, --help                   Prints help information
         --include-merged-tags    Include tags from merged branches
+        --no-branding            Do not add branding to the commit message
         --no-git-commit          Do not commit version changes
         --no-git-push            Do not push generated commit and tags to git remote
         --no-git-tag             Do not tag generated commit
@@ -202,11 +203,13 @@ ARGS:
 
 FLAGS:
     -a, --all                    Also do versioning for private crates (will not be published)
+        --allow-dirty            Allow dirty working directories to be published
         --amend                  Amend the existing commit, instead of generating a new one
         --exact                  Specify inter dependency version numbers exactly with `=`
         --from-git               Publish crates from the current commit without versioning
     -h, --help                   Prints help information
         --include-merged-tags    Include tags from merged branches
+        --no-branding            Do not add branding to the commit message
         --no-git-commit          Do not commit version changes
         --no-git-push            Do not push generated commit and tags to git remote
         --no-git-tag             Do not tag generated commit
