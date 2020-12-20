@@ -12,7 +12,7 @@ pub struct ChangeOpt {
     #[clap(long)]
     pub include_merged_tags: bool,
 
-    /// Always include targeted crates matched by glob
+    /// Always include targeted crates matched by glob even when there are no changes
     #[clap(long, value_name = "pattern")]
     pub force: Option<String>,
 

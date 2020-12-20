@@ -106,7 +106,7 @@ FLAGS:
     -l, --long                   Show extended information
 
 OPTIONS:
-        --force <pattern>             Always include targeted crates matched by glob
+        --force <pattern>             Always include targeted crates matched by glob even when there are no changes
         --ignore-changes <pattern>    Ignore changes in files matched by glob
         --since <since>               Use this git reference instead of the last tag
 ```
@@ -166,7 +166,7 @@ FLAGS:
 
 OPTIONS:
         --allow-branch <pattern>            Specify which branches to allow from [default: master]
-        --force <pattern>                   Always include targeted crates matched by glob
+        --force <pattern>                   Always include targeted crates matched by glob even when there are no changes
         --git-remote <remote>               Push git changes to the specified remote [default: origin]
         --ignore-changes <pattern>          Ignore changes in files matched by glob
         --individual-tag-prefix <prefix>    Customize prefix for individual tags (should contain `%n`) [default: %n@]
@@ -217,7 +217,7 @@ FLAGS:
 
 OPTIONS:
         --allow-branch <pattern>            Specify which branches to allow from [default: master]
-        --force <pattern>                   Always include targeted crates matched by glob
+        --force <pattern>                   Always include targeted crates matched by glob even when there are no changes
         --git-remote <remote>               Push git changes to the specified remote [default: origin]
         --ignore-changes <pattern>          Ignore changes in files matched by glob
         --individual-tag-prefix <prefix>    Customize prefix for individual tags (should contain `%n`) [default: %n@]
