@@ -93,9 +93,16 @@ impl GitOpt {
 
             ret = Some(branch.clone());
 
+            // Treat `main` as `master`
+            let test_branch = if branch == "main" {
+                "master".into()
+            } else {
+                branch.clone()
+            };
+
             let pattern = Pattern::new(&self.allow_branch)?;
 
-            if !pattern.matches(&branch) {
+            if !pattern.matches(&test_branch) {
                 return Err(Error::BranchNotAllowed {
                     branch,
                     pattern: pattern.as_str().to_string(),
