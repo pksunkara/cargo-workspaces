@@ -94,7 +94,7 @@ impl GitOpt {
             ret = Some(branch.clone());
 
             // Treat `main` as `master`
-            let test_branch = if branch == "main" {
+            let test_branch = if branch == "main" && self.allow_branch == "master" {
                 "master".into()
             } else {
                 branch.clone()
