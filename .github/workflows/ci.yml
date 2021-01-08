@@ -47,6 +47,9 @@ jobs:
             target: x86_64-pc-windows-msvc
           - os: ubuntu-latest
             target: x86_64-apple-darwin
+          # openssl-sys not cross compiling
+          - os: ubuntu-latest
+            target: i686-unknown-linux-gnu
     runs-on: ${{ matrix.os }}
     steps:
       - name: Install rust

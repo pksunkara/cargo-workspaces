@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.17
+
+### Enhancements
+* Treat `main` branch similarily to `master`
+
 ## 0.2.16
 
 ### Enhancements
