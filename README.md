@@ -27,7 +27,7 @@ But this will also work on single crates because by default every individual cra
 cargo install cargo-workspaces
 
 # Or, if you're an Arch user
-yay -S cargo-deny
+yay -S cargo-workspaces
 ```
 
 ## Usage
