@@ -1,8 +1,3 @@
-use crate::utils::{TERM_ERR, TERM_OUT};
-use cargo_metadata::{CargoOpt, MetadataCommand};
-use clap::{AppSettings, Clap};
-use std::process::exit;
-
 mod changed;
 mod create;
 mod exec;
@@ -13,6 +8,10 @@ mod rename;
 mod version;
 
 mod utils;
+
+use cargo_metadata::{CargoOpt, MetadataCommand};
+use clap::{AppSettings, Clap};
+use oclif::finish;
 
 #[derive(Debug, Clap)]
 enum Subcommand {
@@ -66,7 +65,7 @@ fn main() {
         utils::set_debug();
     }
 
-    let err = if let Subcommand::Init(ref init) = opt.subcommand {
+    let result = if let Subcommand::Init(ref init) = opt.subcommand {
         init.run()
     } else {
         let mut cmd = MetadataCommand::new();
@@ -90,18 +89,7 @@ fn main() {
             Subcommand::Rename(x) => x.run(metadata),
             _ => unreachable!(),
         }
-    }
-    .err();
-
-    let code = if let Some(error) = err {
-        error.print_err().unwrap();
-        1
-    } else {
-        0
     };
 
-    TERM_ERR.flush().unwrap();
-    TERM_OUT.flush().unwrap();
-
-    exit(code)
+    finish(result)
 }

@@ -1,6 +1,8 @@
-use crate::utils::{ChangeData, ChangeOpt, ListOpt, Listable, Result, TERM_ERR};
+use crate::utils::{ChangeData, ChangeOpt, ListOpt, Listable, Result};
+
 use cargo_metadata::Metadata;
 use clap::Clap;
+use oclif::term::TERM_OUT;
 
 /// List crates that have changed since the last tagged release
 #[derive(Debug, Clap)]
@@ -24,7 +26,7 @@ impl Changed {
             let change_data = ChangeData::new(&metadata, &self.change)?;
 
             if change_data.count == "0" {
-                return Ok(TERM_ERR
+                return Ok(TERM_OUT
                     .write_line("Current HEAD is already released, skipping change detection")?);
             }
 

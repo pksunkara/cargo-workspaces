@@ -1,7 +1,8 @@
-use crate::utils::{debug, get_debug, info, Error, Result, INTERNAL_ERR, TERM_ERR};
+use crate::utils::{debug, get_debug, info, Error, Result, INTERNAL_ERR};
 
 use crates_index::BareIndex;
 use lazy_static::lazy_static;
+use oclif::{term::TERM_ERR, CliError};
 use regex::{Captures, Regex};
 use semver::{Version, VersionReq};
 

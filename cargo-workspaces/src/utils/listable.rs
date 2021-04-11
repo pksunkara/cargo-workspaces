@@ -1,5 +1,7 @@
-use crate::utils::{Result, TERM_OUT};
+use crate::utils::Result;
+
 use clap::Clap;
+use oclif::term::TERM_OUT;
 use serde::Serialize;
 
 pub trait Listable: Serialize {

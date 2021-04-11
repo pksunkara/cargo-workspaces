@@ -1,15 +1,17 @@
 use crate::utils::{
     cargo, change_versions, info, ChangeData, ChangeOpt, Error, GitOpt, Pkg, Result, INTERNAL_ERR,
-    TERM_ERR,
 };
+
 use cargo_metadata::Metadata;
 use clap::Clap;
-use console::Style;
 use dialoguer::{theme::ColorfulTheme, Confirm, Input, Select};
+use oclif::{
+    console::Style,
+    term::{TERM_ERR, TERM_OUT},
+};
 use semver::{Identifier, Version};
-use std::collections::BTreeMap as Map;
-use std::fs;
-use std::process::exit;
+
+use std::{collections::BTreeMap as Map, fs, process::exit};
 
 #[derive(Debug, Clap)]
 pub enum Bump {
@@ -79,7 +81,7 @@ impl VersionOpt {
         let change_data = ChangeData::new(metadata, &self.change)?;
 
         if self.change.force.is_none() && change_data.count == "0" && !change_data.dirty {
-            TERM_ERR.write_line("Current HEAD is already released, skipping versioning")?;
+            TERM_OUT.write_line("Current HEAD is already released, skipping versioning")?;
             return Ok(Map::new());
         }
 
@@ -88,7 +90,7 @@ impl VersionOpt {
                 .get_changed_pkgs(metadata, &change_data.since, self.all)?;
 
         if changed_p.is_empty() {
-            TERM_ERR.write_line("No changes detected, skipping versioning")?;
+            TERM_OUT.write_line("No changes detected, skipping versioning")?;
             return Ok(Map::new());
         }
 

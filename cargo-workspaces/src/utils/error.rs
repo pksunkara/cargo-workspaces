@@ -1,5 +1,5 @@
-use console::{style, Style, Term};
 use lazy_static::lazy_static;
+use oclif::{term::ERR_YELLOW, CliError};
 use thiserror::Error;
 
 use std::{
@@ -8,11 +8,6 @@ use std::{
 };
 
 lazy_static! {
-    pub static ref TERM_ERR: Term = Term::stderr();
-    pub static ref TERM_OUT: Term = Term::stdout();
-    static ref YELLOW: Style = Style::new().for_stderr().yellow();
-    pub static ref GREEN: Style = Style::new().for_stderr().green();
-    pub static ref MAGENTA: Style = Style::new().for_stderr().magenta();
     static ref DEBUG: AtomicBool = AtomicBool::new(false);
 }
 
@@ -26,10 +21,10 @@ pub fn set_debug() {
 
 macro_rules! _info {
     ($desc:literal, $val:expr) => {
-        $crate::utils::TERM_ERR.write_line(&format!(
+        oclif::term::TERM_ERR.write_line(&format!(
             "{} {} {}",
-            $crate::utils::GREEN.apply_to("info"),
-            $crate::utils::MAGENTA.apply_to($desc),
+            oclif::term::ERR_GREEN.apply_to("info"),
+            oclif::term::ERR_MAGENTA.apply_to($desc),
             $val
         ))
     };
@@ -38,10 +33,10 @@ macro_rules! _info {
 macro_rules! _debug {
     ($desc:literal, $val:expr) => {
         if $crate::utils::get_debug() {
-            $crate::utils::TERM_ERR.write_line(&format!(
+            oclif::term::TERM_ERR.write_line(&format!(
                 "{} {} {}",
-                $crate::utils::GREEN.apply_to("debug"),
-                $crate::utils::MAGENTA.apply_to($desc),
+                oclif::term::ERR_GREEN.apply_to("debug"),
+                oclif::term::ERR_MAGENTA.apply_to($desc),
                 $val
             ))
         } else {
@@ -71,11 +66,11 @@ pub enum Error {
     Create,
     #[error("unable to initialize workspace: {0}")]
     Init(String),
-    #[error("package {0}'s manifest has not parent directory")]
+    #[error("package {0}'s manifest has no parent directory")]
     ManifestHasNoParent(String),
     #[error("unable to update crate index, got {0}")]
     IndexUpdate(crates_index::Error),
-    #[error("")]
+    #[error("publishing has timed out")]
     PublishTimeout,
 
     #[error("unable to run cargo command with args {args:?}, got {err}")]
@@ -119,47 +114,34 @@ pub enum Error {
     FromUtf8(#[from] std::string::FromUtf8Error),
 }
 
-impl Error {
-    pub fn print_err(self) -> io::Result<()> {
-        self.print(&TERM_ERR)
-    }
-
-    fn color(self) -> Self {
+impl CliError for Error {
+    fn color_err(self) -> Self {
         match self {
             Self::PackageNotInWorkspace { id, ws } => Self::PackageNotInWorkspace {
-                id: format!("{}", YELLOW.apply_to(id)),
-                ws: format!("{}", YELLOW.apply_to(ws)),
+                id: format!("{}", ERR_YELLOW.apply_to(id)),
+                ws: format!("{}", ERR_YELLOW.apply_to(ws)),
             },
             Self::PackageNotFound { id } => Self::PackageNotFound {
-                id: format!("{}", YELLOW.apply_to(id)),
+                id: format!("{}", ERR_YELLOW.apply_to(id)),
             },
-            Self::Verify(pkg) => Self::Verify(format!("{}", YELLOW.apply_to(pkg))),
-            Self::Publish(pkg) => Self::Publish(format!("{}", YELLOW.apply_to(pkg))),
+            Self::Verify(pkg) => Self::Verify(format!("{}", ERR_YELLOW.apply_to(pkg))),
+            Self::Publish(pkg) => Self::Publish(format!("{}", ERR_YELLOW.apply_to(pkg))),
             Self::NoRemote { remote, branch } => Self::NoRemote {
-                remote: format!("{}", YELLOW.apply_to(remote)),
-                branch: format!("{}", YELLOW.apply_to(branch)),
+                remote: format!("{}", ERR_YELLOW.apply_to(remote)),
+                branch: format!("{}", ERR_YELLOW.apply_to(branch)),
             },
             Self::BehindRemote { upstream, branch } => Self::BehindRemote {
-                upstream: format!("{}", YELLOW.apply_to(upstream)),
-                branch: format!("{}", YELLOW.apply_to(branch)),
+                upstream: format!("{}", ERR_YELLOW.apply_to(upstream)),
+                branch: format!("{}", ERR_YELLOW.apply_to(branch)),
             },
             Self::BranchNotAllowed { branch, pattern } => Self::BranchNotAllowed {
-                branch: format!("{}", YELLOW.apply_to(branch)),
-                pattern: format!("{}", YELLOW.apply_to(pattern)),
+                branch: format!("{}", ERR_YELLOW.apply_to(branch)),
+                pattern: format!("{}", ERR_YELLOW.apply_to(pattern)),
             },
             Self::NotTagged(tag, out, err) => {
-                Self::NotTagged(format!("{}", YELLOW.apply_to(tag)), out, err)
+                Self::NotTagged(format!("{}", ERR_YELLOW.apply_to(tag)), out, err)
             }
             _ => self,
         }
-    }
-
-    pub fn print(self, term: &Term) -> io::Result<()> {
-        term.write_str(&format!("{}: ", style("error").for_stderr().red().bold()))?;
-
-        let msg = format!("{}", self.color());
-
-        term.write_line(&msg)?;
-        term.flush()
     }
 }

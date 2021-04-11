@@ -1,8 +1,11 @@
-use crate::utils::{cargo, change_versions, info, Error, Result, INTERNAL_ERR, TERM_ERR};
+use crate::utils::{cargo, change_versions, info, Error, Result, INTERNAL_ERR};
+
 use cargo_metadata::Metadata;
 use clap::Clap;
 use dialoguer::{theme::ColorfulTheme, Input, Select};
+use oclif::term::TERM_ERR;
 use semver::Version;
+
 use std::{collections::BTreeMap as Map, fs};
 
 /// Create a new workspace crate

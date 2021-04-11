@@ -1,9 +1,11 @@
-use crate::utils::{Error, ListOpt, Listable, Result, INTERNAL_ERR, TERM_OUT};
+use crate::utils::{Error, ListOpt, Listable, Result, INTERNAL_ERR};
+
 use cargo_metadata::{Metadata, PackageId};
-use console::style;
+use oclif::{console::style, term::TERM_OUT, CliError};
 use semver::Version;
 use serde::Serialize;
 use serde_json::Value;
+
 use std::{
     cmp::max,
     path::{Path, PathBuf},
