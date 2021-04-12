@@ -223,6 +223,7 @@ OPTIONS:
         --individual-tag-prefix <prefix>    Customize prefix for individual tags (should contain `%n`) [default: %n@]
     -m, --message <message>                 Use a custom commit message when creating the version commit
         --pre-id <identifier>               Specify prerelease identifier
+        --registry <registry>               Registry being published to
         --tag-prefix <prefix>               Customize tag prefix (can be empty) [default: v]
         --token <token>                     The token to use for publishing
 ```

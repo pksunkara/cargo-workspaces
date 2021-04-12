@@ -29,6 +29,10 @@ pub struct Publish {
     /// The token to use for publishing
     #[clap(long)]
     token: Option<String>,
+
+    /// Registry being published to
+    #[clap(long)]
+    registry: Option<String>,
 }
 
 impl Publish {
@@ -89,6 +93,11 @@ impl Publish {
             if let Some(ref token) = self.token {
                 args.push("--token");
                 args.push(token);
+            }
+
+            if let Some(ref registry) = self.registry {
+                args.push("--registry");
+                args.push(registry);
             }
 
             args.push("--manifest-path");
