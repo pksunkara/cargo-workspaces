@@ -139,7 +139,7 @@ pub fn get_pkgs(metadata: &Metadata, all: bool) -> Result<Vec<Pkg>> {
             Error::PackageNotFound {
                 id: id.repr.clone(),
             }
-            .print_err()?;
+            .print()?;
         }
     }
 

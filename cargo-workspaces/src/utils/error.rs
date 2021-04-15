@@ -115,7 +115,7 @@ pub enum Error {
 }
 
 impl CliError for Error {
-    fn color_err(self) -> Self {
+    fn color(self) -> Self {
         match self {
             Self::PackageNotInWorkspace { id, ws } => Self::PackageNotInWorkspace {
                 id: format!("{}", ERR_YELLOW.apply_to(id)),

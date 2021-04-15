@@ -336,14 +336,14 @@ pub fn check_index(name: &str, version: &str) -> Result<()> {
         let crate_data = match index.open_or_clone() {
             Ok(mut bare_index) => {
                 if let Err(e) = bare_index.retrieve() {
-                    Error::IndexUpdate(e).print_err()?;
+                    Error::IndexUpdate(e).print()?;
                     None
                 } else {
                     bare_index.crate_(name)
                 }
             }
             Err(e) => {
-                Error::IndexUpdate(e).print_err()?;
+                Error::IndexUpdate(e).print()?;
                 None
             }
         };
