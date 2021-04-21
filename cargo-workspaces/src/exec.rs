@@ -43,7 +43,7 @@ impl Exec {
             }
         }
 
-        info!("success", "ok")?;
+        info!("success", "ok");
         Ok(())
     }
 }

@@ -108,10 +108,10 @@ impl Publish {
                 check_index(&name, version)?;
             }
 
-            info!("published", name)?;
+            info!("published", name);
         }
 
-        info!("success", "ok")?;
+        info!("success", "ok");
         Ok(())
     }
 }

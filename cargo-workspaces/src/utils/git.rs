@@ -6,7 +6,7 @@ use std::collections::BTreeMap as Map;
 use std::{path::PathBuf, process::Command};
 
 pub fn git<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String), Error> {
-    debug!("git", args.clone().join(" "))?;
+    debug!("git", args.clone().join(" "));
 
     let output = Command::new("git")
         .current_dir(root)
@@ -160,7 +160,7 @@ impl GitOpt {
         branch: Option<String>,
     ) -> Result<(), Error> {
         if !self.no_git_commit {
-            info!("version", "committing changes")?;
+            info!("version", "committing changes");
 
             let branch = branch.expect(INTERNAL_ERR);
             let added = git(root, &["add", "."])?;
@@ -202,7 +202,7 @@ impl GitOpt {
             }
 
             if !self.no_git_tag {
-                info!("version", "tagging")?;
+                info!("version", "tagging");
 
                 if let Some(version) = new_version {
                     let tag = format!("{}{}", &self.tag_prefix, version);
@@ -218,7 +218,7 @@ impl GitOpt {
             }
 
             if !self.no_git_push {
-                info!("git", "pushing")?;
+                info!("git", "pushing");
 
                 let pushed = git(root, &["push", "--follow-tags", &self.git_remote, &branch])?;
 

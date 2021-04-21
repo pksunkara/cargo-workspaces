@@ -80,7 +80,7 @@ impl ChangeOpt {
         let pkgs = get_pkgs(&metadata, private)?;
 
         let pkgs = if let Some(since) = since {
-            info!("looking for changes since", since)?;
+            info!("looking for changes since", since);
 
             let (changed_files, _) = git(
                 &metadata.workspace_root,

@@ -56,7 +56,7 @@ lazy_static! {
 }
 
 pub fn cargo<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String)> {
-    debug!("cargo", args.clone().join(" "))?;
+    debug!("cargo", args.clone().join(" "));
 
     let mut args = args.to_vec();
 
@@ -102,8 +102,8 @@ pub fn cargo<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String)> {
     let output_stdout = String::from_utf8(output.stdout)?;
     let output_stderr = stderr_lines.join("\n");
 
-    debug!("cargo stderr", output_stderr)?;
-    debug!("cargo stdout", output_stdout)?;
+    debug!("cargo stderr", output_stderr);
+    debug!("cargo stdout", output_stdout);
 
     Ok((
         output_stdout.trim().to_owned(),
@@ -361,7 +361,7 @@ pub fn check_index(name: &str, version: &str) -> Result<()> {
         }
 
         if !logged {
-            info!("waiting", "...")?;
+            info!("waiting", "...");
             logged = true;
         }
 

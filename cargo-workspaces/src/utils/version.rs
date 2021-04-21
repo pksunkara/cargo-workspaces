@@ -189,7 +189,7 @@ impl VersionOpt {
                 .expect(INTERNAL_ERR);
 
             if new_version.is_none() {
-                info!("current common version", cur_version)?;
+                info!("current common version", cur_version);
 
                 *new_version = Some(self.ask_version(cur_version, None)?);
             }

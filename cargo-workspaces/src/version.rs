@@ -13,7 +13,7 @@ impl Version {
     pub fn run(self, metadata: Metadata) -> Result {
         self.version.do_versioning(&metadata)?;
 
-        info!("success", "ok")?;
+        info!("success", "ok");
         Ok(())
     }
 }

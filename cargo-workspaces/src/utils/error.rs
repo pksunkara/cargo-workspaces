@@ -20,29 +20,29 @@ pub fn set_debug() {
 }
 
 macro_rules! _info {
-    ($desc:literal, $val:expr) => {
+    ($desc:literal, $val:expr) => {{
         oclif::term::TERM_ERR.write_line(&format!(
             "{} {} {}",
             oclif::term::ERR_GREEN.apply_to("info"),
             oclif::term::ERR_MAGENTA.apply_to($desc),
             $val
-        ))
-    };
+        ))?;
+        oclif::term::TERM_ERR.flush()?;
+    }};
 }
 
 macro_rules! _debug {
-    ($desc:literal, $val:expr) => {
+    ($desc:literal, $val:expr) => {{
         if $crate::utils::get_debug() {
             oclif::term::TERM_ERR.write_line(&format!(
                 "{} {} {}",
                 oclif::term::ERR_GREEN.apply_to("debug"),
                 oclif::term::ERR_MAGENTA.apply_to($desc),
                 $val
-            ))
-        } else {
-            Ok(())
+            ))?;
+            oclif::term::TERM_ERR.flush()?;
         }
-    };
+    }};
 }
 
 pub(crate) use _debug as debug;

@@ -68,7 +68,7 @@ impl Init {
 
         write(cargo_toml, content)?;
 
-        info!("initialized", self.path.display())?;
+        info!("initialized", self.path.display());
         Ok(())
     }
 }

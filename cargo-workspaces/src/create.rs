@@ -75,7 +75,7 @@ impl Create {
 
         // TODO: If none of the globs in workspace `members` match, add a new entry
 
-        info!("success", "ok")?;
+        info!("success", "ok");
         Ok(())
     }
 }
