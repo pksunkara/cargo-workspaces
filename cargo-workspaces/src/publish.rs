@@ -1,6 +1,10 @@
-use crate::utils::{cargo, check_index, dag, info, Error, Result, VersionOpt, INTERNAL_ERR};
+use crate::utils::{
+    cargo, cargo_config_get, check_index, dag, info, is_published, Error, Result, VersionOpt,
+    INTERNAL_ERR,
+};
 use cargo_metadata::Metadata;
 use clap::{ArgSettings, Parser};
+use crates_index::Index;
 use indexmap::IndexSet as Set;
 
 /// Publish crates in the project
@@ -64,7 +68,7 @@ impl Publish {
             .into_iter()
             .filter(|x| {
                 if let Some((pkg, _)) = pkgs.iter().find(|(p, _)| p.manifest_path == *x) {
-                    return !pkg.publish.is_some()
+                    return pkg.publish.is_none()
                         || !pkg.publish.as_ref().expect(INTERNAL_ERR).is_empty();
                 }
 
@@ -77,6 +81,24 @@ impl Publish {
             let name = pkg.name.clone();
             let path = p.to_string_lossy();
             let mut args = vec!["publish"];
+
+            let name_ver = format!("{} v{}", name, version);
+
+            let mut index =
+                if let Some(publish) = pkg.publish.as_deref().and_then(|x| x.get(0)).as_deref() {
+                    let registry_url = cargo_config_get(
+                        &metadata.workspace_root,
+                        &format!("registries.{}.index", publish),
+                    )?;
+                    Index::from_url(&format!("registry+{}", registry_url))?
+                } else {
+                    Index::new_cargo_default()?
+                };
+
+            if is_published(&mut index, &name, version)? {
+                info!("already published", name_ver);
+                continue;
+            }
 
             if self.no_verify {
                 args.push("--no-verify");
@@ -96,19 +118,13 @@ impl Publish {
 
             let output = cargo(&metadata.workspace_root, &args)?;
 
-            if !output.1.contains("Uploading")
-                || (output.1.contains("error:")
-                    && !(self.skip_published && output.1.contains("is already uploaded")))
-            {
+            if !output.1.contains("Uploading") {
                 return Err(Error::Publish(name));
             }
 
-            // TODO: How to update index for non crates.io
-            if pkg.publish.is_none() {
-                check_index(&name, version)?;
-            }
+            check_index(&mut index, &name, version)?;
 
-            info!("published", name);
+            info!("published", name_ver);
         }
 
         info!("success", "ok");
