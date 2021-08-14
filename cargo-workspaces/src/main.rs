@@ -29,7 +29,7 @@ enum Subcommand {
 #[derive(Debug, Clap)]
 #[clap(
     version,
-    global_setting(AppSettings::VersionlessSubcommands),
+    global_setting(AppSettings::DisableVersionForSubcommands),
     replace("la", &["list", "-a"]),
     replace("ll", &["list", "-l"])
 )]

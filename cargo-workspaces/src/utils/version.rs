@@ -3,7 +3,7 @@ use crate::utils::{
 };
 
 use cargo_metadata::Metadata;
-use clap::Clap;
+use clap::{ArgEnum, ArgSettings, Clap};
 use dialoguer::{theme::ColorfulTheme, Confirm, Input, Select};
 use oclif::{
     console::Style,
@@ -13,7 +13,7 @@ use semver::{Identifier, Version};
 
 use std::{collections::BTreeMap as Map, fs, process::exit};
 
-#[derive(Debug, Clap)]
+#[derive(Debug, ArgEnum)]
 pub enum Bump {
     Major,
     Minor,
@@ -52,7 +52,11 @@ pub struct VersionOpt {
     pub custom: Option<Version>,
 
     /// Specify prerelease identifier
-    #[clap(long, value_name = "identifier")]
+    #[clap(
+        long,
+        value_name = "identifier",
+        setting(ArgSettings::ForbidEmptyValues)
+    )]
     pub pre_id: Option<String>,
 
     #[clap(flatten)]

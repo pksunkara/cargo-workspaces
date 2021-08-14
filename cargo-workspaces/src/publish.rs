@@ -1,6 +1,6 @@
 use crate::utils::{cargo, check_index, dag, info, Error, Result, VersionOpt, INTERNAL_ERR};
 use cargo_metadata::Metadata;
-use clap::Clap;
+use clap::{ArgSettings, Clap};
 use indexmap::IndexSet as Set;
 
 /// Publish crates in the project
@@ -27,7 +27,7 @@ pub struct Publish {
     allow_dirty: bool,
 
     /// The token to use for publishing
-    #[clap(long)]
+    #[clap(long, setting(ArgSettings::ForbidEmptyValues))]
     token: Option<String>,
 }
 

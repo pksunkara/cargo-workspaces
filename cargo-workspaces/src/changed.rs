@@ -1,7 +1,7 @@
 use crate::utils::{ChangeData, ChangeOpt, ListOpt, Listable, Result};
 
 use cargo_metadata::Metadata;
-use clap::Clap;
+use clap::{ArgSettings, Clap};
 use oclif::term::TERM_OUT;
 
 /// List crates that have changed since the last tagged release
@@ -14,7 +14,11 @@ pub struct Changed {
     change: ChangeOpt,
 
     /// Use this git reference instead of the last tag
-    #[clap(long, conflicts_with = "include-merged-tags")]
+    #[clap(
+        long,
+        conflicts_with = "include-merged-tags",
+        setting(ArgSettings::ForbidEmptyValues)
+    )]
     since: Option<String>,
 }
 

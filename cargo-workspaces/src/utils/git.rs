@@ -1,5 +1,5 @@
 use crate::utils::{debug, info, validate_value_containing_name, Error, INTERNAL_ERR};
-use clap::Clap;
+use clap::{ArgSettings, Clap};
 use glob::Pattern;
 use semver::Version;
 use std::collections::BTreeMap as Map;
@@ -34,7 +34,12 @@ pub struct GitOpt {
     pub no_git_commit: bool,
 
     /// Specify which branches to allow from
-    #[clap(long, default_value = "master", value_name = "pattern")]
+    #[clap(
+        long,
+        default_value = "master",
+        value_name = "pattern",
+        setting(ArgSettings::ForbidEmptyValues)
+    )]
     pub allow_branch: String,
 
     /// Amend the existing commit, instead of generating a new one
@@ -42,7 +47,12 @@ pub struct GitOpt {
     pub amend: bool,
 
     /// Use a custom commit message when creating the version commit
-    #[clap(short, long, conflicts_with_all = &["amend"])]
+    #[clap(
+        short,
+        long,
+        conflicts_with_all = &["amend"],
+        setting(ArgSettings::ForbidEmptyValues)
+    )]
     pub message: Option<String>,
 
     /// Do not tag generated commit
@@ -54,11 +64,17 @@ pub struct GitOpt {
     pub no_individual_tags: bool,
 
     /// Customize tag prefix (can be empty)
-    #[clap(long, default_value = "v", value_name = "prefix", settings = &[clap::ArgSettings::AllowEmptyValues])]
+    #[clap(long, default_value = "v", value_name = "prefix")]
     pub tag_prefix: String,
 
     /// Customize prefix for individual tags (should contain `%n`)
-    #[clap(long, default_value = "%n@", value_name = "prefix", validator = validate_value_containing_name)]
+    #[clap(
+        long,
+        default_value = "%n@",
+        value_name = "prefix",
+        validator = validate_value_containing_name,
+        setting(ArgSettings::ForbidEmptyValues)
+    )]
     pub individual_tag_prefix: String,
 
     /// Do not push generated commit and tags to git remote
@@ -66,7 +82,12 @@ pub struct GitOpt {
     pub no_git_push: bool,
 
     /// Push git changes to the specified remote
-    #[clap(long, default_value = "origin", value_name = "remote")]
+    #[clap(
+        long,
+        default_value = "origin",
+        value_name = "remote",
+        setting(ArgSettings::ForbidEmptyValues)
+    )]
     pub git_remote: String,
 }
 
