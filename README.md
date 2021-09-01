@@ -161,6 +161,7 @@ FLAGS:
         --no-git-commit          Do not commit version changes
         --no-git-push            Do not push generated commit and tags to git remote
         --no-git-tag             Do not tag generated commit
+        --no-global-tag          Do not create a global tag for a workspace
         --no-individual-tags     Do not tag individual versions for crates
     -y, --yes                    Skip confirmation prompt
 
@@ -173,7 +174,6 @@ OPTIONS:
     -m, --message <message>                 Use a custom commit message when creating the version commit
         --pre-id <identifier>               Specify prerelease identifier
         --tag-prefix <prefix>               Customize tag prefix (can be empty) [default: v]
-        --no-global-tag                     Do not create a global tag for a workspace
 ```
 
 #### Fixed or Independent
@@ -211,6 +211,7 @@ FLAGS:
         --no-git-commit          Do not commit version changes
         --no-git-push            Do not push generated commit and tags to git remote
         --no-git-tag             Do not tag generated commit
+        --no-global-tag          Do not create a global tag for a workspace
         --no-individual-tags     Do not tag individual versions for crates
         --no-verify              Skip crate verification (not recommended)
         --skip-published         Skip already published crate versions
