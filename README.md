@@ -173,6 +173,7 @@ OPTIONS:
     -m, --message <message>                 Use a custom commit message when creating the version commit
         --pre-id <identifier>               Specify prerelease identifier
         --tag-prefix <prefix>               Customize tag prefix (can be empty) [default: v]
+        --no-global-tag                     Do not create a global tag for a workspace
 ```
 
 #### Fixed or Independent
