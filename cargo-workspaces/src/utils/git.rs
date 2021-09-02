@@ -29,7 +29,7 @@ pub struct GitOpt {
     #[clap(long, conflicts_with_all = &[
         "allow-branch", "amend", "message", "no-git-tag",
         "tag-prefix", "individual-tag-prefix", "no-individual-tags",
-        "no-git-push", "git-remote"
+        "no-git-push", "git-remote", "no-global-tag"
     ])]
     pub no_git_commit: bool,
 
@@ -62,6 +62,10 @@ pub struct GitOpt {
     /// Do not tag individual versions for crates
     #[clap(long, conflicts_with_all = &["individual-tag-prefix"])]
     pub no_individual_tags: bool,
+
+    /// Do not create a global tag for a workspace
+    #[clap(long)]
+    pub no_global_tag: bool,
 
     /// Customize tag prefix (can be empty)
     #[clap(long, default_value = "v", value_name = "prefix")]
@@ -225,9 +229,11 @@ impl GitOpt {
             if !self.no_git_tag {
                 info!("version", "tagging");
 
-                if let Some(version) = new_version {
-                    let tag = format!("{}{}", &self.tag_prefix, version);
-                    self.tag(root, &tag, &tag)?;
+                if !self.no_global_tag {
+                    if let Some(version) = new_version {
+                        let tag = format!("{}{}", &self.tag_prefix, version);
+                        self.tag(root, &tag, &tag)?;
+                    }
                 }
 
                 if !self.no_individual_tags {
