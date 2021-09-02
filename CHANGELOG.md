@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.23
+
+* Added `--no-global-tag` flag
+
 ## 0.2.17
 
 ### Enhancements
