@@ -1,7 +1,13 @@
 # Changelog
 
+## 0.2.24
+
+### Bug fixes
+* Don't add untracked files when publishing/versioning
+
 ## 0.2.23
 
+### Enhancements
 * Added `--no-global-tag` flag
 
 ## 0.2.17
