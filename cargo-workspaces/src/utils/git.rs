@@ -188,7 +188,7 @@ impl GitOpt {
             info!("version", "committing changes");
 
             let branch = branch.expect(INTERNAL_ERR);
-            let added = git(root, &["add", "."])?;
+            let added = git(root, &["add", "-u"])?;
 
             if !added.0.is_empty() || !added.1.is_empty() {
                 return Err(Error::NotAdded(added.0, added.1));
