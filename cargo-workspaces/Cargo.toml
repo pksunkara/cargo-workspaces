@@ -1,6 +1,6 @@
 [package]
 name = "cargo-workspaces"
-version = "0.2.23"
+version = "0.2.24"
 authors = ["Pavan Kumar Sunkara <pavan.sss1991@gmail.com>"]
 edition = "2018"
 description = "Cargo workspace manager"
