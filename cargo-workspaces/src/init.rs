@@ -1,14 +1,14 @@
 use crate::utils::{info, Error, Result};
 
 use cargo_metadata::MetadataCommand;
-use clap::Clap;
+use clap::Parser;
 use dunce::canonicalize;
 use glob::glob;
 
 use std::{collections::HashSet, fs::write, path::PathBuf};
 
 /// Initializes a new cargo workspace
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Init {
     /// Path to the workspace root
     #[clap(parse(from_os_str), default_value = ".")]

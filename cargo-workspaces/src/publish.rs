@@ -1,10 +1,10 @@
 use crate::utils::{cargo, check_index, dag, info, Error, Result, VersionOpt, INTERNAL_ERR};
 use cargo_metadata::Metadata;
-use clap::{ArgSettings, Clap};
+use clap::{ArgSettings, Parser};
 use indexmap::IndexSet as Set;
 
 /// Publish crates in the project
-#[derive(Clap, Debug)]
+#[derive(Debug, Parser)]
 pub struct Publish {
     #[clap(flatten)]
     version: VersionOpt,

@@ -10,10 +10,10 @@ mod version;
 mod utils;
 
 use cargo_metadata::{CargoOpt, MetadataCommand};
-use clap::{AppSettings, Clap};
+use clap::Parser;
 use oclif::finish;
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 enum Subcommand {
     // TODO: add
     List(list::List),
@@ -26,10 +26,9 @@ enum Subcommand {
     Init(init::Init),
 }
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 #[clap(
     version,
-    global_setting(AppSettings::DisableVersionForSubcommands),
     replace("la", &["list", "-a"]),
     replace("ll", &["list", "-l"])
 )]
@@ -46,13 +45,8 @@ struct Opt {
     subcommand: Subcommand,
 }
 
-#[derive(Debug, Clap)]
-#[clap(
-    name = "cargo-workspaces",
-    bin_name = "cargo",
-    version,
-    global_setting(AppSettings::ColoredHelp)
-)]
+#[derive(Debug, Parser)]
+#[clap(name = "cargo-workspaces", bin_name = "cargo", version)]
 enum Cargo {
     #[clap(alias = "ws")]
     Workspaces(Opt),

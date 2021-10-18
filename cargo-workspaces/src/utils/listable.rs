@@ -1,6 +1,6 @@
 use crate::utils::Result;
 
-use clap::Clap;
+use clap::Parser;
 use oclif::term::TERM_OUT;
 use serde::Serialize;
 
@@ -13,7 +13,7 @@ pub trait Listable: Serialize {
     fn list(&self, list: ListOpt) -> Result;
 }
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct ListOpt {
     /// Show extended information
     #[clap(short, long)]

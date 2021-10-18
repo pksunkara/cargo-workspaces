@@ -1,11 +1,11 @@
 use crate::utils::{get_pkgs, git, info, Error, Pkg, INTERNAL_ERR};
 use cargo_metadata::Metadata;
-use clap::Clap;
+use clap::Parser;
 use glob::{Pattern, PatternError};
 use regex::Regex;
 use std::path::Path;
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct ChangeOpt {
     // TODO: include_dirty
     /// Include tags from merged branches

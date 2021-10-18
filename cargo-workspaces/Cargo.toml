@@ -21,7 +21,7 @@ test = false
 lto = "thin"
 
 [dependencies]
-clap = { version = "=3.0.0-beta.4", features = ["wrap_help"] }
+clap = { version = "=3.0.0-beta.5", features = ["wrap_help", "unstable-replace"] }
 oclif = "0.3.0"
 cargo_metadata = "0.9"
 semver = "0.9"

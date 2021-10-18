@@ -1,5 +1,5 @@
 use crate::utils::{debug, info, validate_value_containing_name, Error, INTERNAL_ERR};
-use clap::{ArgSettings, Clap};
+use clap::{ArgSettings, Parser};
 use glob::Pattern;
 use semver::Version;
 use std::collections::BTreeMap as Map;
@@ -23,7 +23,7 @@ pub fn git<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String), Err
     ))
 }
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct GitOpt {
     /// Do not commit version changes
     #[clap(long, conflicts_with_all = &[

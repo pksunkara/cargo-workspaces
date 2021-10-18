@@ -3,7 +3,7 @@ use crate::utils::{
 };
 
 use cargo_metadata::Metadata;
-use clap::{ArgEnum, ArgSettings, Clap};
+use clap::{ArgEnum, ArgSettings, Parser};
 use dialoguer::{theme::ColorfulTheme, Confirm, Input, Select};
 use oclif::{
     console::Style,
@@ -13,7 +13,7 @@ use semver::{Identifier, Version};
 
 use std::{collections::BTreeMap as Map, fs, process::exit};
 
-#[derive(Debug, ArgEnum)]
+#[derive(Debug, Clone, ArgEnum)]
 pub enum Bump {
     Major,
     Minor,
@@ -40,7 +40,7 @@ impl Bump {
     }
 }
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct VersionOpt {
     /// Increment all versions by the given explicit
     /// semver keyword while skipping the prompts for them

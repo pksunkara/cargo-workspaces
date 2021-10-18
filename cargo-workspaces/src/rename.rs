@@ -1,11 +1,11 @@
 use crate::utils::{get_pkgs, rename_packages, validate_value_containing_name, Error};
 use cargo_metadata::Metadata;
-use clap::{ArgSettings, Clap};
+use clap::{ArgSettings, Parser};
 use glob::{Pattern, PatternError};
 use std::{collections::BTreeMap as Map, fs};
 
 /// Rename crates in the project
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Rename {
     /// Rename private creates too
     #[clap(short, long)]

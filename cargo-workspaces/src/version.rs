@@ -1,9 +1,9 @@
 use crate::utils::{info, Result, VersionOpt};
 use cargo_metadata::Metadata;
-use clap::Clap;
+use clap::Parser;
 
 /// Bump version of crates
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Version {
     #[clap(flatten)]
     version: VersionOpt,

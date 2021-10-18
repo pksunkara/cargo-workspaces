@@ -1,7 +1,7 @@
 use crate::utils::{cargo, change_versions, info, Error, Result, INTERNAL_ERR};
 
 use cargo_metadata::Metadata;
-use clap::Clap;
+use clap::Parser;
 use dialoguer::{theme::ColorfulTheme, Input, Select};
 use oclif::term::TERM_ERR;
 use semver::Version;
@@ -9,7 +9,7 @@ use semver::Version;
 use std::{collections::BTreeMap as Map, fs};
 
 /// Create a new workspace crate
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Create {
     /// Path for the crate relative to the workspace manifest
     path: String,

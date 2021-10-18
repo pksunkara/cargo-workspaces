@@ -1,11 +1,11 @@
 use crate::utils::{ChangeData, ChangeOpt, ListOpt, Listable, Result};
 
 use cargo_metadata::Metadata;
-use clap::{ArgSettings, Clap};
+use clap::{ArgSettings, Parser};
 use oclif::term::TERM_OUT;
 
 /// List crates that have changed since the last tagged release
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Changed {
     #[clap(flatten)]
     list: ListOpt,
