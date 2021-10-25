@@ -81,6 +81,7 @@ pub fn cargo<'a>(
         .current_dir(root)
         .args(&args)
         .envs(env.iter().copied())
+        .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
         .map_err(|err| Error::Cargo {
@@ -149,7 +150,7 @@ pub fn cargo_config_get(root: &Path, name: &str) -> Result<String> {
     let args = vec!["-Z", "unstable-options", "config", "get", name];
     let env = &[("RUSTC_BOOTSTRAP", "1")];
 
-    let (output_stdout, _) = cargo(root, &args, env)?;
+    let (stdout, _) = cargo(root, &args, env)?;
 
     // `cargo config get` returns TOML output, like so:
     //
@@ -161,15 +162,13 @@ pub fn cargo_config_get(root: &Path, name: &str) -> Result<String> {
     // we just do some text wrangling instead:
 
     // tokens is ["registries.foobar.index", "\"some-url\""]
-    let tokens = output_stdout
+    let tokens = stdout
         .split(" = ")
         .map(|x| x.to_string())
         .collect::<Vec<_>>();
 
     // value is "\"some-url\""
-    let value = tokens
-        .get(1)
-        .ok_or(Error::BadConfigGetOutput(output_stdout))?;
+    let value = tokens.get(1).ok_or(Error::BadConfigGetOutput(stdout))?;
 
     // we return "some-url"
     Ok(value
