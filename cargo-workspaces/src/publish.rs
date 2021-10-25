@@ -116,9 +116,9 @@ impl Publish {
             args.push("--manifest-path");
             args.push(&path);
 
-            let output = cargo(&metadata.workspace_root, &args, &[])?;
+            let (_, stderr) = cargo(&metadata.workspace_root, &args, &[])?;
 
-            if !output.1.contains("Uploading") {
+            if !stderr.contains("Uploading") || stderr.contains("error:") {
                 return Err(Error::Publish(name));
             }
 
