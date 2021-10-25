@@ -33,8 +33,8 @@ glob = "0.3.0"
 dialoguer = "0.8.0"
 lazy_static = "1.4.0"
 indexmap = "1.6.0"
-# TODO: revert to upstream when https://github.com/frewsxcv/rust-crates-index/pull/69 lands
-crates-index = { git = "https://github.com/bearcove/rust-crates-index", rev = "8e3c29369d6adec961a1e9b421bc8699a48a04de" }
+# TODO: bump to 0.18.1 when it comes out
+crates-index = { git = "https://github.com/frewsxcv/rust-crates-index", rev = "1448bc058932c0eaf0870243d8b7b5f7768ab20e" }
 dunce = "1.0.1"
 
 [dev-dependencies]
