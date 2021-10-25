@@ -1,4 +1,4 @@
-use cargo_metadata::Package;
+use cargo_metadata::{DependencyKind, Package};
 use indexmap::IndexSet as Set;
 use std::{collections::BTreeMap as Map, path::PathBuf};
 
@@ -21,7 +21,12 @@ fn dag_insert(pkgs: &[(Package, String)], pkg: &Package, visited: &mut Set<PathB
 
     for d in &pkg.dependencies {
         if let Some((dep, _)) = pkgs.iter().find(|(p, _)| d.name == p.name) {
-            dag_insert(pkgs, dep, visited);
+            match d.kind {
+                DependencyKind::Normal | DependencyKind::Build => {
+                    dag_insert(pkgs, dep, visited);
+                }
+                _ => {}
+            }
         }
     }
 
