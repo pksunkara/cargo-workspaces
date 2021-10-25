@@ -57,7 +57,7 @@ impl Create {
 
         args.push(strpath.as_str());
 
-        let created = cargo(&metadata.workspace_root, &args)?;
+        let created = cargo(&metadata.workspace_root, &args, &[])?;
 
         if !created.1.contains("Created") {
             return Err(Error::Create);

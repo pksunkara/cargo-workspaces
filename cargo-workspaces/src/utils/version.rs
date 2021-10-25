@@ -151,7 +151,7 @@ impl VersionOpt {
         }
 
         for (pkg, _) in &new_versions {
-            let output = cargo(&metadata.workspace_root, &["update", "-p", pkg])?;
+            let output = cargo(&metadata.workspace_root, &["update", "-p", pkg], &[])?;
 
             if output.1.contains("error:") {
                 return Err(Error::Update);

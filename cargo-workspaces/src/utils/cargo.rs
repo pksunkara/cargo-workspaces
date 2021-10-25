@@ -55,7 +55,11 @@ lazy_static! {
             .expect(INTERNAL_ERR);
 }
 
-pub fn cargo<'a>(root: &Path, args: &[&'a str]) -> Result<(String, String)> {
+pub fn cargo<'a>(
+    root: &Path,
+    args: &[&'a str],
+    env: &[(&'a str, &'a str)],
+) -> Result<(String, String)> {
     debug!("cargo", args.join(" "));
 
     let mut args = args.to_vec();
@@ -76,6 +80,7 @@ pub fn cargo<'a>(root: &Path, args: &[&'a str]) -> Result<(String, String)> {
     let mut child = Command::new("cargo")
         .current_dir(root)
         .args(&args)
+        .envs(env.iter().copied())
         .stderr(Stdio::piped())
         .spawn()
         .map_err(|err| Error::Cargo {
@@ -126,54 +131,25 @@ pub fn cargo_config_get(root: &Path, name: &str) -> Result<String> {
     //
     // 1. Set the `RUSTC_BOOTSTRAP` environment variable to `1`
     // 2. Pass `-Z unstable-options` to cargo
+    //
+    // This works because stable rustc versions contain exactly the same code as
+    // nightly versions, but all the nightly features are gated. This allows
+    // stable rustc versions to recognize nightly features and tell you: "no, you
+    // need a nightly for this". But rustc should be able to compile rustc, and
+    // the rustc codebase uses nightly features, so `RUSTC_BOOTSTRAP` removes that
+    // gating.
+    //
+    // This is generally frowned upon (it's only supposed to be used to
+    // bootstrap rustc), but here it's _just_ to get access to `cargo config`,
+    // we're not actually building crates with
+    // rustc-stable-masquerading-as-nightly.
 
     debug!("cargo config get", name);
 
-    let mut args = vec!["-Z", "unstable-options", "config", "get", name];
+    let args = vec!["-Z", "unstable-options", "config", "get", name];
+    let env = &[("RUSTC_BOOTSTRAP", "1")];
 
-    if TERM_ERR.features().colors_supported() {
-        args.push("--color");
-        args.push("always");
-    }
-
-    let args_text = args.iter().map(|x| x.to_string()).collect::<Vec<_>>();
-
-    let mut stderr_lines = vec![];
-
-    let mut child = Command::new("cargo")
-        .current_dir(root)
-        .args(&args)
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        // avert your eyes...
-        .env("RUSTC_BOOTSTRAP", "1")
-        .spawn()
-        .map_err(|err| Error::Cargo {
-            err,
-            args: args_text.clone(),
-        })?;
-
-    {
-        let stderr = child.stderr.as_mut().expect(INTERNAL_ERR);
-
-        for line in BufReader::new(stderr).lines() {
-            let line = line?;
-
-            eprintln!("{}", line);
-            stderr_lines.push(line);
-        }
-    }
-
-    let output = child.wait_with_output().map_err(|err| Error::Cargo {
-        err,
-        args: args_text,
-    })?;
-
-    let output_stdout = String::from_utf8(output.stdout)?;
-    let output_stderr = stderr_lines.join("\n");
-
-    debug!("cargo stderr", output_stderr);
-    debug!("cargo stdout", output_stdout);
+    let (output_stdout, _) = cargo(root, &args, env)?;
 
     // `cargo config get` returns TOML output, like so:
     //
