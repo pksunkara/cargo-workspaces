@@ -192,6 +192,11 @@ Publish all the crates from the workspace in the correct order according to the 
 this command runs [version](#version) first. If you do not want that to happen, you can supply the
 `--from-git` option.
 
+> Note: dev-dependencies are not taken into account when building the dependency
+> graph used to determine the proper publishing order. This is because
+> dev-dependencies are ignored by `cargo publish` - as such, a dev-dependency on a
+> local crate (with a `path` attribute), should _not_ have a `version` field.
+
 ```
 USAGE:
     cargo workspaces publish [FLAGS] [OPTIONS] [ARGS]
@@ -214,7 +219,6 @@ FLAGS:
         --no-global-tag          Do not create a global tag for a workspace
         --no-individual-tags     Do not tag individual versions for crates
         --no-verify              Skip crate verification (not recommended)
-        --skip-published         Skip already published crate versions
     -y, --yes                    Skip confirmation prompt
 
 OPTIONS:
