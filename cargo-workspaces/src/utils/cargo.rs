@@ -1,22 +1,22 @@
 use crate::utils::{debug, get_debug, info, Error, Result, INTERNAL_ERR};
 
-use crates_index::BareIndex;
+use crates_index::Index;
 use lazy_static::lazy_static;
-use oclif::{term::TERM_ERR, CliError};
+use oclif::term::TERM_ERR;
 use regex::{Captures, Regex};
 use semver::{Version, VersionReq};
 
 use std::{
     collections::BTreeMap as Map,
     io::{BufRead, BufReader},
-    path::PathBuf,
+    path::Path,
     process::{Command, Stdio},
     thread::sleep,
     time::{Duration, Instant},
 };
 
-const CRLF: &'static str = "\r\n";
-const LF: &'static str = "\n";
+const CRLF: &str = "\r\n";
+const LF: &str = "\n";
 
 lazy_static! {
     static ref NAME: Regex =
@@ -55,8 +55,12 @@ lazy_static! {
             .expect(INTERNAL_ERR);
 }
 
-pub fn cargo<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String)> {
-    debug!("cargo", args.clone().join(" "));
+pub fn cargo<'a>(
+    root: &Path,
+    args: &[&'a str],
+    env: &[(&'a str, &'a str)],
+) -> Result<(String, String)> {
+    debug!("cargo", args.join(" "));
 
     let mut args = args.to_vec();
 
@@ -76,6 +80,8 @@ pub fn cargo<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String)> {
     let mut child = Command::new("cargo")
         .current_dir(root)
         .args(&args)
+        .envs(env.iter().copied())
+        .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
         .map_err(|err| Error::Cargo {
@@ -109,6 +115,67 @@ pub fn cargo<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String)> {
         output_stdout.trim().to_owned(),
         output_stderr.trim().to_owned(),
     ))
+}
+
+pub fn cargo_config_get(root: &Path, name: &str) -> Result<String> {
+    // You know how we sometimes have to make the best of an unfortunate
+    // situation?  This is one of those situations.
+    //
+    // In order to support private registries, we need to know the URL of their
+    // index. That's stored in a `.cargo/config.toml` file, which could be in
+    // the `root` directory, or someplace else, like `~/.cargo/config.toml`.
+    //
+    // In order to match cargo's lookup strategy, the best option is to use
+    // `cargo config get`. However, that's unstable. Since we don't want
+    // cargo-workspaces to require nightly, we can use two combined escape
+    // hatches:
+    //
+    // 1. Set the `RUSTC_BOOTSTRAP` environment variable to `1`
+    // 2. Pass `-Z unstable-options` to cargo
+    //
+    // This works because stable rustc versions contain exactly the same code as
+    // nightly versions, but all the nightly features are gated. This allows
+    // stable rustc versions to recognize nightly features and tell you: "no, you
+    // need a nightly for this". But rustc should be able to compile rustc, and
+    // the rustc codebase uses nightly features, so `RUSTC_BOOTSTRAP` removes that
+    // gating.
+    //
+    // This is generally frowned upon (it's only supposed to be used to
+    // bootstrap rustc), but here it's _just_ to get access to `cargo config`,
+    // we're not actually building crates with
+    // rustc-stable-masquerading-as-nightly.
+
+    debug!("cargo config get", name);
+
+    let args = vec!["-Z", "unstable-options", "config", "get", name];
+    let env = &[("RUSTC_BOOTSTRAP", "1")];
+
+    let (stdout, _) = cargo(root, &args, env)?;
+
+    // `cargo config get` returns TOML output, like so:
+    //
+    //      $ RUSTC_BOOTSTRAP=1 cargo -Z unstable-options config get registries.foobar.index
+    //      registries.foobar.index = "https://dl.cloudsmith.io/basic/some-org/foobar/cargo/index.git"
+    //
+    // The right thing to do is probably to pull in a TOML crate, but since the
+    // output is so predictable, and in the interest of keeping dependencies low,
+    // we just do some text wrangling instead:
+
+    // tokens is ["registries.foobar.index", "\"some-url\""]
+    let tokens = stdout
+        .split(" = ")
+        .map(|x| x.to_string())
+        .collect::<Vec<_>>();
+
+    // value is "\"some-url\""
+    let value = tokens.get(1).ok_or(Error::BadConfigGetOutput(stdout))?;
+
+    // we return "some-url"
+    Ok(value
+        .trim()
+        .trim_start_matches('"')
+        .trim_end_matches('"')
+        .into())
 }
 
 #[derive(Debug)]
@@ -171,6 +238,7 @@ where
     for line in manifest.lines() {
         let trimmed = line.trim();
         let count = new_lines.len();
+        #[allow(clippy::if_same_then_else)]
         if trimmed.starts_with("[package]") {
             context = Context::Package;
         } else if trimmed.starts_with("[dependencies]") {
@@ -187,7 +255,7 @@ where
             if dev_deps {
                 context = Context::DependencyEntry(caps[1].to_string());
             }
-        } else if trimmed.starts_with("[") {
+        } else if trimmed.starts_with('[') {
             if let Context::DependencyEntry(ref dep) = context {
                 dependency_pkg_f(dep, &mut new_lines)?;
             }
@@ -325,36 +393,36 @@ pub fn change_versions(
     )
 }
 
-pub fn check_index(name: &str, version: &str) -> Result<()> {
-    let index = BareIndex::new_cargo_default();
+pub fn is_published(index: &mut Index, name: &str, version: &str) -> Result<bool> {
+    // See if we already have the crate (and version) in cache
+    if let Some(crate_data) = index.crate_(name) {
+        if crate_data.versions().iter().any(|v| v.version() == version) {
+            return Ok(true);
+        }
+    }
+
+    // We don't? Okay, update the cache then
+    index.update()?;
+
+    // Try again with updated index:
+    if let Some(crate_data) = index.crate_(name) {
+        if crate_data.versions().iter().any(|v| v.version() == version) {
+            return Ok(true);
+        }
+    }
+
+    // I guess we didn't have it
+    Ok(false)
+}
+
+pub fn check_index(index: &mut Index, name: &str, version: &str) -> Result<()> {
     let now = Instant::now();
     let sleep_time = Duration::from_secs(2);
     let timeout = Duration::from_secs(300);
     let mut logged = false;
 
     loop {
-        let crate_data = match index.open_or_clone() {
-            Ok(mut bare_index) => {
-                if let Err(e) = bare_index.retrieve() {
-                    Error::IndexUpdate(e).print()?;
-                    None
-                } else {
-                    bare_index.crate_(name)
-                }
-            }
-            Err(e) => {
-                Error::IndexUpdate(e).print()?;
-                None
-            }
-        };
-
-        let published = crate_data
-            .iter()
-            .flat_map(|c| c.versions().iter())
-            .find(|v| v.version() == version)
-            .is_some();
-
-        if published {
+        if is_published(index, name, version)? {
             break;
         } else if timeout < now.elapsed() {
             return Err(Error::PublishTimeout);

@@ -7,7 +7,9 @@ mod listable;
 mod pkg;
 mod version;
 
-pub use cargo::{cargo, change_versions, check_index, rename_packages};
+pub use cargo::{
+    cargo, cargo_config_get, change_versions, check_index, is_published, rename_packages,
+};
 pub use changable::{ChangeData, ChangeOpt};
 pub use dag::dag;
 pub(crate) use error::{debug, info};

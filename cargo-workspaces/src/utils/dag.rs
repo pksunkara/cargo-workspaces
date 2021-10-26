@@ -20,13 +20,13 @@ fn dag_insert(pkgs: &[(Package, String)], pkg: &Package, visited: &mut Set<PathB
     }
 
     for d in &pkg.dependencies {
-        match d.kind {
-            DependencyKind::Normal | DependencyKind::Build => {
-                if let Some((dep, _)) = pkgs.iter().find(|(p, _)| d.name == p.name) {
+        if let Some((dep, _)) = pkgs.iter().find(|(p, _)| d.name == p.name) {
+            match d.kind {
+                DependencyKind::Normal | DependencyKind::Build => {
                     dag_insert(pkgs, dep, visited);
                 }
+                _ => {}
             }
-            _ => {}
         }
     }
 

@@ -68,8 +68,6 @@ pub enum Error {
     Init(String),
     #[error("package {0}'s manifest has no parent directory")]
     ManifestHasNoParent(String),
-    #[error("unable to update crate index, got {0}")]
-    IndexUpdate(crates_index::Error),
     #[error("publishing has timed out")]
     PublishTimeout,
 
@@ -101,6 +99,10 @@ pub enum Error {
     NotTagged(String, String, String),
     #[error("unable to push to remote, out = {0}, err = {1}")]
     NotPushed(String, String),
+    #[error("could not understand 'cargo config get' output: {0}")]
+    BadConfigGetOutput(String),
+    #[error("crates index error: {0}")]
+    CratesRegistry(#[from] crates_index::Error),
 
     #[error("{0}")]
     Semver(#[from] semver::ReqParseError),
