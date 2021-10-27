@@ -33,8 +33,7 @@ glob = "0.3.0"
 dialoguer = "0.8.0"
 lazy_static = "1.4.0"
 indexmap = "1.6.0"
-# TODO: bump to 0.18.1 when it comes out
-crates-index = { git = "https://github.com/frewsxcv/rust-crates-index", rev = "1448bc058932c0eaf0870243d8b7b5f7768ab20e" }
+crates-index = "0.18.1"
 dunce = "1.0.1"
 
 [dev-dependencies]
