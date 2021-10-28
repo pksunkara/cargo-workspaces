@@ -3,7 +3,7 @@ use crate::utils::{Error, Result};
 use serde::Deserialize;
 use serde_json::{from_value, Value};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 struct MetadataWorkspaces {
     pub workspaces: Option<Config>,
 }
@@ -15,8 +15,8 @@ pub struct Config {
 
 impl Config {
     pub fn new(value: &Value) -> Result<Self> {
-        from_value::<MetadataWorkspaces>(value.clone())
+        from_value::<Option<MetadataWorkspaces>>(value.clone())
             .map_err(|e| Error::BadMetadata(e))
-            .map(|v| v.workspaces.unwrap_or_default())
+            .map(|v| v.unwrap_or_default().workspaces.unwrap_or_default())
     }
 }
