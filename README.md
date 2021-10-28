@@ -19,7 +19,8 @@ But this will also work on single crates because by default every individual cra
    6. [Version](#version)
       1. [Fixed or Independent](#fixed-or-independent)
    7. [Publish](#publish)
-3. [Changelog](#changelog)
+3. [Config](#config)
+4. [Changelog](#changelog)
 
 ## Installation
 
@@ -232,6 +233,8 @@ OPTIONS:
         --tag-prefix <prefix>               Customize tag prefix (can be empty) [default: v]
         --token <token>                     The token to use for publishing
 ```
+
+## Config
 
 <!-- omit in TOC -->
 ## Contributors

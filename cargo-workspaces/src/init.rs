@@ -62,7 +62,7 @@ impl Init {
 
         members
             .into_iter()
-            .for_each(|m| content.push_str(&format!("    \"{}\",\n", m.display())));
+            .for_each(|m| content.push_str(&format!("    \"{}\",\n", m.to_string())));
 
         content.push_str("]\n");
 

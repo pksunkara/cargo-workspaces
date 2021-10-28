@@ -79,7 +79,6 @@ impl Publish {
         for p in &visited {
             let (pkg, version) = names.get(p).expect(INTERNAL_ERR);
             let name = pkg.name.clone();
-            let path = p.to_string_lossy();
             let mut args = vec!["publish"];
 
             let name_ver = format!("{} v{}", name, version);
@@ -114,7 +113,7 @@ impl Publish {
             }
 
             args.push("--manifest-path");
-            args.push(&path);
+            args.push(p.as_str());
 
             let (_, stderr) = cargo(&metadata.workspace_root, &args, &[])?;
 

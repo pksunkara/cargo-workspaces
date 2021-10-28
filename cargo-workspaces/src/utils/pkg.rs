@@ -103,7 +103,7 @@ pub fn get_pkgs(metadata: &Metadata, all: bool) -> Result<Vec<Pkg>> {
             if loc.is_err() {
                 return Err(Error::PackageNotInWorkspace {
                     id: pkg.id.repr.clone(),
-                    ws: metadata.workspace_root.to_string_lossy().to_string(),
+                    ws: metadata.workspace_root.to_string(),
                 });
             }
 
@@ -118,7 +118,7 @@ pub fn get_pkgs(metadata: &Metadata, all: bool) -> Result<Vec<Pkg>> {
                 id: pkg.id.clone(),
                 name: pkg.name.clone(),
                 version: pkg.version.clone(),
-                location: metadata.workspace_root.join(loc),
+                location: metadata.workspace_root.join(loc).into(),
                 path: loc.into(),
                 private,
                 config: Config::new(&pkg.metadata)?,

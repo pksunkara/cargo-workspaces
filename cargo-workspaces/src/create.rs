@@ -19,7 +19,6 @@ impl Create {
     pub fn run(&self, metadata: Metadata) -> Result {
         let theme = ColorfulTheme::default();
         let path = &metadata.workspace_root.join(&self.path);
-        let strpath = path.to_string_lossy().to_string();
 
         let name: String = Input::with_theme(&theme)
             .with_prompt("Name of the crate")
@@ -55,7 +54,7 @@ impl Create {
             args.push("--bin");
         }
 
-        args.push(strpath.as_str());
+        args.push(path.as_str());
 
         let created = cargo(&metadata.workspace_root, &args, &[])?;
 

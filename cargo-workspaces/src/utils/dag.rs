@@ -1,8 +1,12 @@
+use camino::Utf8PathBuf;
 use cargo_metadata::{DependencyKind, Package};
 use indexmap::IndexSet as Set;
-use std::{collections::BTreeMap as Map, path::PathBuf};
 
-pub fn dag(pkgs: &[(Package, String)]) -> (Map<&PathBuf, (&Package, &String)>, Set<PathBuf>) {
+use std::collections::BTreeMap as Map;
+
+pub fn dag(
+    pkgs: &[(Package, String)],
+) -> (Map<&Utf8PathBuf, (&Package, &String)>, Set<Utf8PathBuf>) {
     let mut names = Map::new();
     let mut visited = Set::new();
 
@@ -14,7 +18,7 @@ pub fn dag(pkgs: &[(Package, String)]) -> (Map<&PathBuf, (&Package, &String)>, S
     (names, visited)
 }
 
-fn dag_insert(pkgs: &[(Package, String)], pkg: &Package, visited: &mut Set<PathBuf>) {
+fn dag_insert(pkgs: &[(Package, String)], pkg: &Package, visited: &mut Set<Utf8PathBuf>) {
     if visited.contains(&pkg.manifest_path) {
         return;
     }

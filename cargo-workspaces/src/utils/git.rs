@@ -1,11 +1,13 @@
 use crate::utils::{debug, info, validate_value_containing_name, Error, INTERNAL_ERR};
+
+use camino::Utf8PathBuf;
 use clap::{ArgSettings, Parser};
 use glob::Pattern;
 use semver::Version;
-use std::collections::BTreeMap as Map;
-use std::{path::PathBuf, process::Command};
 
-pub fn git<'a>(root: &PathBuf, args: &[&'a str]) -> Result<(String, String), Error> {
+use std::{collections::BTreeMap as Map, process::Command};
+
+pub fn git<'a>(root: &Utf8PathBuf, args: &[&'a str]) -> Result<(String, String), Error> {
     debug!("git", args.clone().join(" "));
 
     let output = Command::new("git")
@@ -96,7 +98,7 @@ pub struct GitOpt {
 }
 
 impl GitOpt {
-    pub fn validate(&self, root: &PathBuf) -> Result<Option<String>, Error> {
+    pub fn validate(&self, root: &Utf8PathBuf) -> Result<Option<String>, Error> {
         let mut ret = None;
 
         if !self.no_git_commit {
@@ -179,7 +181,7 @@ impl GitOpt {
 
     pub fn commit(
         &self,
-        root: &PathBuf,
+        root: &Utf8PathBuf,
         new_version: &Option<Version>,
         new_versions: &Map<String, Version>,
         branch: Option<String>,
@@ -258,7 +260,7 @@ impl GitOpt {
         Ok(())
     }
 
-    fn tag(&self, root: &PathBuf, tag: &str, msg: &str) -> Result<(), Error> {
+    fn tag(&self, root: &Utf8PathBuf, tag: &str, msg: &str) -> Result<(), Error> {
         let tagged = git(root, &["tag", &tag, "-m", &msg])?;
 
         if !tagged.0.is_empty() || !tagged.1.is_empty() {

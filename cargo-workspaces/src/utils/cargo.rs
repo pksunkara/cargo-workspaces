@@ -1,5 +1,6 @@
 use crate::utils::{debug, get_debug, info, Error, Result, INTERNAL_ERR};
 
+use camino::Utf8Path;
 use crates_index::Index;
 use lazy_static::lazy_static;
 use oclif::term::TERM_ERR;
@@ -9,7 +10,6 @@ use semver::{Version, VersionReq};
 use std::{
     collections::BTreeMap as Map,
     io::{BufRead, BufReader},
-    path::Path,
     process::{Command, Stdio},
     thread::sleep,
     time::{Duration, Instant},
@@ -56,7 +56,7 @@ lazy_static! {
 }
 
 pub fn cargo<'a>(
-    root: &Path,
+    root: &Utf8Path,
     args: &[&'a str],
     env: &[(&'a str, &'a str)],
 ) -> Result<(String, String)> {
@@ -117,7 +117,7 @@ pub fn cargo<'a>(
     ))
 }
 
-pub fn cargo_config_get(root: &Path, name: &str) -> Result<String> {
+pub fn cargo_config_get(root: &Utf8Path, name: &str) -> Result<String> {
     // You know how we sometimes have to make the best of an unfortunate
     // situation?  This is one of those situations.
     //
