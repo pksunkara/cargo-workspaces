@@ -102,7 +102,7 @@ impl VersionOpt {
         let mut new_versions = vec![];
 
         while !changed_p.is_empty() {
-            self.get_new_versions(&metadata, changed_p, &mut new_version, &mut new_versions)?;
+            self.get_new_versions(metadata, changed_p, &mut new_version, &mut new_versions)?;
 
             let pkgs = unchanged_p.into_iter().partition::<Vec<_>, _>(|p| {
                 let pkg = metadata
@@ -150,7 +150,7 @@ impl VersionOpt {
             )?;
         }
 
-        for (pkg, _) in &new_versions {
+        for pkg in new_versions.keys() {
             let output = cargo(&metadata.workspace_root, &["update", "-p", pkg], &[])?;
 
             if output.1.contains("error:") {
@@ -279,7 +279,7 @@ impl VersionOpt {
         };
 
         let new_version = if selected == 6 {
-            let custom = custom_pre(&cur_version);
+            let custom = custom_pre(cur_version);
 
             let preid = if let Some(preid) = &self.pre_id {
                 preid.clone()
@@ -293,7 +293,7 @@ impl VersionOpt {
                     .interact_on(&TERM_ERR)?
             };
 
-            inc_preid(&cur_version, Identifier::AlphaNumeric(preid))
+            inc_preid(cur_version, Identifier::AlphaNumeric(preid))
         } else if selected == 7 {
             if let Some(version) = &self.custom {
                 version.clone()
@@ -343,7 +343,7 @@ fn inc_preid(cur_version: &Version, preid: Identifier) -> Version {
             Identifier::AlphaNumeric(id) => {
                 version.pre = vec![preid.clone()];
 
-                if preid.to_string() == id.to_string() {
+                if preid.to_string() == *id {
                     match cur_version.pre.get(1) {
                         Some(Identifier::Numeric(n)) => {
                             version.pre.push(Identifier::Numeric(n + 1))
@@ -358,14 +358,12 @@ fn inc_preid(cur_version: &Version, preid: Identifier) -> Version {
                 if preid.to_string() == n.to_string() {
                     version.pre = cur_version.pre.clone();
 
-                    if let Some(Identifier::Numeric(n)) = version.pre.iter_mut().rfind(|x| {
-                        if let Identifier::Numeric(_) = x {
-                            true
-                        } else {
-                            false
-                        }
-                    }) {
-                        *n = *n + 1;
+                    if let Some(Identifier::Numeric(n)) = version
+                        .pre
+                        .iter_mut()
+                        .rfind(|x| matches!(x, Identifier::Numeric(_)))
+                    {
+                        *n += 1;
                     }
                 } else {
                     version.pre = vec![preid, Identifier::Numeric(0)];

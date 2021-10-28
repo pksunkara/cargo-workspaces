@@ -12,7 +12,7 @@ pub fn dag(
 
     for (pkg, version) in pkgs {
         names.insert(&pkg.manifest_path, (pkg, version));
-        dag_insert(&pkgs, pkg, &mut visited);
+        dag_insert(pkgs, pkg, &mut visited);
     }
 
     (names, visited)

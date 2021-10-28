@@ -31,7 +31,7 @@ impl Exec {
             let dir = pkg
                 .manifest_path
                 .parent()
-                .ok_or(Error::ManifestHasNoParent(pkg.name.clone()))?;
+                .ok_or_else(|| Error::ManifestHasNoParent(pkg.name.clone()))?;
 
             let status = Command::new(self.args.get(0).expect(INTERNAL_ERR))
                 .args(&self.args[1..])

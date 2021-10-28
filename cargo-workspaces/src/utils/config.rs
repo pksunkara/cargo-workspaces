@@ -16,7 +16,7 @@ pub struct Config {
 impl Config {
     pub fn new(value: &Value) -> Result<Self> {
         from_value::<Option<MetadataWorkspaces>>(value.clone())
-            .map_err(|e| Error::BadMetadata(e))
+            .map_err(Error::BadMetadata)
             .map(|v| v.unwrap_or_default().workspaces.unwrap_or_default())
     }
 }

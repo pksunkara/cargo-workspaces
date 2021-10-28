@@ -18,18 +18,16 @@ pub struct Init {
 impl Init {
     pub fn run(&self) -> Result {
         if !self.path.is_dir() {
-            // TODO: Move the error message to error.rs
-            return Err(Error::Init(format!(
-                "no folder at '{}'",
-                self.path.display()
-            )));
+            return Err(Error::WorkspaceRootNotDir(
+                self.path.to_string_lossy().to_string(),
+            ));
         }
 
         let cargo_toml = self.path.join("Cargo.toml");
 
         // TODO: Append to existing toml file
         if cargo_toml.is_file() {
-            return Err(Error::Init(format!("'Cargo.toml' exists")));
+            return Err(Error::Init("'Cargo.toml' exists".into()));
         }
 
         let pkgs = glob(&format!("{}/**/Cargo.toml", self.path.display()))?.filter_map(|e| e.ok());
@@ -57,7 +55,7 @@ impl Init {
         members.sort();
 
         if !members.is_empty() {
-            content.push_str("\n");
+            content.push('\n');
         }
 
         members

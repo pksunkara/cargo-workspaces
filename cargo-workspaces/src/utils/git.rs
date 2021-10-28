@@ -8,7 +8,7 @@ use semver::Version;
 use std::{collections::BTreeMap as Map, process::Command};
 
 pub fn git<'a>(root: &Utf8PathBuf, args: &[&'a str]) -> Result<(String, String), Error> {
-    debug!("git", args.clone().join(" "));
+    debug!("git", args.to_vec().join(" "));
 
     let output = Command::new("git")
         .current_dir(root)
@@ -261,7 +261,7 @@ impl GitOpt {
     }
 
     fn tag(&self, root: &Utf8PathBuf, tag: &str, msg: &str) -> Result<(), Error> {
-        let tagged = git(root, &["tag", &tag, "-m", &msg])?;
+        let tagged = git(root, &["tag", tag, "-m", msg])?;
 
         if !tagged.0.is_empty() || !tagged.1.is_empty() {
             return Err(Error::NotTagged(tag.to_string(), tagged.0, tagged.1));

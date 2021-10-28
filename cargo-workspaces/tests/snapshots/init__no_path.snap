@@ -1,6 +1,7 @@
 ---
 source: tests/init.rs
 expression: err
+
 ---
-error: unable to initialize workspace: no folder at 'new'
+error: given path new is not a folder
 

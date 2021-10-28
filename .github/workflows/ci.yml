@@ -4,11 +4,10 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
-    types: [opened, reopened, synchronize]
 jobs:
   ci:
     name: CI
-    needs: [test]
+    needs: [test, lint]
     runs-on: ubuntu-latest
     steps:
       - name: Done
@@ -71,3 +70,21 @@ jobs:
         with:
           command: test
           args: --target ${{ matrix.target }} --manifest-path cargo-workspaces/Cargo.toml
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Format check
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --manifest-path cargo-workspaces/Cargo.toml -- --check

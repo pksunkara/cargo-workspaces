@@ -313,7 +313,7 @@ pub fn rename_packages(
                     ));
                 }
             } else if let Some(caps) = DEP_OBJ_RENAME_NAME.captures(line) {
-                rename_dep(caps, new_lines, &renames, 2)?;
+                rename_dep(caps, new_lines, renames, 2)?;
             } else if let Some(caps) = DEP_OBJ_NAME.captures(line) {
                 if let Some(new_name) = renames.get(&caps[2]) {
                     new_lines.push(format!(
@@ -327,7 +327,7 @@ pub fn rename_packages(
         },
         |_, line, new_lines| {
             if let Some(caps) = PACKAGE.captures(line) {
-                rename_dep(caps, new_lines, &renames, 2)?;
+                rename_dep(caps, new_lines, renames, 2)?;
                 Ok(Some(Context::DontCare))
             } else {
                 Ok(None)
@@ -363,13 +363,13 @@ pub fn change_versions(
         },
         |line, new_lines| {
             if let Some(caps) = DEP_DIRECT_VERSION.captures(line) {
-                edit_version(caps, new_lines, &versions, exact, 2)?;
+                edit_version(caps, new_lines, versions, exact, 2)?;
             } else if let Some(caps) = DEP_OBJ_RENAME_VERSION.captures(line) {
-                edit_version(caps, new_lines, &versions, exact, 5)?;
+                edit_version(caps, new_lines, versions, exact, 5)?;
             } else if let Some(caps) = DEP_OBJ_RENAME_BEFORE_VERSION.captures(line) {
-                edit_version(caps, new_lines, &versions, exact, 2)?;
+                edit_version(caps, new_lines, versions, exact, 2)?;
             } else if let Some(caps) = DEP_OBJ_VERSION.captures(line) {
-                edit_version(caps, new_lines, &versions, exact, 2)?;
+                edit_version(caps, new_lines, versions, exact, 2)?;
             }
 
             Ok(())

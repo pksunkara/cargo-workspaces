@@ -73,6 +73,8 @@ pub enum Error {
     #[error("unable to create crate")]
     Create,
 
+    #[error("given path {0} is not a folder")]
+    WorkspaceRootNotDir(String),
     #[error("unable to initialize workspace: {0}")]
     Init(String),
 
@@ -134,6 +136,9 @@ impl CliError for Error {
             },
             Self::Verify(pkg) => Self::Verify(format!("{}", ERR_YELLOW.apply_to(pkg))),
             Self::Publish(pkg) => Self::Publish(format!("{}", ERR_YELLOW.apply_to(pkg))),
+            Self::WorkspaceRootNotDir(path) => {
+                Self::WorkspaceRootNotDir(format!("{}", ERR_YELLOW.apply_to(path)))
+            }
             Self::NoRemote { remote, branch } => Self::NoRemote {
                 remote: format!("{}", ERR_YELLOW.apply_to(remote)),
                 branch: format!("{}", ERR_YELLOW.apply_to(branch)),
