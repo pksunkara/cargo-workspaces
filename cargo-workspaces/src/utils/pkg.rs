@@ -1,10 +1,9 @@
-use crate::utils::{Error, ListOpt, Listable, Result, INTERNAL_ERR};
+use crate::utils::{Config, Error, ListOpt, Listable, Result, INTERNAL_ERR};
 
 use cargo_metadata::{Metadata, PackageId};
 use oclif::{console::style, term::TERM_OUT, CliError};
 use semver::Version;
 use serde::Serialize;
-use serde_json::Value;
 
 use std::{
     cmp::max,
@@ -21,7 +20,8 @@ pub struct Pkg {
     #[serde(skip)]
     pub path: PathBuf,
     pub private: bool,
-    pub independent: bool,
+    #[serde(skip)]
+    pub config: Config,
 }
 
 impl Listable for Vec<Pkg> {
@@ -86,18 +86,6 @@ impl Listable for Vec<Pkg> {
     }
 }
 
-fn is_independent(metadata: &Value) -> bool {
-    if let Value::Object(v) = metadata {
-        if let Some(Value::Object(v)) = v.get("workspaces") {
-            if let Some(Value::Bool(v)) = v.get("independent") {
-                return *v;
-            }
-        }
-    }
-
-    false
-}
-
 pub fn get_pkgs(metadata: &Metadata, all: bool) -> Result<Vec<Pkg>> {
     let mut pkgs = vec![];
 
@@ -133,7 +121,7 @@ pub fn get_pkgs(metadata: &Metadata, all: bool) -> Result<Vec<Pkg>> {
                 location: metadata.workspace_root.join(loc),
                 path: loc.into(),
                 private,
-                independent: is_independent(&pkg.metadata),
+                config: Config::new(&pkg.metadata)?,
             });
         } else {
             Error::PackageNotFound {

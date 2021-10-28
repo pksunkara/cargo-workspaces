@@ -175,8 +175,9 @@ impl VersionOpt {
         new_version: &mut Option<Version>,
         new_versions: &mut Vec<(String, Version, Version)>,
     ) -> Result {
-        let (independent_pkgs, same_pkgs) =
-            pkgs.into_iter().partition::<Vec<_>, _>(|p| p.independent);
+        let (independent_pkgs, same_pkgs) = pkgs
+            .into_iter()
+            .partition::<Vec<_>, _>(|p| p.config.independent.unwrap_or(false));
 
         if !same_pkgs.is_empty() {
             let cur_version = same_pkgs

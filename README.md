@@ -131,7 +131,7 @@ For example, if you want to run `ls -l` in each crate, you can simply do `cargo 
 
 ### Version
 
-Bump versions of the crates in the worksapce. This command does the following:
+Bump versions of the crates in the workspace. This command does the following:
 
 1. Identifies crates that have been updated since the previous tagged release
 2. Prompts for a new version according to the crate

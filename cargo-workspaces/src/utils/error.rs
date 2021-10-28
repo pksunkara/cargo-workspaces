@@ -56,20 +56,25 @@ pub enum Error {
     PackageNotFound { id: String },
     #[error("did not find any package")]
     EmptyWorkspace,
+    #[error("package {0}'s manifest has no parent directory")]
+    ManifestHasNoParent(String),
+    #[error("unable to read metadata specified in Cargo.toml: {0}")]
+    BadMetadata(serde_json::Error),
+
     #[error("unable to verify package {0}")]
     Verify(String),
     #[error("unable to publish package {0}")]
     Publish(String),
-    #[error("unable to update Cargo.lock")]
-    Update,
-    #[error("unable to create crate")]
-    Create,
-    #[error("unable to initialize workspace: {0}")]
-    Init(String),
-    #[error("package {0}'s manifest has no parent directory")]
-    ManifestHasNoParent(String),
     #[error("publishing has timed out")]
     PublishTimeout,
+    #[error("unable to update Cargo.lock")]
+    Update,
+
+    #[error("unable to create crate")]
+    Create,
+
+    #[error("unable to initialize workspace: {0}")]
+    Init(String),
 
     #[error("unable to run cargo command with args {args:?}, got {err}")]
     Cargo { err: io::Error, args: Vec<String> },
@@ -99,6 +104,7 @@ pub enum Error {
     NotTagged(String, String, String),
     #[error("unable to push to remote, out = {0}, err = {1}")]
     NotPushed(String, String),
+
     #[error("could not understand 'cargo config get' output: {0}")]
     BadConfigGetOutput(String),
     #[error("crates index error: {0}")]

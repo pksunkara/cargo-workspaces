@@ -1,5 +1,6 @@
 mod cargo;
 mod changable;
+mod config;
 mod dag;
 mod error;
 mod git;
@@ -11,6 +12,7 @@ pub use cargo::{
     cargo, cargo_config_get, change_versions, check_index, is_published, rename_packages,
 };
 pub use changable::{ChangeData, ChangeOpt};
+pub use config::Config;
 pub use dag::dag;
 pub(crate) use error::{debug, info};
 pub use error::{get_debug, set_debug, Error};
