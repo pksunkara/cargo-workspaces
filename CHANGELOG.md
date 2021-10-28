@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.26
+
+### Enhancements
+* Support private registries
+* Skipping published crates is now the default behaviour
+
 ## 0.2.24
 
 ### Bug fixes
