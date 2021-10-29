@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.28
+
+### Enhancements
+* Support reading some options from manifests
+
 ## 0.2.26
 
 ### Enhancements
