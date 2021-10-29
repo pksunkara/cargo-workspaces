@@ -1,4 +1,4 @@
-use crate::utils::{Config, Error, ListOpt, Listable, Result, INTERNAL_ERR};
+use crate::utils::{read_config, Error, ListOpt, Listable, PackageConfig, Result, INTERNAL_ERR};
 
 use cargo_metadata::{Metadata, PackageId};
 use oclif::{console::style, term::TERM_OUT, CliError};
@@ -21,7 +21,7 @@ pub struct Pkg {
     pub path: PathBuf,
     pub private: bool,
     #[serde(skip)]
-    pub config: Config,
+    pub config: PackageConfig,
 }
 
 impl Listable for Vec<Pkg> {
@@ -121,7 +121,7 @@ pub fn get_pkgs(metadata: &Metadata, all: bool) -> Result<Vec<Pkg>> {
                 location: metadata.workspace_root.join(loc).into(),
                 path: loc.into(),
                 private,
-                config: Config::new(&pkg.metadata)?,
+                config: read_config(&pkg.metadata)?,
             });
         } else {
             Error::PackageNotFound {

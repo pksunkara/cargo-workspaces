@@ -1,5 +1,6 @@
 use crate::utils::{
-    cargo, change_versions, info, ChangeData, ChangeOpt, Error, GitOpt, Pkg, Result, INTERNAL_ERR,
+    cargo, change_versions, info, read_config, ChangeData, ChangeOpt, Error, GitOpt, Pkg, Result,
+    WorkspaceConfig, INTERNAL_ERR,
 };
 
 use cargo_metadata::Metadata;
@@ -80,7 +81,8 @@ pub struct VersionOpt {
 
 impl VersionOpt {
     pub fn do_versioning(&self, metadata: &Metadata) -> Result<Map<String, Version>> {
-        let branch = self.git.validate(&metadata.workspace_root)?;
+        let config: WorkspaceConfig = read_config(&metadata.workspace_metadata)?;
+        let branch = self.git.validate(&metadata.workspace_root, &config)?;
 
         let change_data = ChangeData::new(metadata, &self.change)?;
 
@@ -163,6 +165,7 @@ impl VersionOpt {
             &new_version,
             &new_versions,
             branch,
+            &config,
         )?;
 
         Ok(new_versions)

@@ -187,6 +187,8 @@ it's version be independent of the other crates, you can add the following to th
 independent = true
 ```
 
+For more details, check [Config](#config) section below.
+
 ### Publish
 
 Publish all the crates from the workspace in the correct order according to the dependencies. By default,
@@ -235,6 +237,20 @@ OPTIONS:
 ```
 
 ## Config
+
+There are two kind of options.
+
+* **Workspace**: Options that are specified in the workspace with `[workspace.metadata.workspaces]`
+* **Package**: Options that are specified in the package with `[package.metadata.workspaces]`
+
+If an option exists is allowed to exist in both places, it means that the value specified in the **Package**
+overrides the value specified in **Workspace**.
+
+| Name | Type | Workspace | Package |
+| --- | --- | :---: | :---: |
+| `allow_branch` | `String` | Yes | No |
+| `independent` | `bool` | No | Yes |
+| `no_individual_tags` | `bool` | Yes | No |
 
 <!-- omit in TOC -->
 ## Contributors

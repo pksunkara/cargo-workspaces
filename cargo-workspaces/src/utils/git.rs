@@ -1,4 +1,6 @@
-use crate::utils::{debug, info, validate_value_containing_name, Error, INTERNAL_ERR};
+use crate::utils::{
+    debug, info, validate_value_containing_name, Error, WorkspaceConfig, INTERNAL_ERR,
+};
 
 use camino::Utf8PathBuf;
 use clap::{ArgSettings, Parser};
@@ -35,14 +37,9 @@ pub struct GitOpt {
     ])]
     pub no_git_commit: bool,
 
-    /// Specify which branches to allow from
-    #[clap(
-        long,
-        default_value = "master",
-        value_name = "pattern",
-        setting(ArgSettings::ForbidEmptyValues)
-    )]
-    pub allow_branch: String,
+    /// Specify which branches to allow from [default: master]
+    #[clap(long, value_name = "pattern", setting(ArgSettings::ForbidEmptyValues))]
+    pub allow_branch: Option<String>,
 
     /// Amend the existing commit, instead of generating a new one
     #[clap(long)]
@@ -98,7 +95,11 @@ pub struct GitOpt {
 }
 
 impl GitOpt {
-    pub fn validate(&self, root: &Utf8PathBuf) -> Result<Option<String>, Error> {
+    pub fn validate(
+        &self,
+        root: &Utf8PathBuf,
+        config: &WorkspaceConfig,
+    ) -> Result<Option<String>, Error> {
         let mut ret = None;
 
         if !self.no_git_commit {
@@ -120,14 +121,23 @@ impl GitOpt {
 
             ret = Some(branch.clone());
 
+            // Get the final `allow_branch` value
+            let allow_branch_default_value = String::from("master");
+            let allow_branch = self.allow_branch.as_ref().unwrap_or_else(|| {
+                config
+                    .allow_branch
+                    .as_ref()
+                    .unwrap_or(&allow_branch_default_value)
+            });
+
             // Treat `main` as `master`
-            let test_branch = if branch == "main" && self.allow_branch == "master" {
+            let test_branch = if branch == "main" && allow_branch.as_str() == "master" {
                 "master".into()
             } else {
                 branch.clone()
             };
 
-            let pattern = Pattern::new(&self.allow_branch)?;
+            let pattern = Pattern::new(&allow_branch)?;
 
             if !pattern.matches(&test_branch) {
                 return Err(Error::BranchNotAllowed {
@@ -185,6 +195,7 @@ impl GitOpt {
         new_version: &Option<Version>,
         new_versions: &Map<String, Version>,
         branch: Option<String>,
+        config: &WorkspaceConfig,
     ) -> Result<(), Error> {
         if !self.no_git_commit {
             info!("version", "committing changes");
@@ -238,7 +249,7 @@ impl GitOpt {
                     }
                 }
 
-                if !self.no_individual_tags {
+                if !(self.no_individual_tags || config.no_individual_tags.unwrap_or_default()) {
                     for (p, v) in new_versions {
                         let tag = format!("{}{}", self.individual_tag_prefix.replace("%n", p), v);
                         self.tag(root, &tag, &tag)?;

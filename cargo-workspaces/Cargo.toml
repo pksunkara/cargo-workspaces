@@ -43,5 +43,5 @@ assert_cmd = "1.0"
 insta = { version = "1.8.0", features = ["redactions"] }
 indoc = "1.0.3"
 
-[package.metadata.workspaces]
-allow_branch = "dev"
+[workspace.metadata.workspaces]
+no_individual_tags = true
