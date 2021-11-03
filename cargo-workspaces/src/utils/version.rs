@@ -117,6 +117,7 @@ impl VersionOpt {
                     if let Some(version) = new_versions.iter().find(|y| x.name == y.0).map(|y| &y.1)
                     {
                         !x.req.matches(version)
+                            || matches!(x.req.to_string().as_str(), "*" | ">=0.0.0")
                     } else {
                         false
                     }
