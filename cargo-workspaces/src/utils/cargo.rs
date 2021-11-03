@@ -183,7 +183,7 @@ enum Context {
     Beginning,
     Package,
     Dependencies,
-    DependencyEntry(String),
+    DependencyEntry(String, bool),
     DontCare,
 }
 
@@ -229,14 +229,19 @@ fn parse<P, D, DE, DP>(
 where
     P: Fn(&str, &mut Vec<String>) -> Result,
     D: Fn(&str, &mut Vec<String>) -> Result,
-    DE: Fn(&str, &str, &mut Vec<String>) -> Result<Option<Context>>,
-    DP: Fn(&str, &mut Vec<String>) -> Result,
+    DE: Fn(&str, &str, &mut bool, &mut Vec<String>) -> Result<Option<Context>>,
+    DP: Fn(&str, bool, &mut Vec<String>) -> Result,
 {
     let mut context = Context::Beginning;
     let mut new_lines = vec![];
 
     for line in manifest.lines() {
         let trimmed = line.trim();
+        if trimmed.starts_with('[') {
+            if let Context::DependencyEntry(ref dep, has_key) = context {
+                dependency_pkg_f(dep, has_key, &mut new_lines)?;
+            }
+        }
         let count = new_lines.len();
         #[allow(clippy::if_same_then_else)]
         if trimmed.starts_with("[package]") {
@@ -248,30 +253,30 @@ where
         } else if dev_deps && trimmed.starts_with("[dev-dependencies]") {
             context = Context::Dependencies;
         } else if let Some(caps) = DEP_ENTRY.captures(trimmed) {
-            context = Context::DependencyEntry(caps[1].to_string());
+            context = Context::DependencyEntry(caps[1].to_string(), false);
         } else if let Some(caps) = BUILD_DEP_ENTRY.captures(trimmed) {
-            context = Context::DependencyEntry(caps[1].to_string());
+            context = Context::DependencyEntry(caps[1].to_string(), false);
         } else if let Some(caps) = DEV_DEP_ENTRY.captures(trimmed) {
             if dev_deps {
-                context = Context::DependencyEntry(caps[1].to_string());
+                context = Context::DependencyEntry(caps[1].to_string(), false);
             }
         } else if trimmed.starts_with('[') {
-            if let Context::DependencyEntry(ref dep) = context {
-                dependency_pkg_f(dep, &mut new_lines)?;
-            }
-
             context = Context::DontCare;
         } else {
             // TODO: Support `package.version` like stuff (with quotes) at beginning
-            match context {
-                Context::Package => package_f(line, &mut new_lines)?,
-                Context::Dependencies => dependencies_f(line, &mut new_lines)?,
-                Context::DependencyEntry(ref dep) => {
-                    if let Some(new_context) = dependency_entries_f(dep, line, &mut new_lines)? {
-                        context = new_context;
+            let new_context = loop {
+                match context {
+                    Context::Package => package_f(line, &mut new_lines)?,
+                    Context::Dependencies => dependencies_f(line, &mut new_lines)?,
+                    Context::DependencyEntry(ref dep, ref mut has_key) => {
+                        break dependency_entries_f(dep, line, has_key, &mut new_lines)?
                     }
+                    _ => {}
                 }
-                _ => {}
+                break None;
+            };
+            if let Some(new_context) = new_context {
+                context = new_context;
             }
         }
 
@@ -280,8 +285,8 @@ where
         }
     }
 
-    if let Context::DependencyEntry(ref dep) = context {
-        dependency_pkg_f(dep, &mut new_lines)?;
+    if let Context::DependencyEntry(ref dep, has_key) = context {
+        dependency_pkg_f(dep, has_key, &mut new_lines)?;
     }
 
     Ok(new_lines.join(if manifest.contains(CRLF) { CRLF } else { LF }))
@@ -325,17 +330,20 @@ pub fn rename_packages(
 
             Ok(())
         },
-        |_, line, new_lines| {
+        |_, line, has_package_name, new_lines| {
             if let Some(caps) = PACKAGE.captures(line) {
+                *has_package_name = true;
                 rename_dep(caps, new_lines, renames, 2)?;
                 Ok(Some(Context::DontCare))
             } else {
                 Ok(None)
             }
         },
-        |dep, new_lines| {
-            if let Some(new_name) = renames.get(dep) {
-                new_lines.push(format!("package = \"{}\"", new_name));
+        |dep, has_package_name, new_lines| {
+            if !has_package_name {
+                if let Some(new_name) = renames.get(dep) {
+                    new_lines.push(format!("package = \"{}\"", new_name));
+                }
             }
 
             Ok(())
@@ -388,10 +396,11 @@ pub fn change_versions(
 
             Ok(())
         },
-        |dep, line, new_lines| {
+        |dep, line, has_version, new_lines| {
             if let Some(caps) = PACKAGE.captures(line) {
-                return Ok(Some(Context::DependencyEntry(caps[2].to_string())));
+                return Ok(Some(Context::DependencyEntry(caps[2].to_string(), false)));
             } else if let Some(caps) = VERSION.captures(line) {
+                *has_version = true;
                 if let Some(new_version) = versions.get(dep) {
                     if exact {
                         new_lines.push(format!("{}={}{}", &caps[1], new_version, &caps[3]));
@@ -403,7 +412,15 @@ pub fn change_versions(
 
             Ok(None)
         },
-        |_, _| Ok(()),
+        |dep, has_version, new_lines| {
+            if !has_version {
+                if let Some(new_version) = versions.get(dep) {
+                    new_lines.push(format!("version = \"{}\"", new_version));
+                }
+            }
+
+            Ok(())
+        },
     )
 }
 
@@ -647,6 +664,29 @@ mod test {
                 path = "../"
                 version = "0.3.0" # hello"#
             }
+        );
+    }
+
+    #[test]
+    fn test_version_dependency_table_missing_version() {
+        let m = indoc! {r#"
+            [dependencies.this]
+            path = "../" # hello
+            [package]
+            name = "test"
+        "#};
+
+        let mut v = Map::new();
+        v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
+
+        assert_eq!(
+            change_versions(m.into(), "this", &v, false).unwrap(),
+            indoc! {r#"
+                [dependencies.this]
+                path = "../" # hello
+                version = "0.3.0"
+                [package]
+                name = "test""#}
         );
     }
 
