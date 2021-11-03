@@ -206,7 +206,7 @@ impl VersionOpt {
                 new_versions.push((
                     p.name.to_string(),
                     new_version.as_ref().expect(INTERNAL_ERR).clone(),
-                    cur_version.clone(),
+                    p.version.clone(),
                 ));
             }
         }
