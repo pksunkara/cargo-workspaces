@@ -370,6 +370,20 @@ pub fn change_versions(
                 edit_version(caps, new_lines, versions, exact, 2)?;
             } else if let Some(caps) = DEP_OBJ_VERSION.captures(line) {
                 edit_version(caps, new_lines, versions, exact, 2)?;
+            } else if let Some(caps) = DEP_OBJ_NAME.captures(line) {
+                if let Some(new_version) = versions.get(&caps[2]) {
+                    if exact {
+                        new_lines.push(format!(
+                            "{}, version = \"={}\"{}",
+                            &caps[1], new_version, &caps[3]
+                        ));
+                    } else {
+                        new_lines.push(format!(
+                            "{}, version = \"{}\"{}",
+                            &caps[1], new_version, &caps[3]
+                        ));
+                    }
+                }
             }
 
             Ok(())
@@ -540,6 +554,25 @@ mod test {
     }
 
     #[test]
+    fn test_missing_version_dependencies_object() {
+        let m = indoc! {r#"
+            [dependencies]
+            this = { path = "../" } # hello
+        "#};
+
+        let mut v = Map::new();
+        v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
+
+        assert_eq!(
+            change_versions(m.into(), "this", &v, false).unwrap(),
+            indoc! {r#"
+                [dependencies]
+                this = { path = "../", version = "0.3.0" } # hello"#
+            }
+        );
+    }
+
+    #[test]
     fn test_version_dependencies_object() {
         let m = indoc! {r#"
             [dependencies]
@@ -669,6 +702,25 @@ mod test {
         let m = indoc! {r#"
             [dependencies]
             this = { path = "../", version = "0.0.1" } # hello
+        "#};
+
+        let mut v = Map::new();
+        v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
+
+        assert_eq!(
+            change_versions(m.into(), "this", &v, true).unwrap(),
+            indoc! {r#"
+                [dependencies]
+                this = { path = "../", version = "=0.3.0" } # hello"#
+            }
+        );
+    }
+
+    #[test]
+    fn test_exact_version_missing() {
+        let m = indoc! {r#"
+            [dependencies]
+            this = { path = "../" } # hello
         "#};
 
         let mut v = Map::new();
