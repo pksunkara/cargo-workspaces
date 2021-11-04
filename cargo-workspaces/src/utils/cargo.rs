@@ -183,7 +183,7 @@ enum Context {
     Beginning,
     Package,
     Dependencies,
-    DependencyEntry(String, bool),
+    DependencyEntry(String, Option<(usize, String)>),
     DontCare,
 }
 
@@ -229,8 +229,8 @@ fn parse<P, D, DE, DP>(
 where
     P: Fn(&str, &mut Vec<String>) -> Result,
     D: Fn(&str, &mut Vec<String>) -> Result,
-    DE: Fn(&str, &str, &mut bool, &mut Vec<String>) -> Result<Option<Context>>,
-    DP: Fn(&str, bool, &mut Vec<String>) -> Result,
+    DE: Fn(&str, &mut Option<String>) -> Result<Option<String>>,
+    DP: Fn(&str, Option<(usize, String)>, &mut Vec<String>) -> Result,
 {
     let mut context = Context::Beginning;
     let mut new_lines = vec![];
@@ -238,8 +238,8 @@ where
     for line in manifest.lines() {
         let trimmed = line.trim();
         if trimmed.starts_with('[') {
-            if let Context::DependencyEntry(ref dep, has_key) = context {
-                dependency_pkg_f(dep, has_key, &mut new_lines)?;
+            if let Context::DependencyEntry(ref dep, ref mut dep_meta) = context {
+                dependency_pkg_f(dep, dep_meta.take(), &mut new_lines)?;
             }
         }
         let count = new_lines.len();
@@ -253,30 +253,31 @@ where
         } else if dev_deps && trimmed.starts_with("[dev-dependencies]") {
             context = Context::Dependencies;
         } else if let Some(caps) = DEP_ENTRY.captures(trimmed) {
-            context = Context::DependencyEntry(caps[1].to_string(), false);
+            context = Context::DependencyEntry(caps[1].to_string(), None);
         } else if let Some(caps) = BUILD_DEP_ENTRY.captures(trimmed) {
-            context = Context::DependencyEntry(caps[1].to_string(), false);
+            context = Context::DependencyEntry(caps[1].to_string(), None);
         } else if let Some(caps) = DEV_DEP_ENTRY.captures(trimmed) {
             if dev_deps {
-                context = Context::DependencyEntry(caps[1].to_string(), false);
+                context = Context::DependencyEntry(caps[1].to_string(), None);
             }
         } else if trimmed.starts_with('[') {
             context = Context::DontCare;
         } else {
             // TODO: Support `package.version` like stuff (with quotes) at beginning
-            let new_context = loop {
-                match context {
-                    Context::Package => package_f(line, &mut new_lines)?,
-                    Context::Dependencies => dependencies_f(line, &mut new_lines)?,
-                    Context::DependencyEntry(ref dep, ref mut has_key) => {
-                        break dependency_entries_f(dep, line, has_key, &mut new_lines)?
+            match context {
+                Context::Package => package_f(line, &mut new_lines)?,
+                Context::Dependencies => dependencies_f(line, &mut new_lines)?,
+                Context::DependencyEntry(ref mut dep, ref mut dep_meta) => {
+                    let mut line_meta = None;
+
+                    if let Some(new_dep) = dependency_entries_f(line, &mut line_meta)? {
+                        *dep = new_dep;
                     }
-                    _ => {}
+                    if let Some(meta) = line_meta {
+                        dep_meta.replace((new_lines.len(), meta));
+                    }
                 }
-                break None;
-            };
-            if let Some(new_context) = new_context {
-                context = new_context;
+                _ => {}
             }
         }
 
@@ -285,8 +286,8 @@ where
         }
     }
 
-    if let Context::DependencyEntry(ref dep, has_key) = context {
-        dependency_pkg_f(dep, has_key, &mut new_lines)?;
+    if let Context::DependencyEntry(ref dep, dep_meta) = context {
+        dependency_pkg_f(dep, dep_meta, &mut new_lines)?;
     }
 
     Ok(new_lines.join(if manifest.contains(CRLF) { CRLF } else { LF }))
@@ -330,19 +331,28 @@ pub fn rename_packages(
 
             Ok(())
         },
-        |_, line, has_package_name, new_lines| {
-            if let Some(caps) = PACKAGE.captures(line) {
-                *has_package_name = true;
-                rename_dep(caps, new_lines, renames, 2)?;
-                Ok(Some(Context::DontCare))
-            } else {
-                Ok(None)
+        |line, pkg_name_line| {
+            if PACKAGE.is_match(line) {
+                pkg_name_line.replace(line.to_string());
             }
+
+            Ok(None)
         },
-        |dep, has_package_name, new_lines| {
-            if !has_package_name {
-                if let Some(new_name) = renames.get(dep) {
-                    new_lines.push(format!("package = \"{}\"", new_name));
+        |dep, package_line, new_lines| {
+            match package_line {
+                Some((i, line)) => {
+                    if let (Some(line), Some(caps)) =
+                        (new_lines.get_mut(i), PACKAGE.captures(&line))
+                    {
+                        if let Some(new_name) = renames.get(&caps[2]) {
+                            *line = format!("{}{}{}", &caps[1], new_name, &caps[3]);
+                        }
+                    }
+                }
+                None => {
+                    if let Some(new_name) = renames.get(dep) {
+                        new_lines.push(format!("package = \"{}\"", new_name));
+                    }
                 }
             }
 
@@ -396,26 +406,34 @@ pub fn change_versions(
 
             Ok(())
         },
-        |dep, line, has_version, new_lines| {
+        |line, version_line| {
             if let Some(caps) = PACKAGE.captures(line) {
-                return Ok(Some(Context::DependencyEntry(caps[2].to_string(), false)));
-            } else if let Some(caps) = VERSION.captures(line) {
-                *has_version = true;
-                if let Some(new_version) = versions.get(dep) {
-                    if exact {
-                        new_lines.push(format!("{}={}{}", &caps[1], new_version, &caps[3]));
-                    } else if !VersionReq::parse(&caps[2])?.matches(new_version) {
-                        new_lines.push(format!("{}{}{}", &caps[1], new_version, &caps[3]));
-                    }
-                }
+                return Ok(Some(caps[2].to_string()));
+            } else if VERSION.is_match(line) {
+                version_line.replace(line.to_string());
             }
 
             Ok(None)
         },
-        |dep, has_version, new_lines| {
-            if !has_version {
-                if let Some(new_version) = versions.get(dep) {
-                    new_lines.push(format!("version = \"{}\"", new_version));
+        |dep, version_line, new_lines| {
+            match version_line {
+                Some((i, line)) => {
+                    if let (Some(line), Some(caps), Some(new_version)) = (
+                        new_lines.get_mut(i),
+                        VERSION.captures(&line),
+                        versions.get(dep),
+                    ) {
+                        if exact {
+                            *line = format!("{}={}{}", &caps[1], new_version, &caps[3]);
+                        } else if !VersionReq::parse(&caps[2])?.matches(new_version) {
+                            *line = format!("{}{}{}", &caps[1], new_version, &caps[3]);
+                        }
+                    }
+                }
+                None => {
+                    if let Some(new_version) = versions.get(dep) {
+                        new_lines.push(format!("version = \"{}\"", new_version));
+                    }
                 }
             }
 
@@ -690,29 +708,28 @@ mod test {
         );
     }
 
-    // #[test]
-    // fn test_dependency_table_renamed() {
-    //     // TODO: Not correct when `package` key exists
-    //     let m = indoc! {r#"
-    //         [dependencies.this2]
-    //         path = "../"
-    //         version = "0.0.1" # hello"
-    //         package = "this"
-    //     "#};
+    #[test]
+    fn test_dependency_table_renamed() {
+        let m = indoc! {r#"
+            [dependencies.this2]
+            path = "../"
+            version = "0.0.1" # hello"
+            package = "this"
+        "#};
 
-    //     let mut v = Map::new();
-    //     v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
+        let mut v = Map::new();
+        v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
-    //     assert_eq!(
-    //         change_versions(m, "this", &v, false).unwrap(),
-    //         indoc! {r#"
-    //             [dependencies.this2]
-    //             path = "../"
-    //             version = "0.3.0" # hello"
-    //             package = "this""#
-    //         }
-    //     );
-    // }
+        assert_eq!(
+            change_versions(m.into(), "this", &v, false).unwrap(),
+            indoc! {r#"
+                [dependencies.this2]
+                path = "../"
+                version = "0.3.0" # hello"
+                package = "this""#
+            }
+        );
+    }
 
     #[test]
     fn test_version_dependency_table_renamed_before_version() {
