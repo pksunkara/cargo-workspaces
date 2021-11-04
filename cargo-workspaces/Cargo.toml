@@ -45,3 +45,8 @@ indoc = "1.0.3"
 
 [workspace.metadata.workspaces]
 no_individual_tags = true
+
+[patch.crates-io.dialoguer]
+# TODO! blocked awaiting crate update
+git = "https://github.com/mitsuhiko/dialoguer"
+rev = "f9c067bfe711d5a52cb6bac0c128d046d3ade594"

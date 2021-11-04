@@ -7,12 +7,16 @@ use cargo_metadata::Metadata;
 use clap::{ArgEnum, ArgSettings, Parser};
 use dialoguer::{theme::ColorfulTheme, Confirm, Input, Select};
 use oclif::{
-    console::Style,
+    console::{style, Style},
     term::{TERM_ERR, TERM_OUT},
 };
-use semver::{Identifier, Version};
+use semver::{Identifier, Version, VersionReq};
 
-use std::{collections::BTreeMap as Map, fs, process::exit};
+use std::{
+    collections::{BTreeMap as Map, HashMap},
+    fs,
+    process::exit,
+};
 
 #[derive(Debug, Clone, ArgEnum)]
 pub enum Bump {
@@ -128,6 +132,28 @@ impl VersionOpt {
             unchanged_p = pkgs.1;
         }
 
+        let mut unversioned_deps = HashMap::new();
+
+        for (p, _, _) in new_versions.iter() {
+            let pkg = metadata
+                .packages
+                .iter()
+                .find(|x| &x.name == p)
+                .expect(INTERNAL_ERR);
+
+            for dep in pkg.dependencies.iter() {
+                if matches!(dep.req.to_string().as_str(), "*" | ">=0.0.0") {
+                    unversioned_deps
+                        .entry(pkg.id.repr.as_str())
+                        .or_insert_with(|| (pkg.name.as_str(), vec![]))
+                        .1
+                        .push((dep.name.as_str(), &dep.req));
+                }
+            }
+        }
+
+        self.alert_unversioned(unversioned_deps)?;
+
         let new_versions = self.confirm_versions(new_versions)?;
 
         for p in &metadata.packages {
@@ -218,6 +244,48 @@ impl VersionOpt {
         }
 
         Ok(())
+    }
+
+    fn alert_unversioned(&self, pkgs: HashMap<&str, (&str, Vec<(&str, &VersionReq)>)>) -> Result {
+        if pkgs.is_empty() {
+            return Ok(());
+        }
+        loop {
+            match Select::with_theme(&ColorfulTheme::default())
+                .with_prompt(format!(
+                    "You have {} packages with unversioned dependencies",
+                    pkgs.len()
+                ))
+                .items(&["Review Dependencies", "Auto-version", "Abort"])
+                .default(0)
+                .clear(true)
+                .interact_on_opt(&TERM_ERR)?
+            {
+                Some(2) | None => exit(0),
+                Some(1) => return Ok(()),
+                _ => {
+                    let mut items = vec![];
+                    for (name, deps) in pkgs.values() {
+                        items.push(format!(" │ {}", style(name).green()));
+                        for (dep, ver) in deps {
+                            items.push(format!(
+                                " │ \u{21b3} {} {}",
+                                style(dep).cyan(),
+                                style(ver).yellow()
+                            ));
+                        }
+                    }
+                    Select::new()
+                        .with_prompt("Packages with unversioned dependencies")
+                        .items(&items)
+                        .default(0)
+                        .clear(true)
+                        .report(false)
+                        .max_length(10)
+                        .interact_on_opt(&TERM_ERR)?;
+                }
+            }
+        }
     }
 
     fn confirm_versions(
