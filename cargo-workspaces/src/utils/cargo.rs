@@ -331,9 +331,9 @@ pub fn rename_packages(
 
             Ok(())
         },
-        |line, pkg_name_line| {
+        |line, package_line| {
             if PACKAGE.is_match(line) {
-                pkg_name_line.replace(line.to_string());
+                package_line.replace(line.to_string());
             }
 
             Ok(None)
