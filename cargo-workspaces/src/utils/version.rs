@@ -142,12 +142,14 @@ impl VersionOpt {
                 .expect(INTERNAL_ERR);
 
             for dep in pkg.dependencies.iter() {
-                if matches!(dep.req.to_string().as_str(), "*" | ">=0.0.0") {
-                    unversioned_deps
-                        .entry(pkg.id.repr.as_str())
-                        .or_insert_with(|| (pkg.name.as_str(), vec![]))
-                        .1
-                        .push((dep.name.as_str(), &dep.req));
+                if let Some((_, v, _)) = new_versions.iter().find(|(x, _, _)| x == &dep.name) {
+                    if matches!(dep.req.to_string().as_str(), "*" | ">=0.0.0") {
+                        unversioned_deps
+                            .entry(pkg.id.repr.as_str())
+                            .or_insert_with(|| (pkg.name.as_str(), vec![]))
+                            .1
+                            .push((dep.name.as_str(), &dep.req, v));
+                    }
                 }
             }
         }
@@ -246,7 +248,10 @@ impl VersionOpt {
         Ok(())
     }
 
-    fn alert_unversioned(&self, pkgs: HashMap<&str, (&str, Vec<(&str, &VersionReq)>)>) -> Result {
+    fn alert_unversioned(
+        &self,
+        pkgs: HashMap<&str, (&str, Vec<(&str, &VersionReq, &Version)>)>,
+    ) -> Result {
         if pkgs.is_empty() {
             return Ok(());
         }
@@ -277,11 +282,12 @@ impl VersionOpt {
                     let mut items = vec![];
                     for (name, deps) in pkgs.values() {
                         items.push(format!(" │ {}", style(name).green()));
-                        for (dep, ver) in deps {
+                        for (dep, ver, new_ver) in deps {
                             items.push(format!(
-                                " │ \u{21b3} {} {}",
+                                " │ \u{21b3} {}: {} => {}",
                                 style(dep).cyan(),
-                                style(ver).yellow()
+                                style(ver).yellow(),
+                                style(new_ver).green()
                             ));
                         }
                     }
