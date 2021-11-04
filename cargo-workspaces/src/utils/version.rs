@@ -262,7 +262,17 @@ impl VersionOpt {
                 .interact_on_opt(&TERM_ERR)?
             {
                 Some(2) | None => exit(0),
-                Some(1) => return Ok(()),
+                Some(1) => {
+                    if Confirm::with_theme(&ColorfulTheme::default())
+                        .with_prompt(
+                            "Are you sure you want this tool to auto-inject these versions?",
+                        )
+                        .default(false)
+                        .interact_on(&TERM_ERR)?
+                    {
+                        return Ok(());
+                    }
+                }
                 _ => {
                     let mut items = vec![];
                     for (name, deps) in pkgs.values() {
