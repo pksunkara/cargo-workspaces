@@ -8,53 +8,48 @@ use std::path::Path;
 /// if cargo new is updated in the future
 /// package_dir is the directory containing the package
 /// package_type is bin or lib
-fn clean_package_dir(package_dir: &String, package_type: &str) {
-    assert_ne!(package_dir, "");
-    assert_ne!(package_dir, "/");
+fn clean_package_dir(package_path: &Path, package_type: &str) {
+    assert_ne!(package_path.as_os_str(), "");
+    assert_ne!(package_path.as_os_str(), "/");
 
-    let package_path = Path::new(package_dir);
     let exists = package_path.exists();
     if !exists {
         return;
     }
 
-    let cargo_fn = String::from(format!("{}/Cargo.toml", package_dir));
-    let cargo_path = Path::new(&cargo_fn);
+    let cargo_path = package_path.join("Cargo.toml");
     let exists = cargo_path.exists();
     if exists {
-        remove_file(cargo_fn).unwrap();
+        remove_file(cargo_path).unwrap();
     }
 
-    let src_fn =
+    let src_path =
         match package_type {
             "bin" => {
-                String::from(format!("{}/src/main.rs", package_dir))
+                package_path.join("src").join("main.rs")
             },
             "lib" => {
-                String::from(format!("{}/src/lib.rs", package_dir))
+                package_path.join("src").join("lib.rs")
             },
             _ => {
                 return;
             },
         };
 
-    let src_path = Path::new(&src_fn);
     let exists = src_path.exists();
     if exists {
-        remove_file(src_fn).unwrap();
+        remove_file(src_path).unwrap();
     }
 
-    let src_fn = String::from(format!("{}/src", package_dir));
-    let src_path = Path::new(&src_fn);
+    let src_path = package_path.join("src");
     let exists = src_path.exists();
     if exists {
-        remove_dir(src_fn).unwrap();
+        remove_dir(src_path).unwrap();
     }
 
-    let package_path = Path::new(package_dir);
     let exists = package_path.exists();
     if exists {
-        remove_dir(package_dir).unwrap();
+        remove_dir(package_path).unwrap();
     }
 }
 
@@ -63,20 +58,21 @@ fn clean_package_dir(package_dir: &String, package_type: &str) {
 fn test_create_bin_2015() {
     let package_name = "mynewcrate-bin-2015";
     let dir = "../fixtures/normal";
-    let package_dir = format!("{}/{}", dir, package_name);
+    let package_path = Path::new(dir).join(package_name);
+    let manifest_path = package_path.join("Cargo.toml");
 
-    clean_package_dir(&package_dir, "bin");
+    clean_package_dir(&package_path, "bin");
 
     let _err = utils::run_err(dir,
                               &["ws", "create", package_name,
                                 "--edition", "2015", "--bin",
                                 "--name", package_name]);
 
-    let manifest = read_to_string(format!("{}/Cargo.toml", package_dir)).unwrap();
+    let manifest = read_to_string(manifest_path).unwrap();
 
     assert_snapshot!(&manifest);
 
-    clean_package_dir(&package_dir, "bin");
+    clean_package_dir(&package_path, "bin");
 }
 
 /// Test creating a 2015 lib package
@@ -84,20 +80,21 @@ fn test_create_bin_2015() {
 fn test_create_lib_2015() {
     let package_name = "mynewcrate-lib-2015";
     let dir = "../fixtures/normal";
-    let package_dir = format!("{}/{}", dir, package_name);
+    let package_path = Path::new(dir).join(package_name);
+    let manifest_path = package_path.join("Cargo.toml");
 
-    clean_package_dir(&package_dir, "lib");
+    clean_package_dir(&package_path, "lib");
 
     let _err = utils::run_err(dir,
                               &["ws", "create", package_name,
                                 "--edition", "2015", "--lib",
                                 "--name", package_name]);
 
-    let manifest = read_to_string(format!("{}/Cargo.toml", package_dir)).unwrap();
+    let manifest = read_to_string(manifest_path).unwrap();
 
     assert_snapshot!(&manifest);
 
-    clean_package_dir(&package_dir, "lib");
+    clean_package_dir(&package_path, "lib");
 }
 
 /// Test creating a 2018 bin package
@@ -105,20 +102,21 @@ fn test_create_lib_2015() {
 fn test_create_bin_2018() {
     let package_name = "mynewcrate-bin-2018";
     let dir = "../fixtures/normal";
-    let package_dir = format!("{}/{}", dir, package_name);
+    let package_path = Path::new(dir).join(package_name);
+    let manifest_path = package_path.join("Cargo.toml");
 
-    clean_package_dir(&package_dir, "bin");
+    clean_package_dir(&package_path, "bin");
 
     let _err = utils::run_err(dir,
                               &["ws", "create", package_name,
                                 "--edition", "2018", "--bin",
                                 "--name", package_name]);
 
-    let manifest = read_to_string(format!("{}/Cargo.toml", package_dir)).unwrap();
+    let manifest = read_to_string(manifest_path).unwrap();
 
     assert_snapshot!(&manifest);
 
-    clean_package_dir(&package_dir, "bin");
+    clean_package_dir(&package_path, "bin");
 }
 
 /// Test creating a 2018 lib package
@@ -126,20 +124,21 @@ fn test_create_bin_2018() {
 fn test_create_lib_2018() {
     let package_name = "mynewcrate-lib-2018";
     let dir = "../fixtures/normal";
-    let package_dir = format!("{}/{}", dir, package_name);
+    let package_path = Path::new(dir).join(package_name);
+    let manifest_path = package_path.join("Cargo.toml");
 
-    clean_package_dir(&package_dir, "lib");
+    clean_package_dir(&package_path, "lib");
 
     let _err = utils::run_err(dir,
                               &["ws", "create", package_name,
                                 "--edition", "2018", "--lib",
                                 "--name", package_name]);
 
-    let manifest = read_to_string(format!("{}/Cargo.toml", package_dir)).unwrap();
+    let manifest = read_to_string(manifest_path).unwrap();
 
     assert_snapshot!(&manifest);
 
-    clean_package_dir(&package_dir, "lib");
+    clean_package_dir(&package_path, "lib");
 }
 
 /// Test that you can't create a library and binary package at the same time
@@ -147,10 +146,10 @@ fn test_create_lib_2018() {
 fn test_create_lib_and_bin_fails() {
     let package_name = "mynewcrate-lib-and-bin-2018";
     let dir = "../fixtures/normal";
-    let package_dir = format!("{}/{}", dir, package_name);
+    let package_path = Path::new(dir).join(package_name);
 
-    clean_package_dir(&package_dir, "lib");
-    clean_package_dir(&package_dir, "bin");
+    clean_package_dir(&package_path, "lib");
+    clean_package_dir(&package_path, "bin");
 
     let err = utils::run_err(dir,
                              &["ws", "create", package_name,
@@ -162,10 +161,9 @@ fn test_create_lib_and_bin_fails() {
     assert!(err.contains("cannot be used with"));
     assert!(err.contains("--lib"));
 
-    let package_path = Path::new(&package_dir);
     let exists = package_path.exists();
     assert!(!exists);
 
-    clean_package_dir(&package_dir, "lib");
-    clean_package_dir(&package_dir, "bin");
+    clean_package_dir(&package_path, "lib");
+    clean_package_dir(&package_path, "bin");
 }
