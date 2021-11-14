@@ -1,18 +1,55 @@
 use crate::utils::{cargo, change_versions, info, Error, Result, INTERNAL_ERR};
 
 use cargo_metadata::Metadata;
-use clap::Parser;
+use clap::{ArgEnum, Parser};
 use dialoguer::{theme::ColorfulTheme, Input, Select};
 use oclif::term::TERM_ERR;
 use semver::Version;
 
 use std::{collections::BTreeMap as Map, fs};
 
+#[derive(Debug, Clone, ArgEnum)]
+enum Edition {
+    #[clap(name = "2015")]
+    Fifteen,
+    #[clap(name = "2018")]
+    Eighteen,
+    #[clap(name = "2021")]
+    TwentyOne,
+}
+
+impl ToString for Edition {
+    fn to_string(&self) -> String {
+        match self {
+            Edition::Fifteen => "2015",
+            Edition::Eighteen => "2018",
+            Edition::TwentyOne => "2021",
+        }
+        .into()
+    }
+}
+
 /// Create a new workspace crate
 #[derive(Debug, Parser)]
 pub struct Create {
     /// Path for the crate relative to the workspace manifest
     path: String,
+
+    /// The crate edition, currently either 2015 or 2018
+    #[clap(long, arg_enum)]
+    edition: Option<Edition>,
+
+    /// Whether this is a binary crate
+    #[clap(long, conflicts_with = "lib")]
+    bin: bool,
+
+    /// Whether this is a library crate
+    #[clap(long)]
+    lib: bool,
+
+    /// The name of the crate
+    #[clap(long)]
+    name: Option<String>,
 }
 
 impl Create {
@@ -20,32 +57,51 @@ impl Create {
         let theme = ColorfulTheme::default();
         let path = &metadata.workspace_root.join(&self.path);
 
-        let name: String = Input::with_theme(&theme)
-            .with_prompt("Name of the crate")
-            .interact_on(&TERM_ERR)?;
+        let name = match &self.name {
+            Some(n) => n.clone(),
+            None => Input::with_theme(&theme)
+                .with_prompt("Name of the crate")
+                .interact_on(&TERM_ERR)?,
+        };
 
         let types = vec!["library", "binary"];
 
-        let template = Select::with_theme(&theme)
-            .items(&types)
-            .default(1)
-            .with_prompt("Type of the crate")
-            .interact_on(&TERM_ERR)?;
+        let template = if self.lib {
+            0
+        } else if self.bin {
+            1
+        } else {
+            Select::with_theme(&theme)
+                .items(&types)
+                .default(1)
+                .with_prompt("Type of the crate")
+                .interact_on(&TERM_ERR)?
+        };
 
-        let editions = vec!["2015", "2018"];
+        let editions = Edition::value_variants()
+            .iter()
+            .map(|x| x.to_string())
+            .collect::<Vec<_>>();
 
-        let edition = Select::with_theme(&theme)
-            .items(&editions)
-            .default(1)
-            .with_prompt("Rust edition")
-            .interact_on(&TERM_ERR)?;
+        let edition = match &self.edition {
+            Some(edition) => match edition {
+                &Edition::Fifteen => 0,
+                &Edition::Eighteen => 1,
+                &Edition::TwentyOne => 2,
+            },
+            None => Select::with_theme(&theme)
+                .items(&editions)
+                .default(1)
+                .with_prompt("Rust edition")
+                .interact_on(&TERM_ERR)?,
+        };
 
         let mut args = vec![
             "new",
             "--name",
             name.as_str(),
             "--edition",
-            editions[edition],
+            editions[edition].as_str(),
         ];
 
         if template == 0 {
