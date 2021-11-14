@@ -1,7 +1,9 @@
 mod utils;
 use insta::assert_snapshot;
-use std::fs::{read_to_string, remove_dir, remove_file};
-use std::path::Path;
+use std::{
+    fs::{read_to_string, remove_dir, remove_file},
+    path::Path,
+};
 
 /// Clean up a cargo or cargo-workspace created package directory
 /// This doesn't use remove_dir_all, so it's safer, but more liable to break
@@ -23,18 +25,13 @@ fn clean_package_dir(package_path: &Path, package_type: &str) {
         remove_file(cargo_path).unwrap();
     }
 
-    let src_path =
-        match package_type {
-            "bin" => {
-                package_path.join("src").join("main.rs")
-            },
-            "lib" => {
-                package_path.join("src").join("lib.rs")
-            },
-            _ => {
-                return;
-            },
-        };
+    let src_path = match package_type {
+        "bin" => package_path.join("src").join("main.rs"),
+        "lib" => package_path.join("src").join("lib.rs"),
+        _ => {
+            return;
+        }
+    };
 
     let exists = src_path.exists();
     if exists {
@@ -63,10 +60,19 @@ fn test_create_bin_2015() {
 
     clean_package_dir(&package_path, "bin");
 
-    let _err = utils::run_err(dir,
-                              &["ws", "create", package_name,
-                                "--edition", "2015", "--bin",
-                                "--name", package_name]);
+    let _err = utils::run_err(
+        dir,
+        &[
+            "ws",
+            "create",
+            package_name,
+            "--edition",
+            "2015",
+            "--bin",
+            "--name",
+            package_name,
+        ],
+    );
 
     let manifest = read_to_string(manifest_path).unwrap();
 
@@ -85,10 +91,19 @@ fn test_create_lib_2015() {
 
     clean_package_dir(&package_path, "lib");
 
-    let _err = utils::run_err(dir,
-                              &["ws", "create", package_name,
-                                "--edition", "2015", "--lib",
-                                "--name", package_name]);
+    let _err = utils::run_err(
+        dir,
+        &[
+            "ws",
+            "create",
+            package_name,
+            "--edition",
+            "2015",
+            "--lib",
+            "--name",
+            package_name,
+        ],
+    );
 
     let manifest = read_to_string(manifest_path).unwrap();
 
@@ -107,10 +122,19 @@ fn test_create_bin_2018() {
 
     clean_package_dir(&package_path, "bin");
 
-    let _err = utils::run_err(dir,
-                              &["ws", "create", package_name,
-                                "--edition", "2018", "--bin",
-                                "--name", package_name]);
+    let _err = utils::run_err(
+        dir,
+        &[
+            "ws",
+            "create",
+            package_name,
+            "--edition",
+            "2018",
+            "--bin",
+            "--name",
+            package_name,
+        ],
+    );
 
     let manifest = read_to_string(manifest_path).unwrap();
 
@@ -129,10 +153,19 @@ fn test_create_lib_2018() {
 
     clean_package_dir(&package_path, "lib");
 
-    let _err = utils::run_err(dir,
-                              &["ws", "create", package_name,
-                                "--edition", "2018", "--lib",
-                                "--name", package_name]);
+    let _err = utils::run_err(
+        dir,
+        &[
+            "ws",
+            "create",
+            package_name,
+            "--edition",
+            "2018",
+            "--lib",
+            "--name",
+            package_name,
+        ],
+    );
 
     let manifest = read_to_string(manifest_path).unwrap();
 
@@ -151,10 +184,20 @@ fn test_create_lib_and_bin_fails() {
     clean_package_dir(&package_path, "lib");
     clean_package_dir(&package_path, "bin");
 
-    let err = utils::run_err(dir,
-                             &["ws", "create", package_name,
-                               "--edition", "2018", "--lib", "--bin",
-                               "--name", package_name]);
+    let err = utils::run_err(
+        dir,
+        &[
+            "ws",
+            "create",
+            package_name,
+            "--edition",
+            "2018",
+            "--lib",
+            "--bin",
+            "--name",
+            package_name,
+        ],
+    );
 
     assert!(err.contains("error"));
     assert!(err.contains("--bin"));
