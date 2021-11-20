@@ -366,6 +366,7 @@ pub fn change_versions(
     pkg_name: &str,
     versions: &Map<String, Version>,
     exact: bool,
+    autoversion: bool,
 ) -> Result<String> {
     parse(
         manifest,
@@ -389,17 +390,19 @@ pub fn change_versions(
             } else if let Some(caps) = DEP_OBJ_VERSION.captures(line) {
                 edit_version(caps, new_lines, versions, exact, 2)?;
             } else if let Some(caps) = DEP_OBJ_NAME.captures(line) {
-                if let Some(new_version) = versions.get(&caps[2]) {
-                    if exact {
-                        new_lines.push(format!(
-                            "{}, version = \"={}\"{}",
-                            &caps[1], new_version, &caps[3]
-                        ));
-                    } else {
-                        new_lines.push(format!(
-                            "{}, version = \"{}\"{}",
-                            &caps[1], new_version, &caps[3]
-                        ));
+                if autoversion {
+                    if let Some(new_version) = versions.get(&caps[2]) {
+                        if exact {
+                            new_lines.push(format!(
+                                "{}, version = \"={}\"{}",
+                                &caps[1], new_version, &caps[3]
+                            ));
+                        } else {
+                            new_lines.push(format!(
+                                "{}, version = \"{}\"{}",
+                                &caps[1], new_version, &caps[3]
+                            ));
+                        }
                     }
                 }
             }
@@ -431,11 +434,13 @@ pub fn change_versions(
                     }
                 }
                 None => {
-                    if let Some(new_version) = versions.get(dep) {
-                        if exact {
-                            new_lines.push(format!("version = \"={}\"", new_version));
-                        } else {
-                            new_lines.push(format!("version = \"{}\"", new_version));
+                    if autoversion {
+                        if let Some(new_version) = versions.get(dep) {
+                            if exact {
+                                new_lines.push(format!("version = \"={}\"", new_version));
+                            } else {
+                                new_lines.push(format!("version = \"{}\"", new_version));
+                            }
                         }
                     }
                 }
@@ -508,7 +513,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m.into(), "this", &v, false).unwrap(),
+            change_versions(m.into(), "this", &v, false, false).unwrap(),
             indoc! {r#"
                 [package]
                 version = "0.3.0""#
@@ -527,7 +532,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m.into(), "this", &v, false).unwrap(),
+            change_versions(m.into(), "this", &v, false, false).unwrap(),
             indoc! {r#"
                 [package]
                 version="0.3.0" # hello"#
@@ -546,7 +551,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m.into(), "this", &v, false).unwrap(),
+            change_versions(m.into(), "this", &v, false, false).unwrap(),
             indoc! {r#"
                 [package]
                 "version"	=	"0.3.0""#
@@ -565,7 +570,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m.into(), "this", &v, false).unwrap(),
+            change_versions(m.into(), "this", &v, false, false).unwrap(),
             indoc! {r#"
                 [package]
                 'version'='0.3.0'# hello"#
@@ -584,7 +589,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m.into(), "this", &v, false).unwrap(),
+            change_versions(m.into(), "this", &v, false, false).unwrap(),
             indoc! {r#"
                 [dependencies]
                 this = "0.3.0" # hello"#
@@ -603,7 +608,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m.into(), "this", &v, false).unwrap(),
+            change_versions(m.into(), "this", &v, false, true).unwrap(),
             indoc! {r#"
                 [dependencies]
                 this = { path = "../", version = "0.3.0" } # hello"#
@@ -622,7 +627,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m.into(), "this", &v, false).unwrap(),
+            change_versions(m.into(), "this", &v, false, false).unwrap(),
             indoc! {r#"
                 [dependencies]
                 this = { path = "../", version = "0.3.0" } # hello"#
@@ -641,7 +646,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m.into(), "this", &v, false).unwrap(),
+            change_versions(m.into(), "this", &v, false, false).unwrap(),
             indoc! {r#"
                 [dependencies]
                 this2 = { path = "../", version = "0.3.0", package = "this" } # hello"#
@@ -660,7 +665,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m.into(), "this", &v, false).unwrap(),
+            change_versions(m.into(), "this", &v, false, false).unwrap(),
             indoc! {r#"
                 [dependencies]
                 this2 = { path = "../", package = "this", version = "0.3.0" } # hello"#
@@ -680,7 +685,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m.into(), "this", &v, false).unwrap(),
+            change_versions(m.into(), "this", &v, false, false).unwrap(),
             indoc! {r#"
                 [dependencies.this]
                 path = "../"
@@ -702,7 +707,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m.into(), "this", &v, false).unwrap(),
+            change_versions(m.into(), "this", &v, false, true).unwrap(),
             indoc! {r#"
                 [dependencies.this]
                 path = "../" # hello
@@ -725,7 +730,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m.into(), "this", &v, false).unwrap(),
+            change_versions(m.into(), "this", &v, false, false).unwrap(),
             indoc! {r#"
                 [dependencies.this2]
                 path = "../"
@@ -748,7 +753,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m.into(), "this", &v, false).unwrap(),
+            change_versions(m.into(), "this", &v, false, false).unwrap(),
             indoc! {r#"
                 [dependencies.this2]
                 path = "../"
@@ -769,7 +774,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m.into(), "this", &v, true).unwrap(),
+            change_versions(m.into(), "this", &v, true, false).unwrap(),
             indoc! {r#"
                 [dependencies]
                 this = { path = "../", version = "=0.3.0" } # hello"#
@@ -788,7 +793,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m.into(), "this", &v, true).unwrap(),
+            change_versions(m.into(), "this", &v, true, true).unwrap(),
             indoc! {r#"
                 [dependencies]
                 this = { path = "../", version = "=0.3.0" } # hello"#
@@ -807,7 +812,7 @@ mod test {
         v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
 
         assert_eq!(
-            change_versions(m.into(), "this", &v, true).unwrap(),
+            change_versions(m.into(), "this", &v, true, true).unwrap(),
             indoc! {r#"
                 [dependencies.this]
                 path = "../" # hello

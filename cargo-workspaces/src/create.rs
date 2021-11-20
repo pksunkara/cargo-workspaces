@@ -69,7 +69,13 @@ impl Create {
 
         fs::write(
             &manifest,
-            change_versions(fs::read_to_string(&manifest)?, &name, &versions, false)?,
+            change_versions(
+                fs::read_to_string(&manifest)?,
+                &name,
+                &versions,
+                false,
+                false,
+            )?,
         )?;
 
         // TODO: If none of the globs in workspace `members` match, add a new entry

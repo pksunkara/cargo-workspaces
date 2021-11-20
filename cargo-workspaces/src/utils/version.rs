@@ -154,7 +154,7 @@ impl VersionOpt {
             }
         }
 
-        self.alert_unversioned(unversioned_deps)?;
+        let autoversion = self.alert_unversioned(unversioned_deps)?;
 
         let new_versions = self.confirm_versions(new_versions)?;
 
@@ -176,6 +176,7 @@ impl VersionOpt {
                         &p.name,
                         &new_versions,
                         self.exact,
+                        autoversion,
                     )?
                 ),
             )?;
@@ -251,9 +252,9 @@ impl VersionOpt {
     fn alert_unversioned(
         &self,
         pkgs: HashMap<&str, (&str, Vec<(&str, &VersionReq, &Version)>)>,
-    ) -> Result {
+    ) -> Result<bool> {
         if pkgs.is_empty() {
-            return Ok(());
+            return Ok(false);
         }
         loop {
             match Select::with_theme(&ColorfulTheme::default())
@@ -261,13 +262,13 @@ impl VersionOpt {
                     "You have {} packages with unversioned dependencies",
                     pkgs.len()
                 ))
-                .items(&["Review Dependencies", "Auto-version", "Abort"])
+                .items(&["Review Dependencies", "Auto-version", "Skip"])
                 .default(0)
                 .clear(true)
-                .interact_on_opt(&TERM_ERR)?
+                .interact_on(&TERM_ERR)?
             {
-                Some(2) | None => exit(0),
-                Some(1) => {
+                2 => return Ok(false),
+                1 => {
                     if Confirm::with_theme(&ColorfulTheme::default())
                         .with_prompt(
                             "Are you sure you want this tool to auto-inject these versions?",
@@ -275,7 +276,7 @@ impl VersionOpt {
                         .default(false)
                         .interact_on(&TERM_ERR)?
                     {
-                        return Ok(());
+                        return Ok(true);
                     }
                 }
                 _ => {
