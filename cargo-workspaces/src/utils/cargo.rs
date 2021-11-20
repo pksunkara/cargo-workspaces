@@ -432,7 +432,11 @@ pub fn change_versions(
                 }
                 None => {
                     if let Some(new_version) = versions.get(dep) {
-                        new_lines.push(format!("version = \"{}\"", new_version));
+                        if exact {
+                            new_lines.push(format!("version = \"={}\"", new_version));
+                        } else {
+                            new_lines.push(format!("version = \"{}\"", new_version));
+                        }
                     }
                 }
             }
@@ -789,6 +793,25 @@ mod test {
                 [dependencies]
                 this = { path = "../", version = "=0.3.0" } # hello"#
             }
+        );
+    }
+
+    #[test]
+    fn test_exact_dependency_table_version_missing() {
+        let m = indoc! {r#"
+            [dependencies.this]
+            path = "../" # hello
+        "#};
+
+        let mut v = Map::new();
+        v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
+
+        assert_eq!(
+            change_versions(m.into(), "this", &v, true).unwrap(),
+            indoc! {r#"
+                [dependencies.this]
+                path = "../" # hello
+                version = "=0.3.0""#}
         );
     }
 
