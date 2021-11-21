@@ -14,7 +14,7 @@ path = "src/main.rs"
 
 [[bin]]
 name = "cargo-ws"
-path = "src/main.rs"
+path = "src/../src/main.rs"
 test = false
 bench = false
 
