@@ -35,7 +35,7 @@ pub struct Create {
     /// Path for the crate relative to the workspace manifest
     path: String,
 
-    /// The crate edition, currently either 2015 or 2018
+    /// The crate edition
     #[clap(long, arg_enum)]
     edition: Option<Edition>,
 

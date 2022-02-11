@@ -19,7 +19,7 @@ pub struct Publish {
     from_git: bool,
 
     /// Skip already published crate versions
-    #[clap(long, hidden = true)]
+    #[clap(long, hide = true)]
     skip_published: bool,
 
     /// Skip crate verification (not recommended)

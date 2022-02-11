@@ -43,13 +43,17 @@ fills the `members` with the all the crates that can be found in that directory.
 
 ```
 USAGE:
-    cargo workspaces init [path]
+    cargo workspaces create [OPTIONS] <PATH>
 
 ARGS:
-    <path>    Path to the workspace root [default: .]
+    <PATH>    Path for the crate relative to the workspace manifest
 
-FLAGS:
-    -h, --help    Prints help information
+OPTIONS:
+        --bin                  Whether this is a binary crate
+        --edition <EDITION>    The crate edition [possible values: 2015, 2018, 2021]
+    -h, --help                 Print help information
+        --lib                  Whether this is a library crate
+        --name <NAME>          The name of the crate
 ```
 
 ### Create

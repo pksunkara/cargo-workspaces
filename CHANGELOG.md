@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.29
+
+### Enhancements
+* Added `lib`, `bin` flags to `create` subcommand
+* Added `edition`, `name` options to `create` subcommand
+
 ## 0.2.28
 
 ### Enhancements
