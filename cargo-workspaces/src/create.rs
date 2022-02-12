@@ -18,17 +18,6 @@ enum Edition {
     TwentyOne,
 }
 
-impl ToString for Edition {
-    fn to_string(&self) -> String {
-        match self {
-            Edition::Fifteen => "2015",
-            Edition::Eighteen => "2018",
-            Edition::TwentyOne => "2021",
-        }
-        .into()
-    }
-}
-
 /// Create a new workspace crate
 #[derive(Debug, Parser)]
 pub struct Create {
@@ -80,7 +69,7 @@ impl Create {
 
         let editions = Edition::value_variants()
             .iter()
-            .map(|x| x.to_string())
+            .map(|x| x.to_possible_value().unwrap().get_name())
             .collect::<Vec<_>>();
 
         let edition = match &self.edition {
@@ -91,7 +80,7 @@ impl Create {
             },
             None => Select::with_theme(&theme)
                 .items(&editions)
-                .default(1)
+                .default(2)
                 .with_prompt("Rust edition")
                 .interact_on(&TERM_ERR)?,
         };
@@ -101,7 +90,7 @@ impl Create {
             "--name",
             name.as_str(),
             "--edition",
-            editions[edition].as_str(),
+            editions[edition],
         ];
 
         if template == 0 {
