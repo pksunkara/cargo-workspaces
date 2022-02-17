@@ -1,7 +1,7 @@
 use crate::utils::{ChangeData, ChangeOpt, ListOpt, Listable, Result};
 
 use cargo_metadata::Metadata;
-use clap::{ArgSettings, Parser};
+use clap::Parser;
 use oclif::term::TERM_OUT;
 
 /// List crates that have changed since the last tagged release
@@ -17,7 +17,7 @@ pub struct Changed {
     #[clap(
         long,
         conflicts_with = "include-merged-tags",
-        setting(ArgSettings::ForbidEmptyValues)
+        forbid_empty_values(true)
     )]
     since: Option<String>,
 }

@@ -3,7 +3,7 @@ use crate::utils::{
 };
 
 use camino::Utf8PathBuf;
-use clap::{ArgSettings, Parser};
+use clap::Parser;
 use glob::Pattern;
 use semver::Version;
 
@@ -45,7 +45,7 @@ pub struct GitOpt {
     pub no_git_commit: bool,
 
     /// Specify which branches to allow from [default: master]
-    #[clap(long, value_name = "pattern", setting(ArgSettings::ForbidEmptyValues))]
+    #[clap(long, value_name = "pattern", forbid_empty_values(true))]
     pub allow_branch: Option<String>,
 
     /// Amend the existing commit, instead of generating a new one
@@ -57,7 +57,7 @@ pub struct GitOpt {
         short,
         long,
         conflicts_with_all = &["amend"],
-        setting(ArgSettings::ForbidEmptyValues)
+        forbid_empty_values(true)
     )]
     pub message: Option<String>,
 
@@ -83,7 +83,7 @@ pub struct GitOpt {
         default_value = "%n@",
         value_name = "prefix",
         validator = validate_value_containing_name,
-        setting(ArgSettings::ForbidEmptyValues)
+        forbid_empty_values(true)
     )]
     pub individual_tag_prefix: String,
 
@@ -96,7 +96,7 @@ pub struct GitOpt {
         long,
         default_value = "origin",
         value_name = "remote",
-        setting(ArgSettings::ForbidEmptyValues)
+        forbid_empty_values(true)
     )]
     pub git_remote: String,
 }

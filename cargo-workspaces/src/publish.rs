@@ -3,7 +3,7 @@ use crate::utils::{
     INTERNAL_ERR,
 };
 use cargo_metadata::Metadata;
-use clap::{ArgSettings, Parser};
+use clap::Parser;
 use crates_index::Index;
 use indexmap::IndexSet as Set;
 
@@ -31,7 +31,7 @@ pub struct Publish {
     allow_dirty: bool,
 
     /// The token to use for publishing
-    #[clap(long, setting(ArgSettings::ForbidEmptyValues))]
+    #[clap(long, forbid_empty_values(true))]
     token: Option<String>,
 }
 

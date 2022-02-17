@@ -1,6 +1,6 @@
 use crate::utils::{get_pkgs, rename_packages, validate_value_containing_name, Error};
 use cargo_metadata::Metadata;
-use clap::{ArgSettings, Parser};
+use clap::Parser;
 use glob::{Pattern, PatternError};
 use std::{collections::BTreeMap as Map, fs};
 
@@ -18,7 +18,7 @@ pub struct Rename {
     /// The value that should be used as new name (should contain `%n`)
     #[clap(
         validator = validate_value_containing_name,
-        setting(ArgSettings::ForbidEmptyValues)
+        forbid_empty_values(true)
     )]
     pub to: String,
 }

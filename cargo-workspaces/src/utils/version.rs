@@ -4,7 +4,7 @@ use crate::utils::{
 };
 
 use cargo_metadata::Metadata;
-use clap::{ArgEnum, ArgSettings, Parser};
+use clap::{ArgEnum, Parser};
 use dialoguer::{theme::ColorfulTheme, Confirm, Input, Select};
 use oclif::{
     console::Style,
@@ -53,11 +53,7 @@ pub struct VersionOpt {
     pub custom: Option<Version>,
 
     /// Specify prerelease identifier
-    #[clap(
-        long,
-        value_name = "identifier",
-        setting(ArgSettings::ForbidEmptyValues)
-    )]
+    #[clap(long, value_name = "identifier", forbid_empty_values(true))]
     pub pre_id: Option<String>,
 
     #[clap(flatten)]
