@@ -1,7 +1,7 @@
 mod utils;
 use insta::assert_snapshot;
 use std::{
-    fs::{read_to_string, remove_dir, remove_file},
+    fs::{read_to_string, remove_dir, remove_dir_all, remove_file},
     path::Path,
 };
 
@@ -42,6 +42,14 @@ fn clean_package_dir(package_path: &Path, package_type: &str) {
     let exists = src_path.exists();
     if exists {
         remove_dir(src_path).unwrap();
+    }
+
+    let git_path = package_path.join(".git");
+    let gitignore_path = package_path.join(".gitignore");
+    let exists = git_path.exists();
+    if exists {
+        remove_dir_all(git_path).unwrap();
+        remove_file(gitignore_path).unwrap();
     }
 
     let exists = package_path.exists();
