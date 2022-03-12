@@ -35,6 +35,7 @@ pub fn git<'a>(
 }
 
 #[derive(Debug, Parser)]
+#[clap(next_help_heading = "GIT OPTIONS")]
 pub struct GitOpt {
     /// Do not commit version changes
     #[clap(long, conflicts_with_all = &[

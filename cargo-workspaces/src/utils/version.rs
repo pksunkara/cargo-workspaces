@@ -42,14 +42,15 @@ impl Bump {
 }
 
 #[derive(Debug, Parser)]
+#[clap(next_help_heading = "VERSION OPTIONS")]
 pub struct VersionOpt {
     /// Increment all versions by the given explicit
     /// semver keyword while skipping the prompts for them
-    #[clap(arg_enum)]
+    #[clap(arg_enum, help_heading = "VERSION ARGS")]
     pub bump: Option<Bump>,
 
     /// Specify custom version value when 'bump' is set to 'custom'
-    #[clap(required_if_eq("bump", "custom"))]
+    #[clap(required_if_eq("bump", "custom"), help_heading = "VERSION ARGS")]
     pub custom: Option<Version>,
 
     /// Specify prerelease identifier

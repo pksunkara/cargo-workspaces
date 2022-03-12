@@ -9,8 +9,9 @@ use indexmap::IndexSet as Set;
 
 /// Publish crates in the project
 #[derive(Debug, Parser)]
+#[clap(next_help_heading = "PUBLISH OPTIONS")]
 pub struct Publish {
-    #[clap(flatten)]
+    #[clap(flatten, next_help_heading = None)]
     version: VersionOpt,
 
     /// Publish crates from the current commit without versioning
