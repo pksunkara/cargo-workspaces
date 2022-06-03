@@ -34,6 +34,10 @@ pub struct Publish {
     /// The token to use for publishing
     #[clap(long, forbid_empty_values(true))]
     token: Option<String>,
+
+    /// The Cargo registry to use for publishing
+    #[clap(long, forbid_empty_values(true))]
+    registry: Option<String>,
 }
 
 impl Publish {
@@ -106,6 +110,11 @@ impl Publish {
 
             if self.allow_dirty {
                 args.push("--allow-dirty");
+            }
+
+            if let Some(ref registry) = self.registry {
+                args.push("--registry");
+                args.push(registry);
             }
 
             if let Some(ref token) = self.token {
