@@ -35,9 +35,9 @@ pub struct Publish {
     #[clap(long, forbid_empty_values(true))]
     token: Option<String>,
 
-    /// The Cargo profile to use for publishing
+    /// The Cargo registry to use for publishing
     #[clap(long, forbid_empty_values(true))]
-    profile: Option<String>,
+    registry: Option<String>,
 }
 
 impl Publish {
@@ -112,9 +112,9 @@ impl Publish {
                 args.push("--allow-dirty");
             }
 
-            if let Some(ref profile) = self.profile {
-                args.push("--profile");
-                args.push(profile);
+            if let Some(ref registry) = self.registry {
+                args.push("--registry");
+                args.push(registry);
             }
 
             if let Some(ref token) = self.token {
