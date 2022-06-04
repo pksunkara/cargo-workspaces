@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.34
+
+### Enhancements
+* Added `registry` flag to `publish` subcommand
+
 ## 0.2.33
 
 ### Bug Fixes

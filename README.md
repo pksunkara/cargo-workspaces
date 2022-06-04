@@ -43,6 +43,23 @@ fills the `members` with the all the crates that can be found in that directory.
 
 ```
 USAGE:
+    cargo workspaces init [PATH]
+
+ARGS:
+    <PATH>    Path to the workspace root [default: .]
+
+OPTIONS:
+    -h, --help    Print help information
+```
+
+### Create
+
+Interactively creates a new crate in the workspace. *We recommend using this instead of `cargo new`*. All
+the crates start with `0.0.0` version because the [version](#version) is responsible for determining the
+version.
+
+```
+USAGE:
     cargo workspaces create [OPTIONS] <PATH>
 
 ARGS:
@@ -56,34 +73,17 @@ OPTIONS:
         --name <NAME>          The name of the crate
 ```
 
-### Create
-
-Interactively creates a new crate in the workspace. *We recommend using this instead of `cargo new`*. All
-the crates start with `0.0.0` version because the [version](#version) is responsible for determining the
-version.
-
-```
-USAGE:
-    cargo workspaces create <path>
-
-ARGS:
-    <path>    Path for the crate relative to the workspace manifest
-
-FLAGS:
-    -h, --help    Prints help information
-```
-
 ### List
 
 Lists crates in the workspace.
 
 ```
 USAGE:
-    cargo workspaces list [FLAGS]
+    cargo workspaces list [OPTIONS]
 
-FLAGS:
+OPTIONS:
     -a, --all     Show private crates that are normally hidden
-    -h, --help    Prints help information
+    -h, --help    Print help information
         --json    Show information as a JSON array
     -l, --long    Show extended information
 ```
@@ -101,19 +101,17 @@ would be the subjects of the next [version](#version) or [publish](#publish) com
 
 ```
 USAGE:
-    cargo workspaces changed [FLAGS] [OPTIONS]
-
-FLAGS:
-    -a, --all                    Show private crates that are normally hidden
-    -h, --help                   Prints help information
-        --include-merged-tags    Include tags from merged branches
-        --json                   Show information as a JSON array
-    -l, --long                   Show extended information
+    cargo workspaces changed [OPTIONS]
 
 OPTIONS:
+    -a, --all                         Show private crates that are normally hidden
         --force <pattern>             Always include targeted crates matched by glob even when there are no changes
+    -h, --help                        Print help information
         --ignore-changes <pattern>    Ignore changes in files matched by glob
-        --since <since>               Use this git reference instead of the last tag
+        --include-merged-tags         Include tags from merged branches
+        --json                        Show information as a JSON array
+    -l, --long                        Show extended information
+        --since <SINCE>               Use this git reference instead of the last tag
 ```
 
 ### Exec
@@ -122,13 +120,13 @@ Executes an arbitrary command in each crate of the workspace.
 
 ```
 USAGE:
-    cargo workspaces exec [FLAGS] <args>...
+    cargo workspaces exec [OPTIONS] <ARGS>...
 
 ARGS:
-    <args>...
+    <ARGS>...
 
-FLAGS:
-    -h, --help       Prints help information
+OPTIONS:
+    -h, --help       Print help information
         --no-bail    Continue executing command despite non-zero exit in a given crate
 ```
 
@@ -150,34 +148,36 @@ You can influence the above steps with the flags and options for this command.
 
 ```
 USAGE:
-    cargo workspaces version [FLAGS] [OPTIONS] [ARGS]
-
-ARGS:
-    <bump>      Increment all versions by the given explicit semver keyword while skipping the prompts for them
-                [possible values: major, minor, patch, premajor, preminor, prepatch, prerelease, custom]
-    <custom>    Specify custom version value when 'bump' is set to 'custom'
-
-FLAGS:
-    -a, --all                    Also do versioning for private crates (will not be published)
-        --amend                  Amend the existing commit, instead of generating a new one
-        --exact                  Specify inter dependency version numbers exactly with `=`
-    -h, --help                   Prints help information
-        --include-merged-tags    Include tags from merged branches
-        --no-git-commit          Do not commit version changes
-        --no-git-push            Do not push generated commit and tags to git remote
-        --no-git-tag             Do not tag generated commit
-        --no-global-tag          Do not create a global tag for a workspace
-        --no-individual-tags     Do not tag individual versions for crates
-    -y, --yes                    Skip confirmation prompt
+    cargo workspaces version [OPTIONS] [ARGS]
 
 OPTIONS:
+    -h, --help    Print help information
+
+VERSION ARGS:
+    <BUMP>      Increment all versions by the given explicit semver keyword while skipping the prompts for them [possible values: major, minor, patch,
+                premajor, preminor, prepatch, prerelease, custom]
+    <CUSTOM>    Specify custom version value when 'bump' is set to 'custom'
+
+VERSION OPTIONS:
+    -a, --all                         Also do versioning for private crates (will not be published)
+        --exact                       Specify inter dependency version numbers exactly with `=`
+        --force <pattern>             Always include targeted crates matched by glob even when there are no changes
+        --ignore-changes <pattern>    Ignore changes in files matched by glob
+        --include-merged-tags         Include tags from merged branches
+        --pre-id <identifier>         Specify prerelease identifier
+    -y, --yes                         Skip confirmation prompt
+
+GIT OPTIONS:
         --allow-branch <pattern>            Specify which branches to allow from [default: master]
-        --force <pattern>                   Always include targeted crates matched by glob even when there are no changes
+        --amend                             Amend the existing commit, instead of generating a new one
         --git-remote <remote>               Push git changes to the specified remote [default: origin]
-        --ignore-changes <pattern>          Ignore changes in files matched by glob
         --individual-tag-prefix <prefix>    Customize prefix for individual tags (should contain `%n`) [default: %n@]
-    -m, --message <message>                 Use a custom commit message when creating the version commit
-        --pre-id <identifier>               Specify prerelease identifier
+    -m, --message <MESSAGE>                 Use a custom commit message when creating the version commit
+        --no-git-commit                     Do not commit version changes
+        --no-git-push                       Do not push generated commit and tags to git remote
+        --no-git-tag                        Do not tag generated commit
+        --no-global-tag                     Do not create a global tag for a workspace
+        --no-individual-tags                Do not tag individual versions for crates
         --tag-prefix <prefix>               Customize tag prefix (can be empty) [default: v]
 ```
 
@@ -206,38 +206,44 @@ this command runs [version](#version) first. If you do not want that to happen, 
 
 ```
 USAGE:
-    cargo workspaces publish [FLAGS] [OPTIONS] [ARGS]
-
-ARGS:
-    <bump>      Increment all versions by the given explicit semver keyword while skipping the prompts for them
-                [possible values: major, minor, patch, premajor, preminor, prepatch, prerelease, custom]
-    <custom>    Specify custom version value when 'bump' is set to 'custom'
-
-FLAGS:
-    -a, --all                    Also do versioning for private crates (will not be published)
-        --amend                  Amend the existing commit, instead of generating a new one
-        --exact                  Specify inter dependency version numbers exactly with `=`
-        --from-git               Publish crates from the current commit without versioning
-    -h, --help                   Prints help information
-        --include-merged-tags    Include tags from merged branches
-        --no-git-commit          Do not commit version changes
-        --no-git-push            Do not push generated commit and tags to git remote
-        --no-git-tag             Do not tag generated commit
-        --no-global-tag          Do not create a global tag for a workspace
-        --no-individual-tags     Do not tag individual versions for crates
-        --no-verify              Skip crate verification (not recommended)
-    -y, --yes                    Skip confirmation prompt
+    cargo workspaces publish [OPTIONS] [ARGS]
 
 OPTIONS:
+    -h, --help    Print help information
+
+VERSION ARGS:
+    <BUMP>      Increment all versions by the given explicit semver keyword while skipping the prompts for them [possible values: major, minor, patch,
+                premajor, preminor, prepatch, prerelease, custom]
+    <CUSTOM>    Specify custom version value when 'bump' is set to 'custom'
+
+VERSION OPTIONS:
+    -a, --all                         Also do versioning for private crates (will not be published)
+        --exact                       Specify inter dependency version numbers exactly with `=`
+        --force <pattern>             Always include targeted crates matched by glob even when there are no changes
+        --ignore-changes <pattern>    Ignore changes in files matched by glob
+        --include-merged-tags         Include tags from merged branches
+        --pre-id <identifier>         Specify prerelease identifier
+    -y, --yes                         Skip confirmation prompt
+
+GIT OPTIONS:
         --allow-branch <pattern>            Specify which branches to allow from [default: master]
-        --force <pattern>                   Always include targeted crates matched by glob even when there are no changes
+        --amend                             Amend the existing commit, instead of generating a new one
         --git-remote <remote>               Push git changes to the specified remote [default: origin]
-        --ignore-changes <pattern>          Ignore changes in files matched by glob
         --individual-tag-prefix <prefix>    Customize prefix for individual tags (should contain `%n`) [default: %n@]
-    -m, --message <message>                 Use a custom commit message when creating the version commit
-        --pre-id <identifier>               Specify prerelease identifier
+    -m, --message <MESSAGE>                 Use a custom commit message when creating the version commit
+        --no-git-commit                     Do not commit version changes
+        --no-git-push                       Do not push generated commit and tags to git remote
+        --no-git-tag                        Do not tag generated commit
+        --no-global-tag                     Do not create a global tag for a workspace
+        --no-individual-tags                Do not tag individual versions for crates
         --tag-prefix <prefix>               Customize tag prefix (can be empty) [default: v]
-        --token <token>                     The token to use for publishing
+
+PUBLISH OPTIONS:
+        --allow-dirty            Allow dirty working directories to be published
+        --from-git               Publish crates from the current commit without versioning
+        --no-verify              Skip crate verification (not recommended)
+        --registry <REGISTRY>    The Cargo registry to use for publishing
+        --token <TOKEN>          The token to use for publishing
 ```
 
 ## Config
@@ -247,7 +253,7 @@ There are two kind of options.
 * **Workspace**: Options that are specified in the workspace with `[workspace.metadata.workspaces]`
 * **Package**: Options that are specified in the package with `[package.metadata.workspaces]`
 
-If an option exists is allowed to exist in both places, it means that the value specified in the **Package**
+If an option is allowed to exist in both places, it means that the value specified in the **Package**
 overrides the value specified in **Workspace**.
 
 | Name | Type | Workspace | Package |
