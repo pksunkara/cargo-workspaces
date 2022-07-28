@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.35
+
+### Enhancements
+* Allow renaming single crates
+
 ## 0.2.34
 
 ### Enhancements
