@@ -7,7 +7,7 @@ use std::{collections::BTreeMap as Map, fs};
 /// Rename crates in the project
 #[derive(Debug, Parser)]
 pub struct Rename {
-    /// Rename private creates too
+    /// Rename private crates too
     #[clap(short, long)]
     pub all: bool,
 
@@ -15,17 +15,18 @@ pub struct Rename {
     #[clap(long, value_name = "pattern")]
     pub ignore: Option<String>,
 
+    /// Rename only a specific crate
+    #[clap(short, long, value_name = "crate", conflicts_with_all = &["all", "ignore"])]
+    pub from: Option<String>,
+
     /// The value that should be used as new name (should contain `%n`)
-    #[clap(
-        validator = validate_value_containing_name,
-        forbid_empty_values(true)
-    )]
+    #[clap(forbid_empty_values(true))]
     pub to: String,
 }
 
 impl Rename {
     pub fn run(self, metadata: Metadata) -> Result<(), Error> {
-        let pkgs = get_pkgs(&metadata, self.all)?;
+        let pkgs = get_pkgs(&metadata, self.all || self.from.is_some())?;
 
         let ignore = self
             .ignore
@@ -35,16 +36,33 @@ impl Rename {
 
         let mut rename_map = Map::new();
 
-        for pkg in pkgs {
-            if let Some(pattern) = &ignore {
-                if pattern.matches(&pkg.name) {
-                    continue;
-                }
+        if let Some(from) = self.from {
+            if pkgs
+                .iter()
+                .map(|p| &p.name)
+                .collect::<Vec<&String>>()
+                .contains(&&from)
+            {
+                rename_map.insert(from, self.to.clone());
+            } else {
+                return Err(Error::PackageNotFound { id: from });
             }
+        } else {
+            // Validate the `to` value
+            validate_value_containing_name(&self.to)
+                .map_err(|_| Error::MustContainPercentN("<TO>".into()))?;
 
-            let new_name = self.to.replace("%n", &pkg.name);
+            for pkg in pkgs {
+                if let Some(pattern) = &ignore {
+                    if pattern.matches(&pkg.name) {
+                        continue;
+                    }
+                }
 
-            rename_map.insert(pkg.name, new_name);
+                let new_name = self.to.replace("%n", &pkg.name);
+
+                rename_map.insert(pkg.name, new_name);
+            }
         }
 
         for pkg in &metadata.packages {

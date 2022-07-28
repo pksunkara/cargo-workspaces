@@ -19,6 +19,7 @@ But this will also work on single crates because by default every individual cra
    6. [Version](#version)
       1. [Fixed or Independent](#fixed-or-independent)
    7. [Publish](#publish)
+   8. [Rename](#rename)
 3. [Config](#config)
 4. [Changelog](#changelog)
 
@@ -246,6 +247,24 @@ PUBLISH OPTIONS:
         --token <TOKEN>          The token to use for publishing
 ```
 
+### Rename
+
+Rename crates in the project. You can run this command when you might want to publish the crates with a standard prefix.
+
+```
+USAGE:
+    cargo workspaces rename [OPTIONS] <TO>
+
+ARGS:
+    <TO>    The value that should be used as new name (should contain `%n`)
+
+OPTIONS:
+    -a, --all                 Rename private crates too
+    -f, --from <crate>        Rename only a specific crate
+    -h, --help                Print help information
+        --ignore <pattern>    Ignore the crates matched by glob
+```
+
 ## Config
 
 There are two kind of options.
@@ -256,11 +275,11 @@ There are two kind of options.
 If an option is allowed to exist in both places, it means that the value specified in the **Package**
 overrides the value specified in **Workspace**.
 
-| Name | Type | Workspace | Package |
-| --- | --- | :---: | :---: |
-| `allow_branch` | `String` | Yes | No |
-| `independent` | `bool` | No | Yes |
-| `no_individual_tags` | `bool` | Yes | No |
+| Name | Type | Workspace | Package | Used in Commands |
+| --- | --- | :---: | :---: | --- |
+| `allow_branch` | `String` | Yes | No | `version`, `publish` |
+| `independent` | `bool` | No | Yes | `version`, `publish` |
+| `no_individual_tags` | `bool` | Yes | No | `version`, `publish` |
 
 <!-- omit in TOC -->
 ## Contributors

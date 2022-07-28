@@ -70,6 +70,9 @@ pub enum Error {
     #[error("unable to update Cargo.lock")]
     Update,
 
+    #[error("{0} value must contain '%n'")]
+    MustContainPercentN(String),
+
     #[error("unable to create crate")]
     Create,
 
@@ -136,6 +139,9 @@ impl CliError for Error {
             },
             Self::Verify(pkg) => Self::Verify(format!("{}", ERR_YELLOW.apply_to(pkg))),
             Self::Publish(pkg) => Self::Publish(format!("{}", ERR_YELLOW.apply_to(pkg))),
+            Self::MustContainPercentN(val) => {
+                Self::MustContainPercentN(format!("{}", ERR_YELLOW.apply_to(val)))
+            }
             Self::WorkspaceRootNotDir(path) => {
                 Self::WorkspaceRootNotDir(format!("{}", ERR_YELLOW.apply_to(path)))
             }
