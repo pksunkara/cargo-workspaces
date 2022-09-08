@@ -19,6 +19,10 @@ pub struct Publish {
     #[clap(long)]
     from_git: bool,
 
+    /// Perform all checks without uploading, and if versioning without pushing
+    #[clap(long)]
+    dry_run: bool,
+
     /// Skip already published crate versions
     #[clap(long, hide = true)]
     skip_published: bool,
@@ -43,7 +47,11 @@ pub struct Publish {
 impl Publish {
     pub fn run(self, metadata: Metadata) -> Result {
         let pkgs = if !self.from_git {
-            self.version
+            let mut version = self.version;
+            if self.dry_run {
+                version.git.no_git_push = true;
+            }
+            version
                 .do_versioning(&metadata)?
                 .iter()
                 .map(|x| {
@@ -99,9 +107,13 @@ impl Publish {
                     Index::new_cargo_default()?
                 };
 
-            if is_published(&mut index, &name, version)? {
+            if !self.dry_run && is_published(&mut index, &name, version)? {
                 info!("already published", name_ver);
                 continue;
+            }
+
+            if self.dry_run {
+                args.push("--dry-run");
             }
 
             if self.no_verify {
@@ -131,9 +143,15 @@ impl Publish {
                 return Err(Error::Publish(name));
             }
 
-            check_index(&mut index, &name, version)?;
+            if !self.dry_run {
+                check_index(&mut index, &name, version)?;
+            }
 
-            info!("published", name_ver);
+            if self.dry_run {
+                info!("published (dry run)", name_ver);
+            } else {
+                info!("published", name_ver);
+            }
         }
 
         info!("success", "ok");
