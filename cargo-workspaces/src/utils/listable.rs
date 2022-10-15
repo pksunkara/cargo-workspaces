@@ -26,4 +26,8 @@ pub struct ListOpt {
     /// Show information as a JSON array
     #[clap(long, conflicts_with = "long")]
     pub json: bool,
+
+    /// Exclude any crates with lib target
+    #[clap(short, long, conflicts_with = "all")]
+    pub exclude_lib: bool,
 }

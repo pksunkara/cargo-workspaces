@@ -77,7 +77,7 @@ impl ChangeOpt {
         since: &Option<String>,
         private: bool,
     ) -> Result<(Vec<Pkg>, Vec<Pkg>), Error> {
-        let pkgs = get_pkgs(metadata, private)?;
+        let pkgs = get_pkgs(metadata, private, false)?;
 
         let pkgs = if let Some(since) = since {
             info!("looking for changes since", since);

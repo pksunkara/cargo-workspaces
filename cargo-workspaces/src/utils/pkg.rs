@@ -86,15 +86,19 @@ impl Listable for Vec<Pkg> {
     }
 }
 
-pub fn get_pkgs(metadata: &Metadata, all: bool) -> Result<Vec<Pkg>> {
+pub fn get_pkgs(metadata: &Metadata, all: bool, exclude_lib: bool) -> Result<Vec<Pkg>> {
     let mut pkgs = vec![];
 
     for id in &metadata.workspace_members {
         if let Some(pkg) = metadata.packages.iter().find(|x| x.id == *id) {
             let private =
                 pkg.publish.is_some() && pkg.publish.as_ref().expect(INTERNAL_ERR).is_empty();
+            let has_only_lib_target = pkg
+                .targets
+                .iter()
+                .all(|t| t.kind.iter().all(|k| k == "lib"));
 
-            if !all && private {
+            if (!all && private) || (exclude_lib && has_only_lib_target) {
                 continue;
             }
 

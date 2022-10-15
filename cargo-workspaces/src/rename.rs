@@ -26,7 +26,7 @@ pub struct Rename {
 
 impl Rename {
     pub fn run(self, metadata: Metadata) -> Result<(), Error> {
-        let pkgs = get_pkgs(&metadata, self.all || self.from.is_some())?;
+        let pkgs = get_pkgs(&metadata, self.all || self.from.is_some(), false)?;
 
         let ignore = self
             .ignore

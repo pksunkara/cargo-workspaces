@@ -12,7 +12,7 @@ pub struct List {
 
 impl List {
     pub fn run(self, metadata: Metadata) -> Result {
-        let pkgs = get_pkgs(&metadata, self.list.all)?;
+        let pkgs = get_pkgs(&metadata, self.list.all, self.list.exclude_lib)?;
         pkgs.list(self.list)
     }
 }
