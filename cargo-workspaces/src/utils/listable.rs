@@ -27,7 +27,7 @@ pub struct ListOpt {
     #[clap(long, conflicts_with = "long")]
     pub json: bool,
 
-    /// Exclude any crates with lib target
+    /// Exclude any packages if they contain a single lib target
     #[clap(short, long, conflicts_with = "all")]
     pub exclude_lib: bool,
 }
