@@ -173,7 +173,7 @@ GIT OPTIONS:
         --amend                             Amend the existing commit, instead of generating a new one
         --git-remote <remote>               Push git changes to the specified remote [default: origin]
         --individual-tag-prefix <prefix>    Customize prefix for individual tags (should contain `%n`) [default: %n@]
-    -m, --message <MESSAGE>                 Use a custom commit message when creating the version commit
+    -m, --message <MESSAGE>                 Use a custom commit message when creating the version commit (use: `%v` for the new version)
         --no-git-commit                     Do not commit version changes
         --no-git-push                       Do not push generated commit and tags to git remote
         --no-git-tag                        Do not tag generated commit
@@ -231,7 +231,7 @@ GIT OPTIONS:
         --amend                             Amend the existing commit, instead of generating a new one
         --git-remote <remote>               Push git changes to the specified remote [default: origin]
         --individual-tag-prefix <prefix>    Customize prefix for individual tags (should contain `%n`) [default: %n@]
-    -m, --message <MESSAGE>                 Use a custom commit message when creating the version commit
+    -m, --message <MESSAGE>                 Use a custom commit message when creating the version commit (use: `%v` for the new version)
         --no-git-commit                     Do not commit version changes
         --no-git-push                       Do not push generated commit and tags to git remote
         --no-git-tag                        Do not tag generated commit
