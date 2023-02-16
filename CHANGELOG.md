@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.36
+
+### Enhancements
+* Improve the glob pattern support allowed in arguments of subcommands
+
 ## 0.2.35
 
 ### Enhancements
