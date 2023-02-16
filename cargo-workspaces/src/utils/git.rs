@@ -53,7 +53,7 @@ pub struct GitOpt {
     #[clap(long)]
     pub amend: bool,
 
-    /// Use a custom commit message when creating the version commit
+    /// Use a custom commit message when creating the version commit [default: Release %v]
     #[clap(
         short,
         long,
