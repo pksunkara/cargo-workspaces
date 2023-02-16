@@ -1,7 +1,7 @@
 use crate::utils::{get_pkgs, rename_packages, validate_value_containing_name, Error};
 use cargo_metadata::Metadata;
 use clap::Parser;
-use glob::{Pattern, PatternError};
+use globset::{Error as GlobsetError, Glob};
 use std::{collections::BTreeMap as Map, fs};
 
 /// Rename crates in the project
@@ -31,8 +31,8 @@ impl Rename {
         let ignore = self
             .ignore
             .clone()
-            .map(|x| Pattern::new(&x))
-            .map_or::<Result<_, PatternError>, _>(Ok(None), |x| Ok(x.ok()))?;
+            .map(|x| Glob::new(&x))
+            .map_or::<Result<_, GlobsetError>, _>(Ok(None), |x| Ok(x.ok()))?;
 
         let mut rename_map = Map::new();
 
@@ -54,7 +54,7 @@ impl Rename {
 
             for pkg in pkgs {
                 if let Some(pattern) = &ignore {
-                    if pattern.matches(&pkg.name) {
+                    if pattern.compile_matcher().is_match(&pkg.name) {
                         continue;
                     }
                 }

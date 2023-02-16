@@ -1,7 +1,7 @@
 use crate::utils::{get_pkgs, git, info, Error, Pkg, INTERNAL_ERR};
 use cargo_metadata::Metadata;
 use clap::Parser;
-use glob::{Pattern, PatternError};
+use globset::{Error as GlobsetError, Glob};
 use regex::Regex;
 use std::path::Path;
 
@@ -91,24 +91,27 @@ impl ChangeOpt {
             let force = self
                 .force
                 .clone()
-                .map(|x| Pattern::new(&x))
-                .map_or::<Result<_, PatternError>, _>(Ok(None), |x| Ok(x.ok()))?;
+                .map(|x| Glob::new(&x))
+                .map_or::<Result<_, GlobsetError>, _>(Ok(None), |x| Ok(x.ok()))?;
             let ignore_changes = self
                 .ignore_changes
                 .clone()
-                .map(|x| Pattern::new(&x))
-                .map_or::<Result<_, PatternError>, _>(Ok(None), |x| Ok(x.ok()))?;
+                .map(|x| Glob::new(&x))
+                .map_or::<Result<_, GlobsetError>, _>(Ok(None), |x| Ok(x.ok()))?;
 
             pkgs.into_iter().partition(|p: &Pkg| {
                 if let Some(pattern) = &force {
-                    if pattern.matches(&p.name) {
+                    if pattern.compile_matcher().is_match(&p.name) {
                         return true;
                     }
                 }
 
                 changed_files.iter().any(|f| {
                     if let Some(pattern) = &ignore_changes {
-                        if pattern.matches(f.to_str().expect(INTERNAL_ERR)) {
+                        if pattern
+                            .compile_matcher()
+                            .is_match(f.to_str().expect(INTERNAL_ERR))
+                        {
                             return false;
                         }
                     }

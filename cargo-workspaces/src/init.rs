@@ -30,6 +30,7 @@ impl Init {
             return Err(Error::Init("'Cargo.toml' exists".into()));
         }
 
+        // NOTE: Globset is not used here because it does not support file iterator
         let pkgs = glob(&format!("{}/**/Cargo.toml", self.path.display()))?.filter_map(|e| e.ok());
 
         let mut workspace_roots = HashSet::new();

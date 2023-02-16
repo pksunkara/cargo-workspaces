@@ -4,7 +4,7 @@ use crate::utils::{
 
 use camino::Utf8PathBuf;
 use clap::Parser;
-use glob::Pattern;
+use globset::Glob;
 use semver::Version;
 
 use std::{
@@ -145,12 +145,12 @@ impl GitOpt {
                 branch.clone()
             };
 
-            let pattern = Pattern::new(&allow_branch)?;
+            let pattern = Glob::new(&allow_branch)?;
 
-            if !pattern.matches(&test_branch) {
+            if !pattern.compile_matcher().is_match(&test_branch) {
                 return Err(Error::BranchNotAllowed {
                     branch,
-                    pattern: pattern.as_str().to_string(),
+                    pattern: pattern.glob().to_string(),
                 });
             }
 

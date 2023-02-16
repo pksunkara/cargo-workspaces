@@ -120,6 +120,8 @@ pub enum Error {
     #[error("{0}")]
     Glob(#[from] glob::PatternError),
     #[error("{0}")]
+    Globset(#[from] globset::Error),
+    #[error("{0}")]
     Serde(#[from] serde_json::Error),
     #[error("{0}")]
     Io(#[from] io::Error),
