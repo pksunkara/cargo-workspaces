@@ -39,6 +39,7 @@ lazy_static = "1.4.0"
 indexmap = "1.6.0"
 crates-index = "0.18.1"
 dunce = "1.0.1"
+ctrlc = "3.2.5"
 
 [dev-dependencies]
 assert_cmd = "1.0"
