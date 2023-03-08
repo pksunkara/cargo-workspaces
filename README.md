@@ -1,4 +1,4 @@
-<!-- omit in TOC -->
+<!-- omit from toc -->
 # cargo-workspaces
 
 Inspired by [Lerna](https://lerna.js.org/)
@@ -281,25 +281,25 @@ overrides the value specified in **Workspace**.
 | `independent` | `bool` | No | Yes | `version`, `publish` |
 | `no_individual_tags` | `bool` | Yes | No | `version`, `publish` |
 
-<!-- omit in TOC -->
+<!-- omit from toc -->
 ## Contributors
 Here is a list of [Contributors](http://github.com/pksunkara/cargo-workspaces/contributors)
 
-<!-- omit in TOC -->
+<!-- omit from toc -->
 ### TODO
 
 ## Changelog
 Please see [CHANGELOG.md](CHANGELOG.md).
 
-<!-- omit in TOC -->
+<!-- omit from toc -->
 ## License
 MIT/X11
 
-<!-- omit in TOC -->
+<!-- omit from toc -->
 ## Bug Reports
 Report [here](http://github.com/pksunkara/cargo-workspaces/issues).
 
-<!-- omit in TOC -->
+<!-- omit from toc -->
 ## Creator
 Pavan Kumar Sunkara (pavan.sss1991@gmail.com)
 
