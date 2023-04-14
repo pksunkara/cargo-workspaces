@@ -155,8 +155,8 @@ OPTIONS:
     -h, --help    Print help information
 
 VERSION ARGS:
-    <BUMP>      Increment all versions by the given explicit semver keyword while skipping the prompts for them [possible values: major, minor, patch,
-                premajor, preminor, prepatch, prerelease, custom]
+    <BUMP>      Increment all versions by the given explicit semver keyword while skipping the prompts for them
+                [possible values: major, minor, patch, premajor, preminor, prepatch, skip, prerelease, custom]
     <CUSTOM>    Specify custom version value when 'bump' is set to 'custom'
 
 VERSION OPTIONS:

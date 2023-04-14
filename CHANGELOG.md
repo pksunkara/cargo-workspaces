@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.37
+
+### Enhancements
+* Added `skip` option during versioning
+
+### Bug Fixes
+* Restores cursor if versioning is cancelled
+
 ## 0.2.36
 
 ### Enhancements
