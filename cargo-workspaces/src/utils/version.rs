@@ -22,6 +22,7 @@ pub enum Bump {
     Premajor,
     Preminor,
     Prepatch,
+    Skip,
     Prerelease,
     Custom,
 }
@@ -35,8 +36,9 @@ impl Bump {
             Bump::Premajor => 5,
             Bump::Preminor => 4,
             Bump::Prepatch => 3,
-            Bump::Prerelease => 6,
-            Bump::Custom => 7,
+            Bump::Skip => 6,
+            Bump::Prerelease => 7,
+            Bump::Custom => 8,
         }
     }
 }
@@ -196,21 +198,21 @@ impl VersionOpt {
             if new_version.is_none() {
                 info!("current common version", cur_version);
 
-                *new_version = Some(self.ask_version(cur_version, None)?);
+                *new_version = self.ask_version(cur_version, None)?;
             }
 
-            for p in &same_pkgs {
-                new_versions.push((
-                    p.name.to_string(),
-                    new_version.as_ref().expect(INTERNAL_ERR).clone(),
-                    p.version.clone(),
-                ));
+            if let Some(ref new_version) = new_version {
+                for p in &same_pkgs {
+                    new_versions.push((p.name.to_string(), new_version.clone(), p.version.clone()));
+                }
             }
         }
 
         for p in &independent_pkgs {
             let new_version = self.ask_version(&p.version, Some(&p.name))?;
-            new_versions.push((p.name.to_string(), new_version, p.version.clone()));
+            if let Some(new_version) = new_version {
+                new_versions.push((p.name.to_string(), new_version, p.version.clone()));
+            }
         }
 
         Ok(())
@@ -251,9 +253,15 @@ impl VersionOpt {
         Ok(new_versions)
     }
 
-    fn ask_version(&self, cur_version: &Version, pkg_name: Option<&str>) -> Result<Version> {
+    /// Returns Ok(None) for skip option
+    fn ask_version(
+        &self,
+        cur_version: &Version,
+        pkg_name: Option<&str>,
+    ) -> Result<Option<Version>> {
         let mut items = version_items(cur_version, &self.pre_id);
 
+        items.push((format!("Skip (stays {cur_version})"), None));
         items.push(("Custom Prerelease".to_string(), None));
         items.push(("Custom Version".to_string(), None));
 
@@ -279,6 +287,8 @@ impl VersionOpt {
         };
 
         let new_version = if selected == 6 {
+            return Ok(None);
+        } else if selected == 7 {
             let custom = custom_pre(cur_version);
 
             let preid = if let Some(preid) = &self.pre_id {
@@ -294,7 +304,7 @@ impl VersionOpt {
             };
 
             inc_preid(cur_version, Identifier::AlphaNumeric(preid))
-        } else if selected == 7 {
+        } else if selected == 8 {
             if let Some(version) = &self.custom {
                 version.clone()
             } else {
@@ -311,7 +321,7 @@ impl VersionOpt {
                 .expect(INTERNAL_ERR)
         };
 
-        Ok(new_version)
+        Ok(Some(new_version))
     }
 }
 
