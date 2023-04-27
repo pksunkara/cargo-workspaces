@@ -151,6 +151,20 @@ impl VersionOpt {
             )?;
         }
 
+        let workspace_root = metadata.workspace_root.join("Cargo.toml");
+        fs::write(
+            &workspace_root,
+            format!(
+                "{}\n",
+                change_versions(
+                    fs::read_to_string(&workspace_root)?,
+                    "",
+                    &new_versions,
+                    self.exact
+                )?
+            ),
+        )?;
+
         for pkg in new_versions.keys() {
             let output = cargo(&metadata.workspace_root, &["update", "-p", pkg], &[])?;
 
