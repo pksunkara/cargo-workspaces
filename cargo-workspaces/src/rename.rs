@@ -87,6 +87,15 @@ impl Rename {
             }
         }
 
+        let workspace_root = metadata.workspace_root.join("Cargo.toml");
+        fs::write(
+            &workspace_root,
+            format!(
+                "{}\n",
+                rename_packages(fs::read_to_string(&workspace_root)?, "", &rename_map)?
+            ),
+        )?;
+
         Ok(())
     }
 }

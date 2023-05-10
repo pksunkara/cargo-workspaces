@@ -151,6 +151,26 @@ impl VersionOpt {
             )?;
         }
 
+        if let Some(new_version) = &new_version {
+            let workspace_root = metadata.workspace_root.join("Cargo.toml");
+            let mut workspace_version_map = Map::new();
+
+            workspace_version_map.insert("".to_string(), new_version.clone());
+
+            fs::write(
+                &workspace_root,
+                format!(
+                    "{}\n",
+                    change_versions(
+                        fs::read_to_string(&workspace_root)?,
+                        "",
+                        &workspace_version_map,
+                        self.exact
+                    )?
+                ),
+            )?;
+        }
+
         for pkg in new_versions.keys() {
             let output = cargo(&metadata.workspace_root, &["update", "-p", pkg], &[])?;
 
@@ -210,6 +230,7 @@ impl VersionOpt {
 
         for p in &independent_pkgs {
             let new_version = self.ask_version(&p.version, Some(&p.name))?;
+
             if let Some(new_version) = new_version {
                 new_versions.push((p.name.to_string(), new_version, p.version.clone()));
             }
