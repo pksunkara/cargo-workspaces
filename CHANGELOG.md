@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.39
+
+### Bug Fixes
+* Fix bug with not updating version in `workspace.dependencies`
+
 ## 0.2.38
 
 ### Enhancements
