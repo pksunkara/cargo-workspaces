@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.38
+
+### Enhancements
+* Supports cargo workspace inheritance
+
 ## 0.2.37
 
 ### Enhancements
