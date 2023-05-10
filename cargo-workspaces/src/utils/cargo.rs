@@ -248,7 +248,7 @@ where
         let count = new_lines.len();
 
         #[allow(clippy::if_same_then_else)]
-        if trimmed.starts_with("[package]") {
+        if trimmed.starts_with("[package]") || trimmed.starts_with("[workspace.package]") {
             context = Context::Package;
         } else if let Some(_) = DEP_TABLE.captures(trimmed) {
             context = Context::Dependencies;
@@ -531,6 +531,25 @@ mod test {
             indoc! {r#"
                 [package]
                 'version'='0.3.0'# hello"#
+            }
+        );
+    }
+
+    #[test]
+    fn test_version_workspace() {
+        let m = indoc! {r#"
+            [workspace.package]
+            version = "0.1.0"
+        "#};
+
+        let mut v = Map::new();
+        v.insert("this".to_string(), Version::parse("0.3.0").unwrap());
+
+        assert_eq!(
+            change_versions(m.into(), "this", &v, false).unwrap(),
+            indoc! {r#"
+                [workspace.package]
+                version = "0.3.0""#
             }
         );
     }
