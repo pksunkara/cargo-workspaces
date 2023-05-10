@@ -29,15 +29,15 @@ lazy_static! {
     static ref DEP_TABLE: Regex =
         Regex::new(r#"^\[(target\.'?([^']+)'?\.|workspace\.)?dependencies]"#).expect(INTERNAL_ERR);
     static ref DEP_ENTRY: Regex =
-        Regex::new(r#"^\[dependencies\.([0-9A-Za-z-_]+)]"#).expect(INTERNAL_ERR);
+        Regex::new(r#"^\[(target\.'?([^']+)'?\.|workspace\.)?dependencies\.([0-9A-Za-z-_]+)]"#).expect(INTERNAL_ERR);
     static ref BUILD_DEP_TABLE: Regex =
-        Regex::new(r#"^\[(target\.'?([^']+)'?\.)?build-dependencies]"#).expect(INTERNAL_ERR);
+        Regex::new(r#"^\[(target\.'?([^']+)'?\.|workspace\.)?build-dependencies]"#).expect(INTERNAL_ERR);
     static ref BUILD_DEP_ENTRY: Regex =
-        Regex::new(r#"^\[build-dependencies\.([0-9A-Za-z-_]+)]"#).expect(INTERNAL_ERR);
+        Regex::new(r#"^\[(target\.'?([^']+)'?\.|workspace\.)?build-dependencies\.([0-9A-Za-z-_]+)]"#).expect(INTERNAL_ERR);
     static ref DEV_DEP_TABLE: Regex =
-        Regex::new(r#"^\[(target\.'?([^']+)'?\.)?dev-dependencies]"#).expect(INTERNAL_ERR);
+        Regex::new(r#"^\[(target\.'?([^']+)'?\.|workspace\.)?dev-dependencies]"#).expect(INTERNAL_ERR);
     static ref DEV_DEP_ENTRY: Regex =
-        Regex::new(r#"^\[dev-dependencies\.([0-9A-Za-z-_]+)]"#).expect(INTERNAL_ERR);
+        Regex::new(r#"^\[(target\.'?([^']+)'?\.|workspace\.)?dev-dependencies\.([0-9A-Za-z-_]+)]"#).expect(INTERNAL_ERR);
     static ref DEP_DIRECT_VERSION: Regex =
         Regex::new(r#"^(\s*['"]?([0-9A-Za-z-_]+)['"]?\s*=\s*['"])([^'"]+)(['"].*)$"#)
             .expect(INTERNAL_ERR);
