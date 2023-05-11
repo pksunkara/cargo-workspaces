@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.40
+
+### Bug Fixes
+* Fix bug with some dependency entries not being updated
+
 ## 0.2.39
 
 ### Bug Fixes
