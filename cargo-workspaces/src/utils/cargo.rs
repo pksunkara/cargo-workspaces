@@ -260,7 +260,6 @@ where
                 context = Context::Dependencies;
             }
         } else if let Some(caps) = DEP_ENTRY.captures(trimmed) {
-            println!("{:?}", caps);
             context = Context::DependencyEntry(caps[3].to_string());
         } else if let Some(caps) = BUILD_DEP_ENTRY.captures(trimmed) {
             context = Context::DependencyEntry(caps[3].to_string());

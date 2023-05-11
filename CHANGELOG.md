@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.40
+## 0.2.41
 
 ### Bug Fixes
 * Fix bug with some dependency entries not being updated
