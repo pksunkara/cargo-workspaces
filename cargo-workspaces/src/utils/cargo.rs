@@ -260,13 +260,14 @@ where
                 context = Context::Dependencies;
             }
         } else if let Some(caps) = DEP_ENTRY.captures(trimmed) {
-            context = Context::DependencyEntry(caps[1].to_string());
+            println!("{:?}", caps);
+            context = Context::DependencyEntry(caps[3].to_string());
         } else if let Some(caps) = BUILD_DEP_ENTRY.captures(trimmed) {
-            context = Context::DependencyEntry(caps[1].to_string());
+            context = Context::DependencyEntry(caps[3].to_string());
         } else if let Some(caps) = DEV_DEP_ENTRY.captures(trimmed) {
             // TODO: let-chain
             if dev_deps {
-                context = Context::DependencyEntry(caps[1].to_string());
+                context = Context::DependencyEntry(caps[3].to_string());
             }
         } else if trimmed.starts_with('[') {
             if let Context::DependencyEntry(ref dep) = context {
