@@ -16,3 +16,15 @@ fn test_normal() {
     assert_snapshot!(err);
     assert_snapshot!(out);
 }
+
+// TODO: Get exec test working on windows
+#[cfg(not(windows))]
+#[test]
+fn test_normal_ignore() {
+    let (out, err) = utils::run(
+        "../fixtures/normal",
+        &["ws", "exec", "--ignore={dep2,top}", PRINT, "Cargo.toml"],
+    );
+    assert_snapshot!(err);
+    assert_snapshot!(out);
+}

@@ -1,7 +1,8 @@
 use crate::utils::{dag, info, Error, Result, INTERNAL_ERR};
 use cargo_metadata::Metadata;
 use clap::Parser;
-use std::process::Command;
+use globset::{Error as GlobsetError, Glob};
+use std::{process::Command, result::Result as StdResult};
 
 /// Execute an arbitrary command in each crate
 #[derive(Debug, Parser)]
@@ -10,6 +11,10 @@ pub struct Exec {
     /// Continue executing command despite non-zero exit in a given crate
     #[clap(long)]
     no_bail: bool,
+
+    /// Ignore the crates matched by glob
+    #[clap(long, value_name = "pattern")]
+    ignore: Option<String>,
 
     #[clap(required = true)]
     args: Vec<String>,
@@ -25,8 +30,20 @@ impl Exec {
 
         let (names, visited) = dag(&pkgs);
 
+        let ignore = self
+            .ignore
+            .clone()
+            .map(|x| Glob::new(&x))
+            .map_or::<StdResult<_, GlobsetError>, _>(Ok(None), |x| Ok(x.ok()))?;
+
         for p in &visited {
             let (pkg, _) = names.get(p).expect(INTERNAL_ERR);
+
+            if let Some(pattern) = &ignore {
+                if pattern.compile_matcher().is_match(&pkg.name) {
+                    continue;
+                }
+            }
 
             let dir = pkg
                 .manifest_path

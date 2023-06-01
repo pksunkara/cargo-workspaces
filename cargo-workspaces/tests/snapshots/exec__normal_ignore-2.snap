@@ -1,0 +1,14 @@
+---
+source: tests/exec.rs
+assertion_line: 29
+expression: out
+
+---
+[package]
+name = "dep1"
+version = "0.1.0"
+authors = ["Pavan Kumar Sunkara <pavan.sss1991@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+
