@@ -1,0 +1,8 @@
+---
+source: tests/exec.rs
+assertion_line: 28
+expression: err
+
+---
+info success ok
+
