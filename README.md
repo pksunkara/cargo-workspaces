@@ -127,8 +127,9 @@ ARGS:
     <ARGS>...
 
 OPTIONS:
-    -h, --help       Print help information
-        --no-bail    Continue executing command despite non-zero exit in a given crate
+    -h, --help                Print help information
+        --ignore <pattern>    Ignore the crates matched by glob
+        --no-bail             Continue executing command despite non-zero exit in a given crate
 ```
 
 For example, if you want to run `ls -l` in each crate, you can simply do `cargo ws exec ls -l`.

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.42
+
+### Enhancements
+* Added `ignore` flag to `exec` subcommand
+
 ## 0.2.41
 
 ### Bug Fixes
