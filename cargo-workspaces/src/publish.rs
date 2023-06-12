@@ -88,16 +88,14 @@ impl Publish {
 
             let name_ver = format!("{} v{}", name, version);
 
-            let mut index = if let Some(registry) = self.registry.as_deref() {
+            let mut index = if let Some(registry) = self
+                .registry
+                .as_ref()
+                .or_else(|| pkg.publish.as_deref().and_then(|x| x.get(0)))
+            {
                 let registry_url = cargo_config_get(
                     &metadata.workspace_root,
                     &format!("registries.{}.index", registry),
-                )?;
-                Index::from_url(&format!("registry+{}", registry_url))?
-            } else if let Some(publish) = pkg.publish.as_deref().and_then(|x| x.get(0)) {
-                let registry_url = cargo_config_get(
-                    &metadata.workspace_root,
-                    &format!("registries.{}.index", publish),
                 )?;
                 Index::from_url(&format!("registry+{}", registry_url))?
             } else {
