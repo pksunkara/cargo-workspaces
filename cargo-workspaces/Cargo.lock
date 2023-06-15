@@ -128,7 +128,9 @@ dependencies = [
  "semver 0.11.0",
  "serde",
  "serde_json",
+ "tempfile",
  "thiserror",
+ "toml_edit",
 ]
 
 [[package]]

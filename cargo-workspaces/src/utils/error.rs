@@ -127,6 +127,8 @@ pub enum Error {
     Io(#[from] io::Error),
     #[error("cannot convert command output to string, {0}")]
     FromUtf8(#[from] std::string::FromUtf8Error),
+    #[error("{0}")]
+    Toml(#[from] toml_edit::TomlError),
 }
 
 impl CliError for Error {

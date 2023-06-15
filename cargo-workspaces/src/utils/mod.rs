@@ -2,6 +2,7 @@ mod cargo;
 mod changable;
 mod config;
 mod dag;
+mod dev_dep_remover;
 mod error;
 mod git;
 mod listable;
@@ -14,6 +15,7 @@ pub use cargo::{
 pub use changable::{ChangeData, ChangeOpt};
 pub use config::{read_config, PackageConfig, WorkspaceConfig};
 pub use dag::dag;
+pub(crate) use dev_dep_remover::DevDependencyRemover;
 pub(crate) use error::{debug, info};
 pub use error::{get_debug, set_debug, Error};
 pub use git::{git, GitOpt};
