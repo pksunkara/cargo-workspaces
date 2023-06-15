@@ -40,11 +40,13 @@ indexmap = "1.6.0"
 crates-index = "0.19.7"
 dunce = "1.0.1"
 ctrlc = "3.2.5"
+toml_edit = "0.19.10"
 
 [dev-dependencies]
 assert_cmd = "1.0"
 insta = { version = "1.8.0", features = ["redactions"] }
 indoc = "1.0.3"
+tempfile = "3.6.0"
 
 [workspace.metadata.workspaces]
 no_individual_tags = true

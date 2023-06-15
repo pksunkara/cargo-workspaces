@@ -38,6 +38,10 @@ pub struct Publish {
     /// The Cargo registry to use for publishing
     #[clap(long, forbid_empty_values(true))]
     registry: Option<String>,
+
+    /// Don't remove dev-dependencies while publishing
+    #[clap(long)]
+    no_remove_dev_deps: bool,
 }
 
 impl Publish {
@@ -128,7 +132,17 @@ impl Publish {
             args.push("--manifest-path");
             args.push(p.as_str());
 
+            let dev_deps_remover = if self.no_remove_dev_deps {
+                None
+            } else {
+                Some(crate::utils::DevDependencyRemover::remove_dev_deps(
+                    p.as_std_path(),
+                )?)
+            };
+
             let (_, stderr) = cargo(&metadata.workspace_root, &args, &[])?;
+
+            drop(dev_deps_remover);
 
             if !stderr.contains("Uploading") || stderr.contains("error:") {
                 return Err(Error::Publish(name));
