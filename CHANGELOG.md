@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.43
+
+### Enhancements
+* Ignore dev-dependencies when publishing to Cargo, avoids some versioning issues
+
+### Bug Fixes
+* Respect `registry` option when checking index during publishing
+
 ## 0.2.42
 
 ### Enhancements

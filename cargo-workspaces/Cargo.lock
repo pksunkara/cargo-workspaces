@@ -107,7 +107,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-workspaces"
-version = "0.2.42"
+version = "0.2.43"
 dependencies = [
  "assert_cmd",
  "camino",
