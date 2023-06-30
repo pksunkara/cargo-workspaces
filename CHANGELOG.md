@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.44
+
+### Enhancements
+* Better recognition on when to ignore dev-dependencies, avoids some publishing issues with `--from-git` flag
+
 ## 0.2.43
 
 ### Enhancements
