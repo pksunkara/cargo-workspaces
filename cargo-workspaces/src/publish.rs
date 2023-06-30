@@ -1,6 +1,6 @@
 use crate::utils::{
-    cargo, cargo_config_get, check_index, dag, info, is_published, Error, Result, VersionOpt,
-    INTERNAL_ERR,
+    cargo, cargo_config_get, check_index, dag, info, is_published, should_remove_dev_deps, warn,
+    DevDependencyRemover, Error, Result, VersionOpt, INTERNAL_ERR,
 };
 use cargo_metadata::Metadata;
 use clap::Parser;
@@ -132,13 +132,16 @@ impl Publish {
             args.push("--manifest-path");
             args.push(p.as_str());
 
-            let dev_deps_remover = if self.no_remove_dev_deps {
-                None
-            } else {
-                Some(crate::utils::DevDependencyRemover::remove_dev_deps(
-                    p.as_std_path(),
-                )?)
-            };
+            let dev_deps_remover =
+                if self.no_remove_dev_deps || !should_remove_dev_deps(&pkg.dependencies, &pkgs) {
+                    None
+                } else {
+                    warn!(
+                        "removing dev-deps since some refer to workspace members with versions",
+                        name_ver
+                    );
+                    Some(DevDependencyRemover::remove_dev_deps(p.as_std_path())?)
+                };
 
             let (_, stderr) = cargo(&metadata.workspace_root, &args, &[])?;
 

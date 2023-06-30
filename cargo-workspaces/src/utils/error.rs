@@ -19,18 +19,6 @@ pub fn set_debug() {
     DEBUG.store(true, Ordering::Relaxed);
 }
 
-macro_rules! _info {
-    ($desc:literal, $val:expr) => {{
-        oclif::term::TERM_ERR.write_line(&format!(
-            "{} {} {}",
-            oclif::term::ERR_GREEN.apply_to("info"),
-            oclif::term::ERR_MAGENTA.apply_to($desc),
-            $val
-        ))?;
-        oclif::term::TERM_ERR.flush()?;
-    }};
-}
-
 macro_rules! _debug {
     ($desc:literal, $val:expr) => {{
         if $crate::utils::get_debug() {
@@ -45,8 +33,33 @@ macro_rules! _debug {
     }};
 }
 
+macro_rules! _info {
+    ($desc:literal, $val:expr) => {{
+        oclif::term::TERM_ERR.write_line(&format!(
+            "{} {} {}",
+            oclif::term::ERR_GREEN.apply_to("info"),
+            oclif::term::ERR_MAGENTA.apply_to($desc),
+            $val
+        ))?;
+        oclif::term::TERM_ERR.flush()?;
+    }};
+}
+
+macro_rules! _warn {
+    ($desc:literal, $val:expr) => {{
+        oclif::term::TERM_ERR.write_line(&format!(
+            "{} {} {}",
+            oclif::term::ERR_YELLOW.apply_to("warn"),
+            oclif::term::ERR_MAGENTA.apply_to($desc),
+            $val
+        ))?;
+        oclif::term::TERM_ERR.flush()?;
+    }};
+}
+
 pub(crate) use _debug as debug;
 pub(crate) use _info as info;
+pub(crate) use _warn as warn;
 
 #[derive(Error, Debug)]
 pub enum Error {

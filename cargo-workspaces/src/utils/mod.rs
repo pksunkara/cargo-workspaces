@@ -15,8 +15,8 @@ pub use cargo::{
 pub use changable::{ChangeData, ChangeOpt};
 pub use config::{read_config, PackageConfig, WorkspaceConfig};
 pub use dag::dag;
-pub(crate) use dev_dep_remover::DevDependencyRemover;
-pub(crate) use error::{debug, info};
+pub use dev_dep_remover::{should_remove_dev_deps, DevDependencyRemover};
+pub(crate) use error::{debug, info, warn};
 pub use error::{get_debug, set_debug, Error};
 pub use git::{git, GitOpt};
 pub use listable::{ListOpt, Listable};
