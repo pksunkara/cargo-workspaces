@@ -1,10 +1,13 @@
 # Changelog
 
+## 0.3.0
+
 ### BREAKING
 * Update MSRV to 1.70.0
 
 ### Enhancements
 * Renamed `--from-git` flag to `--publish-as-is`
+* Add new workspace member entry automatically when creating it
 
 ### Bug Fixes
 * Respect protocols in registry URLs
