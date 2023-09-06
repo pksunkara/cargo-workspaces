@@ -3,6 +3,7 @@ use crate::utils::{cargo, change_versions, info, Error, Result, INTERNAL_ERR};
 use cargo_metadata::Metadata;
 use clap::{ArgEnum, Parser};
 use dialoguer::{theme::ColorfulTheme, Input, Select};
+use globset::Glob;
 use oclif::term::TERM_ERR;
 use semver::Version;
 use toml_edit::{Array, Document, Item, Table, Value};
@@ -150,12 +151,33 @@ fn add_ws_member(manifest: &mut Document, new_member: &str) -> Result {
         }
     };
 
+    if let Some(item) = manifest["workspace"].get("exclude") {
+        for exclude in item
+            .as_array()
+            .ok_or(Error::Io(io::Error::new(
+                io::ErrorKind::Other,
+                "workspace.exclude manifest item must be an array",
+            )))?
+            .iter()
+            .map(|e| e.as_str())
+        {
+            let pattern = exclude.ok_or(Error::Io(io::Error::new(
+                io::ErrorKind::Other,
+                "workspace.exclude manifest items must be strings",
+            )))?;
+
+            if Glob::new(pattern)?.compile_matcher().is_match(new_member) {
+                return Ok(());
+            }
+        }
+    }
+
     match manifest["workspace"].get("members") {
         Some(item) => {
             if !item.is_array() {
                 return Err(Error::Io(io::Error::new(
                     io::ErrorKind::Other,
-                    "workspace.members manifest item must be a table",
+                    "workspace.members manifest item must be an array",
                 )));
             }
         }
@@ -169,7 +191,7 @@ fn add_ws_member(manifest: &mut Document, new_member: &str) -> Result {
     for member in members_list.iter() {
         match member.as_str() {
             Some(s) => {
-                if s == new_member {
+                if Glob::new(s)?.compile_matcher().is_match(new_member) {
                     return Ok(());
                 }
             }
