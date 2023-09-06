@@ -5,8 +5,9 @@ use clap::{ArgEnum, Parser};
 use dialoguer::{theme::ColorfulTheme, Input, Select};
 use oclif::term::TERM_ERR;
 use semver::Version;
+use toml_edit::{Array, Document, Item, Table, Value};
 
-use std::{collections::BTreeMap as Map, fs};
+use std::{collections::BTreeMap as Map, fs, io};
 
 #[derive(Debug, Clone, ArgEnum)]
 enum Edition {
@@ -119,7 +120,69 @@ impl Create {
 
         // TODO: If none of the globs in workspace `members` match, add a new entry
 
+        let workspace_manifest = &metadata.workspace_root.join("Cargo.toml");
+
+        let mut workspace_manifest_document =
+            std::fs::read_to_string(workspace_manifest)?.parse::<Document>()?;
+
+        add_ws_member(&mut workspace_manifest_document, &self.path)?;
+
+        fs::write(workspace_manifest, workspace_manifest_document.to_string())?;
+
         info!("success", "ok");
         Ok(())
     }
+}
+
+// Don't have an error type to use, just using Error::Io
+fn add_ws_member(manifest: &mut Document, new_member: &str) -> Result {
+    match manifest.get("workspace") {
+        Some(item) => {
+            if !item.is_table() {
+                return Err(Error::Io(io::Error::new(
+                    io::ErrorKind::Other,
+                    "workspace manifest item must be a table",
+                )));
+            };
+        }
+        None => {
+            manifest["workspace"] = Item::Table(Table::new());
+        }
+    };
+
+    match manifest["workspace"].get("members") {
+        Some(item) => {
+            if !item.is_array() {
+                return Err(Error::Io(io::Error::new(
+                    io::ErrorKind::Other,
+                    "workspace.members manifest item must be a table",
+                )));
+            }
+        }
+        None => {
+            manifest["workspace"]["members"] = Item::Value(Value::Array(Array::new()));
+        }
+    }
+
+    let members_list = manifest["workspace"]["members"].as_array_mut().unwrap();
+
+    for member in members_list.iter() {
+        match member.as_str() {
+            Some(s) => {
+                if s == new_member {
+                    return Ok(());
+                }
+            }
+            None => {
+                return Err(Error::Io(io::Error::new(
+                    io::ErrorKind::Other,
+                    "workspace.members manifest items must be strings",
+                )));
+            }
+        }
+    }
+
+    members_list.push_formatted(new_member.into());
+
+    Ok(())
 }
