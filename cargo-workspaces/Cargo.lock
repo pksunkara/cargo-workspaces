@@ -226,9 +226,9 @@ dependencies = [
 
 [[package]]
 name = "crates-index"
-version = "0.19.11"
+version = "0.19.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "24bc3fa65ce283c2c78b4cad01909d5b29faf51fddee68017a49a5b9e52ebe9f"
+checksum = "c3cab38e209d6ba8bd5b0d41c784ec63a5a9ea3adf866b820d377588960f1ded"
 dependencies = [
  "git2",
  "hex",
