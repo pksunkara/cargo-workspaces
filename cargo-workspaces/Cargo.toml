@@ -46,7 +46,7 @@ toml_edit = "0.19.10"
 assert_cmd = "1.0"
 insta = { version = "1.8.0", features = ["redactions"] }
 indoc = "1.0.9"
-tempfile = "3.6.0"
+tempfile = "3.8.0"
 
 [workspace.metadata.workspaces]
 no_individual_tags = true
