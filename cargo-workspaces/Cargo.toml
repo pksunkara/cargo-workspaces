@@ -44,7 +44,7 @@ toml_edit = "0.19.10"
 
 [dev-dependencies]
 assert_cmd = "1.0"
-insta = { version = "1.8.0", features = ["redactions"] }
+insta = { version = "1.32.0", features = ["redactions"] }
 indoc = "1.0.9"
 tempfile = "3.6.0"
 
