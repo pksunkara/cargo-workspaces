@@ -39,7 +39,7 @@ lazy_static = "1.4.0"
 indexmap = "1.6.0"
 crates-index = "0.19.7"
 dunce = "1.0.4"
-ctrlc = "3.2.5"
+ctrlc = "3.4.1"
 toml_edit = "0.19.10"
 
 [dev-dependencies]
