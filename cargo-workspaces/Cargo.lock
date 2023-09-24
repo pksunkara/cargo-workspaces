@@ -122,7 +122,7 @@ dependencies = [
  "lazy_static",
  "oclif",
  "regex",
- "semver 0.11.0",
+ "semver 1.0.17",
  "serde",
  "serde_json",
  "tempfile",
