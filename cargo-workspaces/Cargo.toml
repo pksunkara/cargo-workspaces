@@ -23,7 +23,7 @@ bench = false
 lto = "thin"
 
 [dependencies]
-clap = { version = "~3.1.12", features = ["derive", "wrap_help", "unstable-replace"] }
+clap = { version = "~4.4.4", features = ["derive", "wrap_help", "unstable-replace"] }
 oclif = "0.4.0"
 cargo_metadata = "0.13.1"
 camino = "1.0.1"
