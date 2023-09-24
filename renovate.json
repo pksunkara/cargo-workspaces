@@ -1,0 +1,16 @@
+{
+  "dependencyDashboard": false,
+  "packageRules": [
+    {
+      "matchManagers": ["cargo"],
+      "matchPackageNames": "camino",
+      "reviewers": ["pksunkara"],
+      "commitMessageSuffix": "(special)"
+    },
+    {
+      "matchManagers": ["cargo"],
+      "matchPackageNames": "camino",
+      "labels": ["dependencies"]
+    }
+  ]
+}
