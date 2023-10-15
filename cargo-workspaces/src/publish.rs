@@ -31,6 +31,10 @@ pub struct Publish {
     #[clap(long)]
     allow_dirty: bool,
 
+    /// Check publication feasibility, but do not actually publish
+    #[clap(long)]
+    dry_run: bool,
+
     /// The token to use for publishing
     #[clap(long, forbid_empty_values(true))]
     token: Option<String>,
@@ -117,6 +121,10 @@ impl Publish {
 
             if self.allow_dirty {
                 args.push("--allow-dirty");
+            }
+
+            if self.dry_run {
+                args.push("--dry-run");
             }
 
             if let Some(ref registry) = self.registry {

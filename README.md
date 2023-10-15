@@ -242,6 +242,7 @@ GIT OPTIONS:
 
 PUBLISH OPTIONS:
         --allow-dirty            Allow dirty working directories to be published
+        --dry-run                Check publication feasibility, but do not actually publish
         --from-git               Publish crates from the current commit without versioning
         --no-remove-dev-deps     Don't remove dev-dependencies while publishing
         --no-verify              Skip crate verification (not recommended)
