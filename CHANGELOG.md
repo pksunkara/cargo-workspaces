@@ -1,5 +1,8 @@
 # Changelog
 
+### BREAKING
+* Update MSRV to 1.70.0
+
 ## 0.2.44
 
 ### Enhancements
