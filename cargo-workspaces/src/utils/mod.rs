@@ -9,7 +9,7 @@ mod listable;
 mod pkg;
 mod version;
 
-pub use cargo::{cargo, cargo_config_get, change_versions, is_published, rename_packages};
+pub use cargo::{cargo, cargo_config_get, change_versions, rename_packages};
 pub use changable::{ChangeData, ChangeOpt};
 pub use config::{read_config, PackageConfig, WorkspaceConfig};
 pub use dag::dag;

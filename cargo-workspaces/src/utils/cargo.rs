@@ -1,7 +1,6 @@
 use crate::utils::{debug, get_debug, Error, Result, INTERNAL_ERR};
 
 use camino::Utf8Path;
-use crates_index::Index;
 use lazy_static::lazy_static;
 use oclif::term::TERM_ERR;
 use regex::{Captures, Regex};
@@ -401,28 +400,6 @@ pub fn change_versions(
         },
         |_, _| Ok(()),
     )
-}
-
-pub fn is_published(index: &mut Index, name: &str, version: &str) -> Result<bool> {
-    // See if we already have the crate (and version) in cache
-    if let Some(crate_data) = index.crate_(name) {
-        if crate_data.versions().iter().any(|v| v.version() == version) {
-            return Ok(true);
-        }
-    }
-
-    // We don't? Okay, update the cache then
-    index.update()?;
-
-    // Try again with updated index:
-    if let Some(crate_data) = index.crate_(name) {
-        if crate_data.versions().iter().any(|v| v.version() == version) {
-            return Ok(true);
-        }
-    }
-
-    // I guess we didn't have it
-    Ok(false)
 }
 
 #[cfg(test)]

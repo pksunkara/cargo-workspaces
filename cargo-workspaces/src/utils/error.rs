@@ -124,7 +124,11 @@ pub enum Error {
     #[error("could not understand 'cargo config get' output: {0}")]
     BadConfigGetOutput(String),
     #[error("crates index error: {0}")]
-    CratesRegistry(#[from] crates_index::Error),
+    CratesRegistry(#[from] tame_index::Error),
+    #[error("unsupported crates index type")]
+    UnsupportedCratesIndexType,
+    #[error("crates index error: {0}")]
+    CratesReqwest(#[from] tame_index::external::reqwest::Error),
 
     #[error("{0}")]
     Semver(#[from] semver::ReqParseError),

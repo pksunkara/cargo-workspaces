@@ -1,11 +1,19 @@
+use std::convert::TryFrom;
+
 use crate::utils::{
-    cargo, cargo_config_get, dag, info, is_published, should_remove_dev_deps, warn,
-    DevDependencyRemover, Error, Result, VersionOpt, INTERNAL_ERR,
+    cargo, cargo_config_get, dag, info, should_remove_dev_deps, warn, DevDependencyRemover, Error,
+    Result, VersionOpt, INTERNAL_ERR,
 };
+
 use cargo_metadata::Metadata;
 use clap::Parser;
-use crates_index::Index;
 use indexmap::IndexSet as Set;
+use tame_index::{
+    external::reqwest::blocking::Client,
+    index::{ComboIndex, ComboIndexCache, RemoteGitIndex, RemoteSparseIndex},
+    utils::flock::LockOptions,
+    IndexLocation, IndexUrl, KrateName,
+};
 
 /// Publish crates in the project
 #[derive(Debug, Parser)]
@@ -92,7 +100,7 @@ impl Publish {
 
             let name_ver = format!("{} v{}", name, version);
 
-            let mut index = if let Some(registry) = self
+            let index_url = if let Some(registry) = self
                 .registry
                 .as_ref()
                 .or_else(|| pkg.publish.as_deref().and_then(|x| x.get(0)))
@@ -101,12 +109,12 @@ impl Publish {
                     &metadata.workspace_root,
                     &format!("registries.{}.index", registry),
                 )?;
-                Index::from_url(&format!("registry+{}", registry_url))?
+                IndexUrl::NonCratesIo(format!("registry+{}", registry_url).into())
             } else {
-                Index::new_cargo_default()?
+                IndexUrl::crates_io(None, None, None)?
             };
 
-            if is_published(&mut index, &name, version)? {
+            if is_published(index_url, &name, version)? {
                 info!("already published", name_ver);
                 continue;
             }
@@ -157,4 +165,31 @@ impl Publish {
         info!("success", "ok");
         Ok(())
     }
+}
+
+fn is_published(index_url: IndexUrl, name: &str, version: &str) -> Result<bool> {
+    let index_cache = ComboIndexCache::new(IndexLocation::new(index_url))?;
+    let lock = LockOptions::cargo_package_lock(None)?.try_lock()?;
+
+    let index: ComboIndex = match index_cache {
+        ComboIndexCache::Git(git) => {
+            let mut rgi = RemoteGitIndex::new(git, &lock)?;
+
+            rgi.fetch(&lock)?;
+            rgi.into()
+        }
+        ComboIndexCache::Sparse(sparse) => {
+            let client = Client::builder().http2_prior_knowledge().build()?;
+            RemoteSparseIndex::new(sparse, client).into()
+        }
+        _ => return Err(Error::UnsupportedCratesIndexType),
+    };
+
+    if let Some(crate_data) = index.krate(KrateName::try_from(name)?, false, &lock)? {
+        if crate_data.versions.iter().any(|v| v.version == version) {
+            return Ok(true);
+        }
+    }
+
+    Ok(false)
 }

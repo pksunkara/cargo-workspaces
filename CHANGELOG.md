@@ -6,6 +6,9 @@
 ### Enhancements
 * Renamed `--from-git` flag to `--publish-as-is`
 
+### Bug Fixes
+* Respect protocols in registry URLs
+
 ## 0.2.44
 
 ### Enhancements
