@@ -12,10 +12,7 @@ use std::{
     process::{Command, ExitStatus},
 };
 
-pub fn git<'a>(
-    root: &Utf8PathBuf,
-    args: &[&'a str],
-) -> Result<(ExitStatus, String, String), Error> {
+pub fn git(root: &Utf8PathBuf, args: &[&str]) -> Result<(ExitStatus, String, String), Error> {
     debug!("git", args.to_vec().join(" "));
 
     let output = Command::new("git")
@@ -145,9 +142,9 @@ impl GitOpt {
                 branch.clone()
             };
 
-            let pattern = Glob::new(&allow_branch)?;
+            let pattern = Glob::new(allow_branch)?;
 
-            if !pattern.compile_matcher().is_match(&test_branch) {
+            if !pattern.compile_matcher().is_match(test_branch) {
                 return Err(Error::BranchNotAllowed {
                     branch,
                     pattern: pattern.glob().to_string(),

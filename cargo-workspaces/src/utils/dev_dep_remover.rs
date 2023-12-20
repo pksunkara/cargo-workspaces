@@ -42,10 +42,12 @@ pub fn should_remove_dev_deps(deps: &[Dependency], pkgs: &[(Package, String)]) -
     }
 
     for dep in deps {
-        if dep.kind == DependencyKind::Development {
-            if names.contains(&&dep.name) && dep.source.is_none() && dep.req != no_version {
-                return true;
-            }
+        if dep.kind == DependencyKind::Development
+            && names.contains(&&dep.name)
+            && dep.source.is_none()
+            && dep.req != no_version
+        {
+            return true;
         }
     }
 
@@ -160,7 +162,7 @@ mod tests {
         path = "lib.rs"
         "#;
 
-        create_dir(&tempdir.path().join("bar")).unwrap();
+        create_dir(tempdir.path().join("bar")).unwrap();
         write(tempdir.path().join("bar").join("Cargo.toml"), member_toml).unwrap();
 
         let (deps, pkgs) = args(&manifest_path, "foo");
@@ -199,7 +201,7 @@ mod tests {
         path = "lib.rs"
         "#;
 
-        create_dir(&tempdir.path().join("bar")).unwrap();
+        create_dir(tempdir.path().join("bar")).unwrap();
         write(tempdir.path().join("bar").join("Cargo.toml"), member_toml).unwrap();
 
         let (deps, pkgs) = args(&manifest_path, "foo");
@@ -245,7 +247,7 @@ mod tests {
         path = "lib.rs"
         "#;
 
-        create_dir(&tempdir.path().join("bar")).unwrap();
+        create_dir(tempdir.path().join("bar")).unwrap();
         write(tempdir.path().join("bar").join("Cargo.toml"), member_toml).unwrap();
 
         let (deps, pkgs) = args(&manifest_path, "foo");
@@ -256,7 +258,7 @@ mod tests {
     fn args(manifest_path: &PathBuf, dep: &str) -> (Vec<Dependency>, Vec<(Package, String)>) {
         let mut cmd = MetadataCommand::new();
 
-        cmd.manifest_path(&manifest_path);
+        cmd.manifest_path(manifest_path);
         cmd.no_deps();
 
         let metadata = cmd.exec().unwrap();

@@ -248,15 +248,12 @@ where
         #[allow(clippy::if_same_then_else)]
         if trimmed.starts_with("[package]") || trimmed.starts_with("[workspace.package]") {
             context = Context::Package;
-        } else if let Some(_) = DEP_TABLE.captures(trimmed) {
+        } else if DEP_TABLE.captures(trimmed).is_some() {
             context = Context::Dependencies;
-        } else if let Some(_) = BUILD_DEP_TABLE.captures(trimmed) {
+        } else if BUILD_DEP_TABLE.captures(trimmed).is_some() {
             context = Context::Dependencies;
-        } else if let Some(_) = DEV_DEP_TABLE.captures(trimmed) {
-            // TODO: let-chain
-            if dev_deps {
-                context = Context::Dependencies;
-            }
+        } else if DEV_DEP_TABLE.captures(trimmed).is_some() && dev_deps {
+            context = Context::Dependencies;
         } else if let Some(caps) = DEP_ENTRY.captures(trimmed) {
             context = Context::DependencyEntry(caps[3].to_string());
         } else if let Some(caps) = BUILD_DEP_ENTRY.captures(trimmed) {

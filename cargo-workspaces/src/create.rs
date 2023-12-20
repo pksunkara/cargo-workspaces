@@ -73,10 +73,10 @@ impl Create {
             .collect::<Vec<_>>();
 
         let edition = match &self.edition {
-            Some(edition) => match edition {
-                &Edition::Fifteen => 0,
-                &Edition::Eighteen => 1,
-                &Edition::TwentyOne => 2,
+            Some(edition) => match *edition {
+                Edition::Fifteen => 0,
+                Edition::Eighteen => 1,
+                Edition::TwentyOne => 2,
             },
             None => Select::with_theme(&theme)
                 .items(&editions)
