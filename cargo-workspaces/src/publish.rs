@@ -1,5 +1,5 @@
 use crate::utils::{
-    cargo, cargo_config_get, check_index, dag, info, is_published, should_remove_dev_deps, warn,
+    cargo, cargo_config_get, dag, info, is_published, should_remove_dev_deps, warn,
     DevDependencyRemover, Error, Result, VersionOpt, INTERNAL_ERR,
 };
 use cargo_metadata::Metadata;
@@ -150,8 +150,6 @@ impl Publish {
             if !stderr.contains("Uploading") || stderr.contains("error:") {
                 return Err(Error::Publish(name));
             }
-
-            check_index(&mut index, &name, version)?;
 
             info!("published", name_ver);
         }

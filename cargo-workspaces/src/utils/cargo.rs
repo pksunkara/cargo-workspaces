@@ -1,4 +1,4 @@
-use crate::utils::{debug, get_debug, info, Error, Result, INTERNAL_ERR};
+use crate::utils::{debug, get_debug, Error, Result, INTERNAL_ERR};
 
 use camino::Utf8Path;
 use crates_index::Index;
@@ -11,8 +11,6 @@ use std::{
     collections::BTreeMap as Map,
     io::{BufRead, BufReader},
     process::{Command, Stdio},
-    thread::sleep,
-    time::{Duration, Instant},
 };
 
 const CRLF: &str = "\r\n";
@@ -428,30 +426,6 @@ pub fn is_published(index: &mut Index, name: &str, version: &str) -> Result<bool
 
     // I guess we didn't have it
     Ok(false)
-}
-
-pub fn check_index(index: &mut Index, name: &str, version: &str) -> Result<()> {
-    let now = Instant::now();
-    let sleep_time = Duration::from_secs(2);
-    let timeout = Duration::from_secs(300);
-    let mut logged = false;
-
-    loop {
-        if is_published(index, name, version)? {
-            break;
-        } else if timeout < now.elapsed() {
-            return Err(Error::PublishTimeout);
-        }
-
-        if !logged {
-            info!("waiting", "...");
-            logged = true;
-        }
-
-        sleep(sleep_time);
-    }
-
-    Ok(())
 }
 
 #[cfg(test)]

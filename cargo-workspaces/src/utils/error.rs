@@ -78,8 +78,6 @@ pub enum Error {
     Verify(String),
     #[error("unable to publish package {0}")]
     Publish(String),
-    #[error("publishing has timed out")]
-    PublishTimeout,
     #[error("unable to update Cargo.lock")]
     Update,
 
