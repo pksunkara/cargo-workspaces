@@ -9,6 +9,7 @@ license = "MIT"
 readme = "README.md"
 exclude = ["tests"]
 rust-version = "1.70.0"
+default-run = "cargo-workspaces"
 
 [[bin]]
 name = "cargo-workspaces"

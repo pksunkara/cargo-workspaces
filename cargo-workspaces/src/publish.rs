@@ -16,8 +16,8 @@ pub struct Publish {
 
     /// Publish crates from the current commit without versioning
     // TODO: conflicts_with = "version" (group)
-    #[clap(long)]
-    from_git: bool,
+    #[clap(long, alias = "from-git")]
+    publish_as_is: bool,
 
     /// Skip already published crate versions
     #[clap(long, hide = true)]
@@ -46,7 +46,7 @@ pub struct Publish {
 
 impl Publish {
     pub fn run(self, metadata: Metadata) -> Result {
-        let pkgs = if !self.from_git {
+        let pkgs = if !self.publish_as_is {
             self.version
                 .do_versioning(&metadata)?
                 .iter()

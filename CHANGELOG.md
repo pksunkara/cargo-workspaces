@@ -3,6 +3,9 @@
 ### BREAKING
 * Update MSRV to 1.70.0
 
+### Enhancements
+* Renamed `--from-git` flag to `--publish-as-is`
+
 ## 0.2.44
 
 ### Enhancements

@@ -242,9 +242,9 @@ GIT OPTIONS:
 
 PUBLISH OPTIONS:
         --allow-dirty            Allow dirty working directories to be published
-        --from-git               Publish crates from the current commit without versioning
         --no-remove-dev-deps     Don't remove dev-dependencies while publishing
         --no-verify              Skip crate verification (not recommended)
+        --publish-as-is          Publish crates from the current commit without versioning
         --registry <REGISTRY>    The Cargo registry to use for publishing
         --token <TOKEN>          The token to use for publishing
 ```
