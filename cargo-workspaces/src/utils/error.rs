@@ -73,6 +73,8 @@ pub enum Error {
     ManifestHasNoParent(String),
     #[error("unable to read metadata specified in Cargo.toml: {0}")]
     BadMetadata(serde_json::Error),
+    #[error("command needs to be run from the workspace root")]
+    MustBeRunFromWorkspaceRoot,
 
     #[error("unable to verify package {0}")]
     Verify(String),
@@ -86,6 +88,12 @@ pub enum Error {
 
     #[error("unable to create crate")]
     Create,
+    #[error("path for crate is in workspace.exclude list ({0})")]
+    InWorkspaceExclude(String),
+    #[error("member path is not inside workspace root")]
+    InvalidMemberPath,
+    #[error("the workspace already contains a package with this name")]
+    DuplicatePackageName,
 
     #[error("given path {0} is not a folder")]
     WorkspaceRootNotDir(String),
@@ -130,10 +138,15 @@ pub enum Error {
     #[error("crates index error: {0}")]
     CratesReqwest(#[from] tame_index::external::reqwest::Error),
 
+    #[error("the workspace manifest has bad format: {0}")]
+    WorkspaceBadFormat(String),
+
     #[error("{0}")]
     Semver(#[from] semver::ReqParseError),
     #[error("{0}")]
-    Glob(#[from] glob::PatternError),
+    Glob(#[from] glob::GlobError),
+    #[error("{0}")]
+    GlobPattern(#[from] glob::PatternError),
     #[error("{0}")]
     Globset(#[from] globset::Error),
     #[error("{0}")]
