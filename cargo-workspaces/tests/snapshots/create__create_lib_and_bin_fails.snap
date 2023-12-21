@@ -1,0 +1,12 @@
+---
+source: tests/create.rs
+assertion_line: 210
+expression: err
+---
+error: The argument '--lib' cannot be used with '--bin'
+
+USAGE:
+    cargo workspaces create --edition <EDITION> --lib --name <NAME> <PATH>
+
+For more information try --help
+

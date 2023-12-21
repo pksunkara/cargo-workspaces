@@ -3,3 +3,4 @@
 
 cargo-workspaces/target
 fixtures/**/Cargo.lock
+fixtures/**/target

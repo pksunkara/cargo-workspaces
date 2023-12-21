@@ -1,7 +1,8 @@
 mod utils;
 use insta::assert_snapshot;
+use serial_test::serial;
 use std::{
-    fs::{read_to_string, remove_dir, remove_dir_all, remove_file},
+    fs::{read_to_string, remove_dir, remove_dir_all, remove_file, write},
     path::Path,
 };
 
@@ -60,12 +61,14 @@ fn clean_package_dir(package_path: &Path, package_type: &str) {
 
 /// Test creating a 2015 bin package
 #[test]
+#[serial]
 fn test_create_bin_2015() {
     let package_name = "mynewcrate-bin-2015";
-    let dir = "../fixtures/normal";
+    let dir = "../fixtures/create";
     let package_path = Path::new(dir).join(package_name);
     let manifest_path = package_path.join("Cargo.toml");
 
+    let backup = read_to_string(Path::new(dir).join("Cargo.toml")).unwrap();
     clean_package_dir(&package_path, "bin");
 
     let _err = utils::run_err(
@@ -87,16 +90,19 @@ fn test_create_bin_2015() {
     assert_snapshot!(&manifest);
 
     clean_package_dir(&package_path, "bin");
+    write(Path::new(dir).join("Cargo.toml"), backup).unwrap();
 }
 
 /// Test creating a 2015 lib package
 #[test]
+#[serial]
 fn test_create_lib_2015() {
     let package_name = "mynewcrate-lib-2015";
-    let dir = "../fixtures/normal";
+    let dir = "../fixtures/create";
     let package_path = Path::new(dir).join(package_name);
     let manifest_path = package_path.join("Cargo.toml");
 
+    let backup = read_to_string(Path::new(dir).join("Cargo.toml")).unwrap();
     clean_package_dir(&package_path, "lib");
 
     let _err = utils::run_err(
@@ -118,16 +124,19 @@ fn test_create_lib_2015() {
     assert_snapshot!(&manifest);
 
     clean_package_dir(&package_path, "lib");
+    write(Path::new(dir).join("Cargo.toml"), backup).unwrap();
 }
 
 /// Test creating a 2018 bin package
 #[test]
+#[serial]
 fn test_create_bin_2018() {
     let package_name = "mynewcrate-bin-2018";
-    let dir = "../fixtures/normal";
+    let dir = "../fixtures/create";
     let package_path = Path::new(dir).join(package_name);
     let manifest_path = package_path.join("Cargo.toml");
 
+    let backup = read_to_string(Path::new(dir).join("Cargo.toml")).unwrap();
     clean_package_dir(&package_path, "bin");
 
     let _err = utils::run_err(
@@ -149,16 +158,19 @@ fn test_create_bin_2018() {
     assert_snapshot!(&manifest);
 
     clean_package_dir(&package_path, "bin");
+    write(Path::new(dir).join("Cargo.toml"), backup).unwrap();
 }
 
 /// Test creating a 2018 lib package
 #[test]
+#[serial]
 fn test_create_lib_2018() {
     let package_name = "mynewcrate-lib-2018";
-    let dir = "../fixtures/normal";
+    let dir = "../fixtures/create";
     let package_path = Path::new(dir).join(package_name);
     let manifest_path = package_path.join("Cargo.toml");
 
+    let backup = read_to_string(Path::new(dir).join("Cargo.toml")).unwrap();
     clean_package_dir(&package_path, "lib");
 
     let _err = utils::run_err(
@@ -180,13 +192,15 @@ fn test_create_lib_2018() {
     assert_snapshot!(&manifest);
 
     clean_package_dir(&package_path, "lib");
+    write(Path::new(dir).join("Cargo.toml"), backup).unwrap();
 }
 
 /// Test that you can't create a library and binary package at the same time
 #[test]
+#[serial]
 fn test_create_lib_and_bin_fails() {
     let package_name = "mynewcrate-lib-and-bin-2018";
-    let dir = "../fixtures/normal";
+    let dir = "../fixtures/create";
     let package_path = Path::new(dir).join(package_name);
 
     clean_package_dir(&package_path, "lib");
@@ -207,14 +221,100 @@ fn test_create_lib_and_bin_fails() {
         ],
     );
 
-    assert!(err.contains("error"));
-    assert!(err.contains("--bin"));
-    assert!(err.contains("cannot be used with"));
-    assert!(err.contains("--lib"));
+    assert_snapshot!(err);
 
     let exists = package_path.exists();
     assert!(!exists);
 
     clean_package_dir(&package_path, "lib");
     clean_package_dir(&package_path, "bin");
+}
+
+#[test]
+#[serial]
+fn test_exclude_fails() {
+    let package_name = "tmp2";
+    let dir = "../fixtures/create";
+    let package_path = Path::new(dir).join(package_name);
+
+    clean_package_dir(&package_path, "lib");
+
+    let err = utils::run_err(
+        dir,
+        &[
+            "ws",
+            "create",
+            package_name,
+            "--edition",
+            "2018",
+            "--lib",
+            "--name",
+            package_name,
+        ],
+    );
+
+    assert_snapshot!(err);
+
+    let exists = package_path.exists();
+    assert!(!exists);
+
+    clean_package_dir(&package_path, "lib");
+}
+
+#[test]
+#[serial]
+fn test_already_exists() {
+    let package_name = "dep1";
+    let dir = "../fixtures/create";
+    let package_path = Path::new(dir).join(package_name);
+
+    let err = utils::run_err(
+        dir,
+        &[
+            "ws",
+            "create",
+            package_name,
+            "--edition",
+            "2018",
+            "--lib",
+            "--name",
+            package_name,
+        ],
+    );
+
+    assert_snapshot!(err);
+
+    let exists = package_path.exists();
+    assert!(exists);
+}
+
+#[test]
+#[serial]
+fn test_duplicate_package_name() {
+    let package_name = "dep1";
+    let dir = "../fixtures/create";
+    let package_path = Path::new(dir).join("dep3");
+
+    clean_package_dir(&package_path, "lib");
+
+    let err = utils::run_err(
+        dir,
+        &[
+            "ws",
+            "create",
+            "dep3",
+            "--edition",
+            "2018",
+            "--lib",
+            "--name",
+            package_name,
+        ],
+    );
+
+    assert_snapshot!(err);
+
+    let exists = package_path.exists();
+    assert!(!exists);
+
+    clean_package_dir(&package_path, "lib");
 }

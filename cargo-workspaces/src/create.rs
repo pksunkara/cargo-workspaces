@@ -14,6 +14,7 @@ use std::{
     collections::BTreeMap as Map,
     env::current_dir,
     fs::{create_dir_all, read_to_string, remove_dir_all, remove_file, write},
+    path::Path,
 };
 
 #[derive(Debug, Clone, ArgEnum)]
@@ -55,6 +56,20 @@ impl Create {
             return Err(Error::MustBeRunFromWorkspaceRoot);
         }
 
+        let path = metadata.workspace_root.join(&self.path);
+
+        if Path::new(&path).exists() {
+            return Err(Error::PathAlreadyExists);
+        }
+
+        create_dir_all(&path)?;
+
+        if !canonicalize(&path)?.starts_with(canonicalize(&metadata.workspace_root)?) {
+            return Err(Error::InvalidMemberPath);
+        }
+
+        remove_dir_all(&path)?;
+
         let workspace_root = metadata.workspace_root.join("Cargo.toml");
         let backup = read_to_string(&workspace_root)?;
 
@@ -70,14 +85,6 @@ impl Create {
     }
 
     fn try_run(&self, metadata: Metadata) -> Result {
-        create_dir_all(&self.path)?;
-
-        if !canonicalize(&metadata.workspace_root.join(&self.path))?
-            .starts_with(canonicalize(&metadata.workspace_root)?)
-        {
-            return Err(Error::InvalidMemberPath);
-        }
-
         self.add_workspace_toml_entry(&metadata)?;
         self.create_new_workspace_member(&metadata)?;
 

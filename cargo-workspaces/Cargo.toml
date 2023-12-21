@@ -48,6 +48,7 @@ toml_edit = "0.19.10"
 assert_cmd = "1.0"
 insta = { version = "1.32.0", features = ["redactions"] }
 indoc = "1.0.9"
+serial_test = "2.0.0"
 tempfile = "3.6.0"
 
 [workspace.metadata.workspaces]

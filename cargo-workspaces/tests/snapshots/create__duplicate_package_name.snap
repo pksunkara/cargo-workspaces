@@ -1,0 +1,13 @@
+---
+source: tests/create.rs
+assertion_line: 297
+expression: err
+---
+warning: compiling this new package may not work due to invalid workspace configuration
+
+two packages named `dep1` in this workspace:
+- /Users/pksunkara/Coding/automa/cargo-workspaces/fixtures/create/dep1/Cargo.toml
+- /Users/pksunkara/Coding/automa/cargo-workspaces/fixtures/create/dep3/Cargo.toml
+     Created library `dep1` package
+error: the workspace already contains a package with this name
+

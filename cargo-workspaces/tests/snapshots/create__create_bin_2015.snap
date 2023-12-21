@@ -1,7 +1,7 @@
 ---
 source: tests/create.rs
+assertion_line: 87
 expression: "&manifest"
-
 ---
 [package]
 name = "mynewcrate-bin-2015"

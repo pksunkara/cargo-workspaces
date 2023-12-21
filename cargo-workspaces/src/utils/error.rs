@@ -88,12 +88,14 @@ pub enum Error {
 
     #[error("unable to create crate")]
     Create,
-    #[error("path for crate is in workspace.exclude list ({0})")]
-    InWorkspaceExclude(String),
+    #[error("path already exists")]
+    PathAlreadyExists,
     #[error("member path is not inside workspace root")]
     InvalidMemberPath,
     #[error("the workspace already contains a package with this name")]
     DuplicatePackageName,
+    #[error("path for crate is in workspace.exclude list ({0})")]
+    InWorkspaceExclude(String),
 
     #[error("given path {0} is not a folder")]
     WorkspaceRootNotDir(String),

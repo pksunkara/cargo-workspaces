@@ -1,0 +1,7 @@
+---
+source: tests/create.rs
+assertion_line: 241
+expression: err
+---
+error: path for crate is in workspace.exclude list (tmp*)
+

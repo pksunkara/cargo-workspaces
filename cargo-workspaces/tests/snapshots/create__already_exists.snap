@@ -1,0 +1,7 @@
+---
+source: tests/create.rs
+assertion_line: 269
+expression: err
+---
+error: path already exists
+
