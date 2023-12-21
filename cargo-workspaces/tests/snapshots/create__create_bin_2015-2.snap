@@ -1,0 +1,14 @@
+---
+source: tests/create.rs
+assertion_line: 93
+expression: "&workspace_manifest"
+---
+[workspace]
+members = [
+	"dep*",
+	"mynewcrate-bin-2015",
+]
+exclude = [
+	"tmp*",
+]
+

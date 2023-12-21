@@ -66,9 +66,10 @@ fn test_create_bin_2015() {
     let package_name = "mynewcrate-bin-2015";
     let dir = "../fixtures/create";
     let package_path = Path::new(dir).join(package_name);
+    let workspace_manifest_path = Path::new(dir).join("Cargo.toml");
     let manifest_path = package_path.join("Cargo.toml");
 
-    let backup = read_to_string(Path::new(dir).join("Cargo.toml")).unwrap();
+    let backup = read_to_string(&workspace_manifest_path).unwrap();
     clean_package_dir(&package_path, "bin");
 
     let _err = utils::run_err(
@@ -86,11 +87,13 @@ fn test_create_bin_2015() {
     );
 
     let manifest = read_to_string(manifest_path).unwrap();
+    let workspace_manifest = read_to_string(&workspace_manifest_path).unwrap();
 
     assert_snapshot!(&manifest);
+    assert_snapshot!(&workspace_manifest);
 
     clean_package_dir(&package_path, "bin");
-    write(Path::new(dir).join("Cargo.toml"), backup).unwrap();
+    write(workspace_manifest_path, backup).unwrap();
 }
 
 /// Test creating a 2015 lib package
@@ -232,6 +235,42 @@ fn test_create_lib_and_bin_fails() {
 
 #[test]
 #[serial]
+fn test_member_glob() {
+    let package_name = "dep3";
+    let dir = "../fixtures/create";
+    let package_path = Path::new(dir).join(package_name);
+    let workspace_manifest_path = Path::new(dir).join("Cargo.toml");
+    let manifest_path = package_path.join("Cargo.toml");
+
+    let backup = read_to_string(&workspace_manifest_path).unwrap();
+    clean_package_dir(&package_path, "lib");
+
+    let _err = utils::run_err(
+        dir,
+        &[
+            "ws",
+            "create",
+            package_name,
+            "--edition",
+            "2018",
+            "--lib",
+            "--name",
+            package_name,
+        ],
+    );
+
+    let manifest = read_to_string(manifest_path).unwrap();
+    let workspace_manifest = read_to_string(&workspace_manifest_path).unwrap();
+
+    assert_snapshot!(&manifest);
+    assert_snapshot!(&workspace_manifest);
+
+    clean_package_dir(&package_path, "lib");
+    write(workspace_manifest_path, backup).unwrap();
+}
+
+#[test]
+#[serial]
 fn test_exclude_fails() {
     let package_name = "tmp2";
     let dir = "../fixtures/create";
@@ -266,7 +305,6 @@ fn test_exclude_fails() {
 fn test_already_exists() {
     let package_name = "dep1";
     let dir = "../fixtures/create";
-    let package_path = Path::new(dir).join(package_name);
 
     let err = utils::run_err(
         dir,
@@ -283,9 +321,6 @@ fn test_already_exists() {
     );
 
     assert_snapshot!(err);
-
-    let exists = package_path.exists();
-    assert!(exists);
 }
 
 #[test]
@@ -293,9 +328,6 @@ fn test_already_exists() {
 fn test_duplicate_package_name() {
     let package_name = "dep1";
     let dir = "../fixtures/create";
-    let package_path = Path::new(dir).join("dep3");
-
-    clean_package_dir(&package_path, "lib");
 
     let err = utils::run_err(
         dir,
@@ -311,10 +343,8 @@ fn test_duplicate_package_name() {
         ],
     );
 
-    assert_snapshot!(err);
+    assert!(err.contains("error: the workspace already contains a package with this name"));
 
-    let exists = package_path.exists();
+    let exists = Path::new(dir).join("dep3").exists();
     assert!(!exists);
-
-    clean_package_dir(&package_path, "lib");
 }

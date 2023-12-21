@@ -1,0 +1,13 @@
+---
+source: tests/create.rs
+assertion_line: 266
+expression: "&workspace_manifest"
+---
+[workspace]
+members = [
+	"dep*",
+]
+exclude = [
+	"tmp*",
+]
+
