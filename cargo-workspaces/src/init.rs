@@ -1,11 +1,29 @@
 use crate::utils::{info, Error, Result};
 
 use cargo_metadata::MetadataCommand;
-use clap::Parser;
+use clap::{ArgEnum, Parser};
 use dunce::canonicalize;
 use glob::glob;
+use toml_edit::{Array, Document, Formatted, Item, Table, Value};
 
 use std::{collections::HashSet, fs::write, path::PathBuf};
+
+#[derive(Debug, Clone, Copy, ArgEnum)]
+enum Resolver {
+    #[clap(name = "1")]
+    V1,
+    #[clap(name = "2")]
+    V2,
+}
+
+impl Resolver {
+    fn name(&self) -> &str {
+        match self {
+            Resolver::V1 => "1",
+            Resolver::V2 => "2",
+        }
+    }
+}
 
 /// Initializes a new cargo workspace
 #[derive(Debug, Parser)]
@@ -13,6 +31,10 @@ pub struct Init {
     /// Path to the workspace root
     #[clap(parse(from_os_str), default_value = ".")]
     path: PathBuf,
+
+    /// Workspace feature resolver version
+    #[clap(long, arg_enum)]
+    resolver: Option<Resolver>,
 }
 
 impl Init {
@@ -46,26 +68,57 @@ impl Init {
 
         let ws = canonicalize(&self.path)?;
 
-        let mut content = "[workspace]\nmembers = [".to_string();
+        let mut document = Document::default();
 
-        let mut members: Vec<_> = workspace_roots
-            .iter()
-            .filter_map(|m| m.strip_prefix(&ws).ok())
-            .collect();
+        let workspace = document
+            .entry("workspace")
+            .or_insert_with(|| Item::Table(Table::default()))
+            .as_table_mut()
+            .ok_or_else(|| {
+                Error::WorkspaceBadFormat(
+                    "no workspace table found in workspace Cargo.toml".to_string(),
+                )
+            })?;
 
-        members.sort();
+        // workspace members
+        {
+            let workspace_members = workspace
+                .entry("members")
+                .or_insert_with(|| Item::Value(Value::Array(Array::new())))
+                .as_array_mut()
+                .ok_or_else(|| {
+                    Error::WorkspaceBadFormat(
+                        "members was not an array in workspace Cargo.toml".to_string(),
+                    )
+                })?;
 
-        if !members.is_empty() {
-            content.push('\n');
+            let mut members: Vec<_> = workspace_roots
+                .iter()
+                .filter_map(|m| m.strip_prefix(&ws).ok())
+                .map(|path| path.to_string())
+                .collect();
+
+            members.sort();
+
+            info!("crates", members.join(", "));
+
+            let max_member = members.len().saturating_sub(1);
+
+            workspace_members.extend(members.into_iter().enumerate().map(|(i, val)| {
+                let prefix = "\n    ";
+                let suffix = if i == max_member { ",\n" } else { "" };
+                Value::String(Formatted::new(val)).decorated(prefix, suffix)
+            }));
         }
 
-        members
-            .into_iter()
-            .for_each(|m| content.push_str(&format!("    \"{m}\",\n")));
+        // workspace resolver
+        if let Some(resolver) = self.resolver {
+            workspace.entry("resolver").or_insert_with(|| {
+                Item::Value(Value::String(Formatted::new(resolver.name().to_owned())))
+            });
+        }
 
-        content.push_str("]\n");
-
-        write(cargo_toml, content)?;
+        write(cargo_toml, document.to_string())?;
 
         info!("initialized", self.path.display());
         Ok(())

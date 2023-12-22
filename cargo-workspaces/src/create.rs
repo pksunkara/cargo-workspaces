@@ -8,7 +8,7 @@ use dunce::canonicalize;
 use glob::Pattern;
 use oclif::term::TERM_ERR;
 use semver::Version;
-use toml_edit::{Array, Decor, Document, Formatted, Item, Table, Value};
+use toml_edit::{Array, Document, Formatted, Item, Table, Value};
 
 use std::{
     collections::BTreeMap as Map,
@@ -243,23 +243,15 @@ fn add_workspace_member(
 
     let members_array = members_item.as_array_mut().expect(INTERNAL_ERR);
 
-    let existing_prefix = members_array
+    let (prefix, suffix) = members_array
         .iter()
-        .next()
-        .and_then(|item| item.decor().prefix().cloned());
+        .last()
+        .map(|item| item.decor())
+        .and_then(|decor| Some((decor.prefix()?.as_str()?, decor.suffix()?.as_str()?)))
+        .unwrap_or(("\n    ", ",\n"));
 
-    let existing_suffix = members_array
-        .iter()
-        .next()
-        .and_then(|item| item.decor().suffix().cloned());
-
-    let decor = Decor::new(
-        existing_prefix.unwrap_or_else(|| "\n  ".into()),
-        existing_suffix.unwrap_or_else(|| ",\n".into()),
-    );
-
-    let mut new_elem = Value::String(Formatted::new(new_member_path.to_owned()));
-    *new_elem.decor_mut() = decor;
+    let new_elem =
+        Value::String(Formatted::new(new_member_path.to_owned())).decorated(prefix, suffix);
 
     members_array.push_formatted(new_elem);
 
