@@ -120,8 +120,13 @@ impl Create {
         let theme = ColorfulTheme::default();
         let path = metadata.workspace_root.join(&self.path);
 
-        let name = match &self.name {
-            Some(n) => n.clone(),
+        let name = match self
+            .name
+            .as_deref()
+            .or_else(|| path.file_name())
+            .map(|s| s.to_owned())
+        {
+            Some(n) => n,
             None => Input::with_theme(&theme)
                 .with_prompt("Name of the crate")
                 .interact_on(&TERM_ERR)?,
