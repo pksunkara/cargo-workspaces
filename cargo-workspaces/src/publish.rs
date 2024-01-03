@@ -5,11 +5,15 @@ use crate::utils::{
     Result, VersionOpt, INTERNAL_ERR,
 };
 
+use camino::Utf8PathBuf;
 use cargo_metadata::Metadata;
 use clap::Parser;
 use indexmap::IndexSet as Set;
 use tame_index::{
-    external::reqwest::blocking::Client,
+    external::{
+        http::{HeaderMap, HeaderValue},
+        reqwest::{blocking::Client, header::AUTHORIZATION, Certificate},
+    },
     index::{ComboIndex, ComboIndexCache, RemoteGitIndex, RemoteSparseIndex},
     utils::flock::LockOptions,
     IndexLocation, IndexUrl, KrateName,
@@ -93,6 +97,7 @@ impl Publish {
             })
             .collect::<Set<_>>();
 
+        let http_client = create_http_client(&metadata.workspace_root, &self.token)?;
         for p in &visited {
             let (pkg, version) = names.get(p).expect(INTERNAL_ERR);
             let name = pkg.name.clone();
@@ -114,7 +119,7 @@ impl Publish {
                 IndexUrl::crates_io(None, None, None)?
             };
 
-            if is_published(index_url, &name, version)? {
+            if is_published(&http_client, index_url, &name, version)? {
                 info!("already published", name_ver);
                 continue;
             }
@@ -167,7 +172,27 @@ impl Publish {
     }
 }
 
-fn is_published(index_url: IndexUrl, name: &str, version: &str) -> Result<bool> {
+fn create_http_client(workspace_root: &Utf8PathBuf, token: &Option<String>) -> Result<Client> {
+    let client_builder = Client::builder().use_rustls_tls();
+    let client_builder = if let Some(ref token) = token {
+        let mut headers = HeaderMap::new();
+        headers.insert(AUTHORIZATION, HeaderValue::from_str(token).unwrap());
+        client_builder.default_headers(headers)
+    } else {
+        client_builder
+    };
+    let http_cainfo = cargo_config_get(workspace_root, "http.cainfo").ok();
+    let client_builder = if let Some(http_cainfo) = http_cainfo {
+        client_builder
+            .tls_built_in_root_certs(false)
+            .add_root_certificate(Certificate::from_pem(&std::fs::read(http_cainfo)?)?)
+    } else {
+        client_builder
+    };
+    Ok(client_builder.build()?)
+}
+
+fn is_published(client: &Client, index_url: IndexUrl, name: &str, version: &str) -> Result<bool> {
     let index_cache = ComboIndexCache::new(IndexLocation::new(index_url))?;
     let lock = LockOptions::cargo_package_lock(None)?.try_lock()?;
 
@@ -178,10 +203,7 @@ fn is_published(index_url: IndexUrl, name: &str, version: &str) -> Result<bool> 
             rgi.fetch(&lock)?;
             rgi.into()
         }
-        ComboIndexCache::Sparse(sparse) => {
-            let client = Client::builder().http2_prior_knowledge().build()?;
-            RemoteSparseIndex::new(sparse, client).into()
-        }
+        ComboIndexCache::Sparse(sparse) => RemoteSparseIndex::new(sparse, client.clone()).into(),
         _ => return Err(Error::UnsupportedCratesIndexType),
     };
 
