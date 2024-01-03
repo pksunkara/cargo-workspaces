@@ -125,7 +125,7 @@ impl Create {
             None => Input::with_theme(&theme)
                 .default(path.file_name().map(|s| s.to_owned()).unwrap_or_default())
                 .with_prompt("Name of the crate")
-                .interact_on(&TERM_ERR)?,
+                .interact_text_on(&TERM_ERR)?,
         };
 
         let template = if self.lib {
