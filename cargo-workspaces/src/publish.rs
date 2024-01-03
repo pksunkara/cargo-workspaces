@@ -109,7 +109,7 @@ impl Publish {
                     &metadata.workspace_root,
                     &format!("registries.{}.index", registry),
                 )?;
-                IndexUrl::NonCratesIo(format!("registry+{}", registry_url).into())
+                IndexUrl::NonCratesIo(registry_url.into())
             } else {
                 IndexUrl::crates_io(None, None, None)?
             };
