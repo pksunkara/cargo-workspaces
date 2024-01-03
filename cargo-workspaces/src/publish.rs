@@ -11,8 +11,7 @@ use clap::Parser;
 use indexmap::IndexSet as Set;
 use tame_index::{
     external::{
-        gix::filter::plumbing::driver::process::client,
-        http::{HeaderMap, HeaderName, HeaderValue},
+        http::{HeaderMap, HeaderValue},
         reqwest::{blocking::Client, header::AUTHORIZATION, Certificate},
     },
     index::{ComboIndex, ComboIndexCache, RemoteGitIndex, RemoteSparseIndex},
