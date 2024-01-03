@@ -171,12 +171,10 @@ impl VersionOpt {
             )?;
         }
 
-        for pkg in new_versions.keys() {
-            let output = cargo(&metadata.workspace_root, &["update", "-p", pkg], &[])?;
+        let output = cargo(&metadata.workspace_root, &["update", "-w"], &[])?;
 
-            if output.1.contains("error:") {
-                return Err(Error::Update);
-            }
+        if output.1.contains("error:") {
+            return Err(Error::Update);
         }
 
         self.git.commit(
