@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.1
+
+### Enhancements
+* Infer package name when creating a workspace member crate
+* Improve time taken for versioning and releasing
+* Support TLS and authentication for sparse registries
+
+### Bug Fixes
+* Fix issue with publishing to sparse registries
+
 ## 0.3.0
 
 ### BREAKING
