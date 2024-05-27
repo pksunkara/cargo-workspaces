@@ -177,7 +177,7 @@ impl Create {
             return Err(Error::DuplicatePackageName);
         }
 
-        if !stderr.contains("Created") {
+        if !stderr.contains("Created") && !stderr.contains("Adding") {
             return Err(Error::Create);
         }
 
