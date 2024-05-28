@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.2
+
+### Bug Fixes
+* Fix issue with creating a package with newer versions of Rust
+
 ## 0.3.1
 
 ### Enhancements
