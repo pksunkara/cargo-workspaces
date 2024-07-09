@@ -1,23 +1,13 @@
-use std::convert::TryFrom;
-
 use crate::utils::{
-    cargo, cargo_config_get, dag, info, should_remove_dev_deps, warn, DevDependencyRemover, Error,
-    Result, VersionOpt, INTERNAL_ERR,
+    basic_checks, cargo, cargo_config_get, create_http_client, dag, filter_private, info,
+    is_published, should_remove_dev_deps, warn, DevDependencyRemover, Error, Result, VersionOpt,
+    INTERNAL_ERR,
 };
 
 use camino::Utf8PathBuf;
 use cargo_metadata::Metadata;
 use clap::Parser;
-use indexmap::IndexSet as Set;
-use tame_index::{
-    external::{
-        http::{HeaderMap, HeaderValue},
-        reqwest::{blocking::Client, header::AUTHORIZATION, Certificate},
-    },
-    index::{ComboIndex, ComboIndexCache, RemoteGitIndex, RemoteSparseIndex},
-    utils::flock::LockOptions,
-    IndexLocation, IndexUrl, KrateName,
-};
+use tame_index::IndexUrl;
 
 /// Publish crates in the project
 #[derive(Debug, Parser)]
@@ -54,10 +44,27 @@ pub struct Publish {
     /// Don't remove dev-dependencies while publishing
     #[clap(long)]
     no_remove_dev_deps: bool,
+
+    /// Perform checks without uploading. WIP and performs fewer
+    /// checks than `cargo publish --dry-run`
+    #[clap(long)]
+    dry_run: bool,
 }
 
 impl Publish {
-    pub fn run(self, metadata: Metadata) -> Result {
+    pub fn run(mut self, metadata: Metadata) -> Result {
+        if self.dry_run {
+            warn!(
+                "Dry run option is WIP and performs fewer checks than `cargo publish --dry-run`.",
+                ""
+            );
+            if !self.publish_as_is {
+                info!("Dry run doesn't perform versioning. Perform `version` command manually if required", "");
+                info!("Skipping versioning step", "");
+                self.publish_as_is = true;
+            }
+        }
+
         let pkgs = if !self.publish_as_is {
             self.version
                 .do_versioning(&metadata)?
@@ -85,23 +92,26 @@ impl Publish {
         let (names, visited) = dag(&pkgs);
 
         // Filter out private packages
-        let visited = visited
-            .into_iter()
-            .filter(|x| {
-                if let Some((pkg, _)) = pkgs.iter().find(|(p, _)| p.manifest_path == *x) {
-                    return pkg.publish.is_none()
-                        || !pkg.publish.as_ref().expect(INTERNAL_ERR).is_empty();
-                }
-
-                false
-            })
-            .collect::<Set<_>>();
+        let visited = filter_private(visited, &pkgs);
 
         let http_client = create_http_client(&metadata.workspace_root, &self.token)?;
 
         for p in &visited {
             let (pkg, version) = names.get(p).expect(INTERNAL_ERR);
             let name = pkg.name.clone();
+
+            if self.dry_run {
+                info!("Checking package", name);
+                if !self.no_verify {
+                    self.try_build(&metadata.workspace_root, &name, p)?;
+                } else {
+                    info!("Skipping build", name);
+                }
+                basic_checks(pkg)?;
+                info!("Can be published", name);
+                continue;
+            }
+
             let mut args = vec!["publish"];
 
             let name_ver = format!("{} v{}", name, version);
@@ -171,48 +181,21 @@ impl Publish {
         info!("success", "ok");
         Ok(())
     }
-}
 
-fn create_http_client(workspace_root: &Utf8PathBuf, token: &Option<String>) -> Result<Client> {
-    let client_builder = Client::builder().use_rustls_tls();
-    let client_builder = if let Some(ref token) = token {
-        let mut headers = HeaderMap::new();
-        headers.insert(AUTHORIZATION, HeaderValue::from_str(token).unwrap());
-        client_builder.default_headers(headers)
-    } else {
-        client_builder
-    };
-    let http_cainfo = cargo_config_get(workspace_root, "http.cainfo").ok();
-    let client_builder = if let Some(http_cainfo) = http_cainfo {
-        client_builder
-            .tls_built_in_root_certs(false)
-            .add_root_certificate(Certificate::from_pem(&std::fs::read(http_cainfo)?)?)
-    } else {
-        client_builder
-    };
-    Ok(client_builder.build()?)
-}
+    fn try_build(
+        &self,
+        workspace_root: &Utf8PathBuf,
+        name: &str,
+        manifest_path: &Utf8PathBuf,
+    ) -> Result<()> {
+        let mut args = vec!["build"];
+        args.push("--manifest-path");
+        args.push(manifest_path.as_str());
 
-fn is_published(client: &Client, index_url: IndexUrl, name: &str, version: &str) -> Result<bool> {
-    let index_cache = ComboIndexCache::new(IndexLocation::new(index_url))?;
-    let lock = LockOptions::cargo_package_lock(None)?.try_lock()?;
-
-    let index: ComboIndex = match index_cache {
-        ComboIndexCache::Git(git) => {
-            let mut rgi = RemoteGitIndex::new(git, &lock)?;
-
-            rgi.fetch(&lock)?;
-            rgi.into()
+        let (_stdout, stderr) = cargo(workspace_root, &args, &[])?;
+        if stderr.contains("could not compile") {
+            return Err(Error::Build(name.to_string()));
         }
-        ComboIndexCache::Sparse(sparse) => RemoteSparseIndex::new(sparse, client.clone()).into(),
-        _ => return Err(Error::UnsupportedCratesIndexType),
-    };
-
-    if let Some(crate_data) = index.krate(KrateName::try_from(name)?, false, &lock)? {
-        if crate_data.versions.iter().any(|v| v.version == version) {
-            return Ok(true);
-        }
+        Ok(())
     }
-
-    Ok(false)
 }

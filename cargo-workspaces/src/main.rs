@@ -3,6 +3,7 @@ mod create;
 mod exec;
 mod init;
 mod list;
+mod plan;
 mod publish;
 mod rename;
 mod version;
@@ -24,6 +25,7 @@ enum Subcommand {
     Create(create::Create),
     Rename(rename::Rename),
     Init(init::Init),
+    Plan(plan::Plan),
 }
 
 #[derive(Debug, Parser)]
@@ -83,6 +85,7 @@ fn main() {
             Subcommand::Exec(x) => x.run(metadata),
             Subcommand::Create(x) => x.run(metadata),
             Subcommand::Rename(x) => x.run(metadata),
+            Subcommand::Plan(x) => x.run(metadata),
             _ => unreachable!(),
         }
     };

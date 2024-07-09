@@ -20,6 +20,7 @@ But this will also work on single crates because by default every individual cra
       1. [Fixed or Independent](#fixed-or-independent)
    7. [Publish](#publish)
    8. [Rename](#rename)
+   8. [Plan](#plan)
 3. [Config](#config)
 4. [Changelog](#changelog)
 
@@ -249,6 +250,7 @@ PUBLISH OPTIONS:
         --publish-as-is          Publish crates from the current commit without versioning
         --registry <REGISTRY>    The Cargo registry to use for publishing
         --token <TOKEN>          The token to use for publishing
+        --dry-run                Perform checks without uploading. WIP and performs fewer checks than `cargo publish --dry-run`.
 ```
 
 ### Rename
@@ -267,6 +269,25 @@ OPTIONS:
     -f, --from <crate>        Rename only a specific crate
     -h, --help                Print help information
         --ignore <pattern>    Ignore the crates matched by glob
+```
+
+### Plan
+
+Print the plan for publishing. The output will contain the names and versions of the workspace crates according
+to the order in which they should be published.
+
+```
+USAGE:
+    cargo workspaces plan [OPTIONS]
+
+OPTIONS:
+    -h, --help
+            Print help information
+
+PUBLISH PLAN OPTIONS:
+    --check-published        Check if the crates are already published and include the information in the output
+    --registry <REGISTRY>    The Cargo registry to check against
+    --token <TOKEN>          The token to use for accessing the registry
 ```
 
 ## Config

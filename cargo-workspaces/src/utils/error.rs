@@ -76,6 +76,8 @@ pub enum Error {
     #[error("command needs to be run from the workspace root")]
     MustBeRunFromWorkspaceRoot,
 
+    #[error("unable to build package {0}")]
+    Build(String),
     #[error("unable to verify package {0}")]
     Verify(String),
     #[error("unable to publish package {0}")]
