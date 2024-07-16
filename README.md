@@ -129,6 +129,7 @@ ARGS:
 OPTIONS:
     -h, --help                Print help information
         --ignore <pattern>    Ignore the crates matched by glob
+        --ignore-private      Ignore private crates
         --no-bail             Continue executing command despite non-zero exit in a given crate
 ```
 

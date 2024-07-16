@@ -1,4 +1,4 @@
-use crate::utils::{dag, info, Error, Result, INTERNAL_ERR};
+use crate::utils::{dag, info, is_private, Error, Result, INTERNAL_ERR};
 use cargo_metadata::Metadata;
 use clap::Parser;
 use globset::{Error as GlobsetError, Glob};
@@ -15,6 +15,10 @@ pub struct Exec {
     /// Ignore the crates matched by glob
     #[clap(long, value_name = "pattern")]
     ignore: Option<String>,
+
+    /// Ignore private crates
+    #[clap(long)]
+    ignore_private: bool,
 
     #[clap(required = true)]
     args: Vec<String>,
@@ -38,6 +42,10 @@ impl Exec {
 
         for p in &visited {
             let (pkg, _) = names.get(p).expect(INTERNAL_ERR);
+
+            if self.ignore_private && is_private(pkg) {
+                continue;
+            }
 
             if let Some(pattern) = &ignore {
                 if pattern.compile_matcher().is_match(&pkg.name) {

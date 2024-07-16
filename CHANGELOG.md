@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.3
+
+### Enhancements
+* Allow ignore private crates for `exec`
+
 ## 0.3.2
 
 ### Bug Fixes

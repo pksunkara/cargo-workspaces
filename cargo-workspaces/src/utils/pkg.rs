@@ -1,6 +1,6 @@
 use crate::utils::{read_config, Error, ListOpt, Listable, PackageConfig, Result, INTERNAL_ERR};
 
-use cargo_metadata::{Metadata, PackageId};
+use cargo_metadata::{Metadata, Package, PackageId};
 use oclif::{console::style, term::TERM_OUT, CliError};
 use semver::Version;
 use serde::Serialize;
@@ -86,13 +86,16 @@ impl Listable for Vec<Pkg> {
     }
 }
 
+pub fn is_private(pkg: &Package) -> bool {
+    pkg.publish.is_some() && pkg.publish.as_ref().expect(INTERNAL_ERR).is_empty()
+}
+
 pub fn get_pkgs(metadata: &Metadata, all: bool) -> Result<Vec<Pkg>> {
     let mut pkgs = vec![];
 
     for id in &metadata.workspace_members {
         if let Some(pkg) = metadata.packages.iter().find(|x| x.id == *id) {
-            let private =
-                pkg.publish.is_some() && pkg.publish.as_ref().expect(INTERNAL_ERR).is_empty();
+            let private = is_private(pkg);
 
             if !all && private {
                 continue;
