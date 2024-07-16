@@ -4,6 +4,7 @@
 
 ### Enhancements
 * Allow ignore private crates for `exec`
+* Listing now follows DAG order of the dependencies
 
 ## 0.3.2
 
