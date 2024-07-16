@@ -131,6 +131,9 @@ pub enum Error {
     #[error("unable to push to remote, out = {0}, err = {1}")]
     NotPushed(String, String),
 
+    #[error("no changes detected")]
+    NoChanges,
+
     #[error("could not understand 'cargo config get' output: {0}")]
     BadConfigGetOutput(String),
     #[error("crates index error: {0}")]

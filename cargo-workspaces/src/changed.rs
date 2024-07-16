@@ -1,4 +1,4 @@
-use crate::utils::{list, ChangeData, ChangeOpt, ListOpt, Result};
+use crate::utils::{list, ChangeData, ChangeOpt, Error, ListOpt, Result};
 
 use cargo_metadata::Metadata;
 use clap::Parser;
@@ -20,6 +20,10 @@ pub struct Changed {
         forbid_empty_values(true)
     )]
     since: Option<String>,
+
+    /// Return non-zero exit code if no changes detected
+    #[clap(long)]
+    error_on_empty: bool,
 }
 
 impl Changed {
@@ -30,8 +34,9 @@ impl Changed {
             let change_data = ChangeData::new(&metadata, &self.change)?;
 
             if change_data.count == "0" {
-                return Ok(TERM_OUT
-                    .write_line("Current HEAD is already released, skipping change detection")?);
+                TERM_OUT
+                    .write_line("Current HEAD is already released, skipping change detection")?;
+                return self.finish();
             }
 
             since = change_data.since;
@@ -41,6 +46,18 @@ impl Changed {
             .change
             .get_changed_pkgs(&metadata, &since, self.list.all)?;
 
+        if pkgs.0.is_empty() && self.error_on_empty {
+            return self.finish();
+        }
+
         list(&pkgs.0, self.list)
+    }
+
+    fn finish(self) -> Result {
+        if self.error_on_empty {
+            return Err(Error::NoChanges);
+        }
+
+        return Ok(());
     }
 }

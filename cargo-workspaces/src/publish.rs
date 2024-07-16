@@ -98,6 +98,7 @@ impl Publish {
             .collect::<Set<_>>();
 
         let http_client = create_http_client(&metadata.workspace_root, &self.token)?;
+
         for p in &visited {
             let (pkg, version) = names.get(p).expect(INTERNAL_ERR);
             let name = pkg.name.clone();

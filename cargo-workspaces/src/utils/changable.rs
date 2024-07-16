@@ -87,7 +87,12 @@ impl ChangeOpt {
                 &["diff", "--name-only", "--relative", since],
             )?;
 
-            let changed_files = changed_files.split('\n').map(Path::new).collect::<Vec<_>>();
+            let changed_files = changed_files
+                .split('\n')
+                .filter(|f| !f.is_empty())
+                .map(Path::new)
+                .collect::<Vec<_>>();
+
             let force = self
                 .force
                 .clone()

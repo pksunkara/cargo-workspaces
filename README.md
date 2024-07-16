@@ -106,6 +106,7 @@ USAGE:
 
 OPTIONS:
     -a, --all                         Show private crates that are normally hidden
+        --error-on-empty              Return non-zero exit code if no changes detected
         --force <pattern>             Always include targeted crates matched by glob even when there are no changes
     -h, --help                        Print help information
         --ignore-changes <pattern>    Ignore changes in files matched by glob
