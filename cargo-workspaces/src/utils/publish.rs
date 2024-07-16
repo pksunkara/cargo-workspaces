@@ -2,10 +2,11 @@
 
 use std::convert::TryFrom;
 
-use crate::utils::{cargo_config_get, Error, Result, INTERNAL_ERR};
+use crate::utils::{cargo_config_get, is_private, Error, Result};
 
 use camino::Utf8PathBuf;
 use cargo_metadata::{Metadata, Package};
+use clap::Parser;
 use indexmap::IndexSet as Set;
 use tame_index::{
     external::{
@@ -17,16 +18,26 @@ use tame_index::{
     IndexLocation, IndexUrl, KrateName,
 };
 
+#[derive(Debug, Parser)]
+#[clap(next_help_heading = "REGISTRY OPTIONS")]
+pub struct RegistryOpt {
+    /// The token to use for accessing the registry
+    #[clap(long, forbid_empty_values(true))]
+    pub token: Option<String>,
+
+    /// The Cargo registry to use
+    #[clap(long, forbid_empty_values(true))]
+    pub registry: Option<String>,
+}
+
 pub fn filter_private(visited: Set<Utf8PathBuf>, pkgs: &[(Package, String)]) -> Set<Utf8PathBuf> {
     visited
         .into_iter()
         .filter(|x| {
-            if let Some((pkg, _)) = pkgs.iter().find(|(p, _)| p.manifest_path == *x) {
-                return pkg.publish.is_none()
-                    || !pkg.publish.as_ref().expect(INTERNAL_ERR).is_empty();
-            }
-
-            false
+            pkgs.iter()
+                .find(|(p, _)| p.manifest_path == *x)
+                .map(|(pkg, _)| !is_private(pkg))
+                .unwrap_or(false)
         })
         .collect()
 }
@@ -47,6 +58,7 @@ pub fn package_registry<'a>(
     } else {
         IndexUrl::crates_io(None, None, None)?
     };
+
     Ok(url)
 }
 

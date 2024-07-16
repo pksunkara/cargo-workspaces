@@ -1,65 +1,70 @@
 use crate::utils::{
-    create_http_client, dag, filter_private, info, is_published, package_registry, Result,
-    INTERNAL_ERR,
+    create_http_client, dag, filter_private, get_pkgs, is_published, list, package_registry,
+    ListOpt, ListPublicOpt, RegistryOpt, Result, INTERNAL_ERR,
 };
 
 use cargo_metadata::Metadata;
 use clap::Parser;
 
-/// Prepare a plan for publishing crates in the project
+/// List the crates in publishing order
 #[derive(Debug, Parser)]
-#[clap(next_help_heading = "PUBLISH PLAN OPTIONS")]
 pub struct Plan {
-    /// The token to use for accessing the registry
-    #[clap(long, forbid_empty_values(true))]
-    token: Option<String>,
+    /// Skip already published crate versions
+    #[clap(long)]
+    skip_published: bool,
 
-    /// The Cargo registry to check against
-    #[clap(long, forbid_empty_values(true))]
-    registry: Option<String>,
+    #[clap(flatten)]
+    registry: RegistryOpt,
 
-    /// Check if the crates are already published.
-    #[clap(long, short)]
-    check_published: bool,
+    #[clap(flatten)]
+    list: ListPublicOpt,
 }
 
 impl Plan {
     pub fn run(self, metadata: Metadata) -> Result {
-        let pkgs: Vec<_> = metadata
+        let pkgs = metadata
             .packages
             .iter()
             .map(|x| (x.clone(), x.version.to_string()))
-            .collect();
+            .collect::<Vec<_>>();
 
         let (names, visited) = dag(&pkgs);
 
-        // Filter out private packages
-        let visited = filter_private(visited, &pkgs);
+        let http_client = create_http_client(&metadata.workspace_root, &self.registry.token)?;
 
-        let http_client = create_http_client(&metadata.workspace_root, &self.token)?;
-        for p in &visited {
-            let (pkg, version) = names.get(p).expect(INTERNAL_ERR);
-            let name = pkg.name.clone();
+        let pkg_ids = filter_private(visited, &pkgs)
+            .into_iter()
+            .map(|p| {
+                let (pkg, version) = names.get(&p).expect(INTERNAL_ERR);
 
-            let name_ver = format!("{} v{}", name, version);
+                let published = if self.skip_published {
+                    let index_url =
+                        package_registry(&metadata, self.registry.registry.as_ref(), pkg)?;
+                    is_published(&http_client, index_url, &pkg.name, version)?
+                } else {
+                    false
+                };
 
-            let index_url = package_registry(&metadata, self.registry.as_ref(), pkg)?;
+                Ok((pkg.id.clone(), published))
+            })
+            .collect::<Result<Vec<_>>>()?
+            .into_iter()
+            .filter_map(|(id, published)| (!published).then_some(id));
 
-            let already_published = if self.check_published {
-                is_published(&http_client, index_url, &name, version)?
-            } else {
-                false
-            };
+        let pkgs = get_pkgs(&metadata, false)?;
 
-            let msg = if already_published {
-                format!("{name_ver} (already published)")
-            } else {
-                name_ver
-            };
-            info!("- ", msg);
-        }
+        let ordered_pkgs = pkg_ids
+            .into_iter()
+            .filter_map(|id| pkgs.iter().find(|p| p.id == id))
+            .cloned()
+            .collect::<Vec<_>>();
 
-        info!("success", "ok");
-        Ok(())
+        list(
+            &ordered_pkgs,
+            ListOpt {
+                all: false,
+                list: self.list,
+            },
+        )
     }
 }

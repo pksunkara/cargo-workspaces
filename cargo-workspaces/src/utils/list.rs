@@ -7,22 +7,30 @@ use serde_json::to_string_pretty;
 use std::{cmp::max, path::Path};
 
 #[derive(Debug, Parser)]
-pub struct ListOpt {
+#[clap(next_help_heading = "LIST OPTIONS")]
+pub struct ListPublicOpt {
     /// Show extended information
     #[clap(short, long)]
     pub long: bool,
-
-    /// Show private crates that are normally hidden
-    #[clap(short, long)]
-    pub all: bool,
 
     /// Show information as a JSON array
     #[clap(long, conflicts_with = "long")]
     pub json: bool,
 }
 
+#[derive(Debug, Parser)]
+#[clap(next_help_heading = "LIST OPTIONS")]
+pub struct ListOpt {
+    #[clap(flatten)]
+    pub list: ListPublicOpt,
+
+    /// Show private crates that are normally hidden
+    #[clap(short, long)]
+    pub all: bool,
+}
+
 pub fn list(pkgs: &[Pkg], list: ListOpt) -> Result {
-    if list.json {
+    if list.list.json {
         return Ok(TERM_OUT.write_line(&to_string_pretty(pkgs)?)?);
     }
 
@@ -43,10 +51,14 @@ pub fn list(pkgs: &[Pkg], list: ListOpt) -> Result {
         .expect(INTERNAL_ERR);
 
     for pkg in pkgs {
+        if !list.all && pkg.private {
+            continue;
+        }
+
         TERM_OUT.write_str(&pkg.name)?;
         let mut width = first - pkg.name.len();
 
-        if list.long {
+        if list.list.long {
             let path = if pkg.path.as_os_str().is_empty() {
                 Path::new(".")
             } else {

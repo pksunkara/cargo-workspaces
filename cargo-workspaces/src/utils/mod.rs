@@ -20,9 +20,11 @@ pub use dev_dep_remover::{should_remove_dev_deps, DevDependencyRemover};
 pub(crate) use error::{debug, info, warn};
 pub use error::{get_debug, set_debug, Error};
 pub use git::{git, GitOpt};
-pub use list::{list, ListOpt};
+pub use list::{list, ListOpt, ListPublicOpt};
 pub use pkg::{get_pkgs, is_private, Pkg};
-pub use publish::{create_http_client, filter_private, is_published, package_registry};
+pub use publish::{
+    create_http_client, filter_private, is_published, package_registry, RegistryOpt,
+};
 pub use version::VersionOpt;
 
 pub type Result<T = ()> = std::result::Result<T, Error>;

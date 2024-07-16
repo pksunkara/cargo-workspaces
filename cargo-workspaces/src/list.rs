@@ -22,8 +22,7 @@ impl List {
 
         let pkg_ids = visited
             .into_iter()
-            .map(|p| names.get(&p).expect(INTERNAL_ERR).0.id.clone())
-            .collect::<Vec<_>>();
+            .map(|p| names.get(&p).expect(INTERNAL_ERR).0.id.clone());
 
         let pkgs = get_pkgs(&metadata, self.list.all)?;
 

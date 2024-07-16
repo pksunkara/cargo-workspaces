@@ -1,19 +1,18 @@
 use crate::utils::{
-    basic_checks, cargo, cargo_config_get, create_http_client, dag, filter_private, info,
-    is_published, should_remove_dev_deps, warn, DevDependencyRemover, Error, Result, VersionOpt,
-    INTERNAL_ERR,
+    basic_checks, cargo, create_http_client, dag, filter_private, info, is_published,
+    package_registry, should_remove_dev_deps, warn, DevDependencyRemover, Error, RegistryOpt,
+    Result, VersionOpt, INTERNAL_ERR,
 };
 
 use camino::Utf8PathBuf;
 use cargo_metadata::Metadata;
 use clap::Parser;
-use tame_index::IndexUrl;
 
 /// Publish crates in the project
 #[derive(Debug, Parser)]
 #[clap(next_help_heading = "PUBLISH OPTIONS")]
 pub struct Publish {
-    #[clap(flatten, next_help_heading = None)]
+    #[clap(flatten)]
     version: VersionOpt,
 
     /// Publish crates from the current commit without versioning
@@ -33,14 +32,6 @@ pub struct Publish {
     #[clap(long)]
     allow_dirty: bool,
 
-    /// The token to use for publishing
-    #[clap(long, forbid_empty_values(true))]
-    token: Option<String>,
-
-    /// The Cargo registry to use for publishing
-    #[clap(long, forbid_empty_values(true))]
-    registry: Option<String>,
-
     /// Don't remove dev-dependencies while publishing
     #[clap(long)]
     no_remove_dev_deps: bool,
@@ -49,6 +40,9 @@ pub struct Publish {
     /// checks than `cargo publish --dry-run`
     #[clap(long)]
     dry_run: bool,
+
+    #[clap(flatten)]
+    registry: RegistryOpt,
 }
 
 impl Publish {
@@ -94,7 +88,7 @@ impl Publish {
         // Filter out private packages
         let visited = filter_private(visited, &pkgs);
 
-        let http_client = create_http_client(&metadata.workspace_root, &self.token)?;
+        let http_client = create_http_client(&metadata.workspace_root, &self.registry.token)?;
 
         for p in &visited {
             let (pkg, version) = names.get(p).expect(INTERNAL_ERR);
@@ -115,20 +109,7 @@ impl Publish {
             let mut args = vec!["publish"];
 
             let name_ver = format!("{} v{}", name, version);
-
-            let index_url = if let Some(registry) = self
-                .registry
-                .as_ref()
-                .or_else(|| pkg.publish.as_deref().and_then(|x| x.get(0)))
-            {
-                let registry_url = cargo_config_get(
-                    &metadata.workspace_root,
-                    &format!("registries.{}.index", registry),
-                )?;
-                IndexUrl::NonCratesIo(registry_url.into())
-            } else {
-                IndexUrl::crates_io(None, None, None)?
-            };
+            let index_url = package_registry(&metadata, self.registry.registry.as_ref(), pkg)?;
 
             if is_published(&http_client, index_url, &name, version)? {
                 info!("already published", name_ver);
@@ -143,12 +124,12 @@ impl Publish {
                 args.push("--allow-dirty");
             }
 
-            if let Some(ref registry) = self.registry {
+            if let Some(ref registry) = self.registry.registry {
                 args.push("--registry");
                 args.push(registry);
             }
 
-            if let Some(ref token) = self.token {
+            if let Some(ref token) = self.registry.token {
                 args.push("--token");
                 args.push(token);
             }

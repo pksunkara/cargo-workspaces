@@ -20,7 +20,7 @@ But this will also work on single crates because by default every individual cra
       1. [Fixed or Independent](#fixed-or-independent)
    7. [Publish](#publish)
    8. [Rename](#rename)
-   8. [Plan](#plan)
+   9. [Plan](#plan)
 3. [Config](#config)
 4. [Changelog](#changelog)
 
@@ -84,8 +84,10 @@ USAGE:
     cargo workspaces list [OPTIONS]
 
 OPTIONS:
-    -a, --all     Show private crates that are normally hidden
     -h, --help    Print help information
+
+LIST OPTIONS:
+    -a, --all     Show private crates that are normally hidden
         --json    Show information as a JSON array
     -l, --long    Show extended information
 ```
@@ -106,15 +108,17 @@ USAGE:
     cargo workspaces changed [OPTIONS]
 
 OPTIONS:
-    -a, --all                         Show private crates that are normally hidden
         --error-on-empty              Return non-zero exit code if no changes detected
         --force <pattern>             Always include targeted crates matched by glob even when there are no changes
     -h, --help                        Print help information
         --ignore-changes <pattern>    Ignore changes in files matched by glob
         --include-merged-tags         Include tags from merged branches
-        --json                        Show information as a JSON array
-    -l, --long                        Show extended information
         --since <SINCE>               Use this git reference instead of the last tag
+
+LIST OPTIONS:
+    -a, --all     Show private crates that are normally hidden
+        --json    Show information as a JSON array
+    -l, --long    Show extended information
 ```
 
 ### Exec
@@ -217,8 +221,8 @@ OPTIONS:
     -h, --help    Print help information
 
 VERSION ARGS:
-    <BUMP>      Increment all versions by the given explicit semver keyword while skipping the prompts for them [possible values: major, minor, patch,
-                premajor, preminor, prepatch, prerelease, custom]
+    <BUMP>      Increment all versions by the given explicit semver keyword while skipping the prompts for them
+                [possible values: major, minor, patch, premajor, preminor, prepatch, skip, prerelease, custom]
     <CUSTOM>    Specify custom version value when 'bump' is set to 'custom'
 
 VERSION OPTIONS:
@@ -245,12 +249,14 @@ GIT OPTIONS:
 
 PUBLISH OPTIONS:
         --allow-dirty            Allow dirty working directories to be published
+        --dry-run                Perform checks without uploading. WIP and performs fewer checks than `cargo publish --dry-run`
         --no-remove-dev-deps     Don't remove dev-dependencies while publishing
         --no-verify              Skip crate verification (not recommended)
         --publish-as-is          Publish crates from the current commit without versioning
-        --registry <REGISTRY>    The Cargo registry to use for publishing
-        --token <TOKEN>          The token to use for publishing
-        --dry-run                Perform checks without uploading. WIP and performs fewer checks than `cargo publish --dry-run`.
+
+REGISTRY OPTIONS:
+        --registry <REGISTRY>    The Cargo registry to use
+        --token <TOKEN>          The token to use for accessing the registry
 ```
 
 ### Rename
@@ -273,21 +279,23 @@ OPTIONS:
 
 ### Plan
 
-Print the plan for publishing. The output will contain the names and versions of the workspace crates according
-to the order in which they should be published.
+List the crates in publishing order. This does not check for changes or try to version. It takes the crates as-is.
 
 ```
 USAGE:
     cargo workspaces plan [OPTIONS]
 
 OPTIONS:
-    -h, --help
-            Print help information
+    -h, --help              Print help information
+        --skip-published    Skip already published crate versions
 
-PUBLISH PLAN OPTIONS:
-    --check-published        Check if the crates are already published and include the information in the output
-    --registry <REGISTRY>    The Cargo registry to check against
-    --token <TOKEN>          The token to use for accessing the registry
+REGISTRY OPTIONS:
+        --registry <REGISTRY>    The Cargo registry to use
+        --token <TOKEN>          The token to use for accessing the registry
+
+LIST OPTIONS:
+        --json    Show information as a JSON array
+    -l, --long    Show extended information
 ```
 
 ## Config
