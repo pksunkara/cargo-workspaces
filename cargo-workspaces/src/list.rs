@@ -1,4 +1,4 @@
-use crate::utils::{dag, get_pkgs, ListOpt, Listable, Result, INTERNAL_ERR};
+use crate::utils::{dag, get_pkgs, list, ListOpt, Result, INTERNAL_ERR};
 use cargo_metadata::Metadata;
 use clap::Parser;
 
@@ -27,15 +27,12 @@ impl List {
 
         let pkgs = get_pkgs(&metadata, self.list.all)?;
 
-        pkg_ids
+        let ordered_pkgs = pkg_ids
             .into_iter()
-            .map(|id| {
-                pkgs.iter()
-                    .find(|p| p.id == id)
-                    .expect(INTERNAL_ERR)
-                    .clone()
-            })
-            .collect::<Vec<_>>()
-            .list(self.list)
+            .filter_map(|id| pkgs.iter().find(|p| p.id == id))
+            .cloned()
+            .collect::<Vec<_>>();
+
+        list(&ordered_pkgs, self.list)
     }
 }

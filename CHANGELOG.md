@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.4
+
+### Bug Fixes
+* Fixes issue with listing public members when private members exist
+
 ## 0.3.3
 
 ### Enhancements

@@ -1,4 +1,4 @@
-use crate::utils::{ChangeData, ChangeOpt, ListOpt, Listable, Result};
+use crate::utils::{list, ChangeData, ChangeOpt, ListOpt, Result};
 
 use cargo_metadata::Metadata;
 use clap::Parser;
@@ -41,6 +41,6 @@ impl Changed {
             .change
             .get_changed_pkgs(&metadata, &since, self.list.all)?;
 
-        pkgs.0.list(self.list)
+        list(&pkgs.0, self.list)
     }
 }

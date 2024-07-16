@@ -1,14 +1,11 @@
-use crate::utils::{read_config, Error, ListOpt, Listable, PackageConfig, Result, INTERNAL_ERR};
+use crate::utils::{read_config, Error, PackageConfig, Result, INTERNAL_ERR};
 
 use cargo_metadata::{Metadata, Package, PackageId};
-use oclif::{console::style, term::TERM_OUT, CliError};
+use oclif::CliError;
 use semver::Version;
 use serde::Serialize;
 
-use std::{
-    cmp::max,
-    path::{Path, PathBuf},
-};
+use std::path::PathBuf;
 
 #[derive(Serialize, Debug, Clone, Ord, Eq, PartialOrd, PartialEq)]
 pub struct Pkg {
@@ -22,68 +19,6 @@ pub struct Pkg {
     pub private: bool,
     #[serde(skip)]
     pub config: PackageConfig,
-}
-
-impl Listable for Vec<Pkg> {
-    fn list(&self, list: ListOpt) -> Result {
-        if list.json {
-            return self.json();
-        }
-
-        if self.is_empty() {
-            return Ok(());
-        }
-
-        let first = self.iter().map(|x| x.name.len()).max().expect(INTERNAL_ERR);
-        let second = self
-            .iter()
-            .map(|x| x.version.to_string().len() + 1)
-            .max()
-            .expect(INTERNAL_ERR);
-        let third = self
-            .iter()
-            .map(|x| max(1, x.path.as_os_str().len()))
-            .max()
-            .expect(INTERNAL_ERR);
-
-        for pkg in self {
-            TERM_OUT.write_str(&pkg.name)?;
-            let mut width = first - pkg.name.len();
-
-            if list.long {
-                let path = if pkg.path.as_os_str().is_empty() {
-                    Path::new(".")
-                } else {
-                    pkg.path.as_path()
-                };
-
-                TERM_OUT.write_str(&format!(
-                    "{:f$} {}{:s$} {}",
-                    "",
-                    style(format!("v{}", pkg.version)).green(),
-                    "",
-                    style(path.display()).black().bright(),
-                    f = width,
-                    s = second - pkg.version.to_string().len() - 1,
-                ))?;
-
-                width = third - pkg.path.as_os_str().len();
-            }
-
-            if list.all && pkg.private {
-                TERM_OUT.write_str(&format!(
-                    "{:w$} ({})",
-                    "",
-                    style("PRIVATE").red(),
-                    w = width
-                ))?;
-            }
-
-            TERM_OUT.write_line("")?;
-        }
-
-        Ok(())
-    }
 }
 
 pub fn is_private(pkg: &Package) -> bool {

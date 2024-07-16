@@ -5,7 +5,7 @@ mod dag;
 mod dev_dep_remover;
 mod error;
 mod git;
-mod listable;
+mod list;
 mod pkg;
 mod version;
 
@@ -17,7 +17,7 @@ pub use dev_dep_remover::{should_remove_dev_deps, DevDependencyRemover};
 pub(crate) use error::{debug, info, warn};
 pub use error::{get_debug, set_debug, Error};
 pub use git::{git, GitOpt};
-pub use listable::{ListOpt, Listable};
+pub use list::{list, ListOpt};
 pub use pkg::{get_pkgs, is_private, Pkg};
 pub use version::VersionOpt;
 
