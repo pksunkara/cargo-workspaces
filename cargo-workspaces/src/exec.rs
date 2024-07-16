@@ -1,4 +1,4 @@
-use crate::utils::{dag, info, is_private, Error, Result, INTERNAL_ERR};
+use crate::utils::{dag, filter_private, info, Error, Result, INTERNAL_ERR};
 
 use cargo_metadata::Metadata;
 use clap::Parser;
@@ -34,7 +34,11 @@ impl Exec {
             .map(|x| (x.clone(), x.version.to_string()))
             .collect::<Vec<_>>();
 
-        let (names, visited) = dag(&pkgs);
+        let (names, mut visited) = dag(&pkgs);
+
+        if self.ignore_private {
+            visited = filter_private(visited, &pkgs);
+        }
 
         let ignore = self
             .ignore
@@ -44,10 +48,6 @@ impl Exec {
 
         for p in &visited {
             let (pkg, _) = names.get(p).expect(INTERNAL_ERR);
-
-            if self.ignore_private && is_private(pkg) {
-                continue;
-            }
 
             if let Some(pattern) = &ignore {
                 if pattern.compile_matcher().is_match(&pkg.name) {

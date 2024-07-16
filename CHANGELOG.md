@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.5
+
+### Enhancements
+* Allow error on no changes detected
+* List crates to be published
+* Add dry-run mode for publishing
+
 ## 0.3.4
 
 ### Bug Fixes
