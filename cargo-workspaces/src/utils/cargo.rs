@@ -198,7 +198,7 @@ fn edit_version(
     versions: &Map<String, Version>,
     exact: bool,
     version_index: usize,
-) -> Result<()> {
+) -> Result {
     if let Some(new_version) = versions.get(&caps[version_index]) {
         if exact {
             new_lines.push(format!("{}={}{}", &caps[1], new_version, &caps[4]));
@@ -215,7 +215,7 @@ fn rename_dep(
     new_lines: &mut Vec<String>,
     renames: &Map<String, String>,
     name_index: usize,
-) -> Result<()> {
+) -> Result {
     if let Some(new_name) = renames.get(&caps[name_index]) {
         new_lines.push(format!("{}{}{}", &caps[1], new_name, &caps[3]));
     }

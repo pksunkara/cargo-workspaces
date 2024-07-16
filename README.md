@@ -249,7 +249,7 @@ GIT OPTIONS:
 
 PUBLISH OPTIONS:
         --allow-dirty            Allow dirty working directories to be published
-        --dry-run                Perform checks without uploading. WIP and performs fewer checks than `cargo publish --dry-run`
+        --dry-run                Runs in dry-run mode
         --no-remove-dev-deps     Don't remove dev-dependencies while publishing
         --no-verify              Skip crate verification (not recommended)
         --publish-as-is          Publish crates from the current commit without versioning

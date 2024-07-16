@@ -58,6 +58,6 @@ impl Changed {
             return Err(Error::NoChanges);
         }
 
-        return Ok(());
+        Ok(())
     }
 }

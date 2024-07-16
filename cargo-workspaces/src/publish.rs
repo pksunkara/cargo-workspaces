@@ -36,8 +36,7 @@ pub struct Publish {
     #[clap(long)]
     no_remove_dev_deps: bool,
 
-    /// Perform checks without uploading. WIP and performs fewer
-    /// checks than `cargo publish --dry-run`
+    /// Runs in dry-run mode
     #[clap(long)]
     dry_run: bool,
 
@@ -49,12 +48,12 @@ impl Publish {
     pub fn run(mut self, metadata: Metadata) -> Result {
         if self.dry_run {
             warn!(
-                "Dry run option is WIP and performs fewer checks than `cargo publish --dry-run`.",
+                "Dry run doesn't check that all dependencies have been published.",
                 ""
             );
+
             if !self.publish_as_is {
-                info!("Dry run doesn't perform versioning. Perform `version` command manually if required", "");
-                info!("Skipping versioning step", "");
+                warn!("Dry run doesn't perform versioning.", "");
                 self.publish_as_is = true;
             }
         }
@@ -95,15 +94,13 @@ impl Publish {
             let name = pkg.name.clone();
 
             if self.dry_run {
-                info!("Checking package", name);
-                if !self.no_verify {
-                    self.try_build(&metadata.workspace_root, &name, p)?;
-                } else {
-                    info!("Skipping build", name);
+                info!("checking", name);
+
+                if !self.no_verify && !self.build(&metadata.workspace_root, p)? {
+                    warn!("build failed", "");
                 }
+
                 basic_checks(pkg)?;
-                info!("Can be published", name);
-                continue;
             }
 
             let mut args = vec!["publish"];
@@ -116,7 +113,11 @@ impl Publish {
                 continue;
             }
 
-            if self.no_verify {
+            if self.dry_run {
+                args.push("--dry-run");
+            }
+
+            if self.no_verify || self.dry_run {
                 args.push("--no-verify");
             }
 
@@ -153,30 +154,34 @@ impl Publish {
             drop(dev_deps_remover);
 
             if !stderr.contains("Uploading") || stderr.contains("error:") {
-                return Err(Error::Publish(name));
+                if self.dry_run {
+                    warn!("publish failed", name_ver);
+                } else {
+                    return Err(Error::Publish(name));
+                }
             }
 
-            info!("published", name_ver);
+            if !self.dry_run {
+                info!("published", name_ver);
+            }
         }
 
         info!("success", "ok");
         Ok(())
     }
 
-    fn try_build(
-        &self,
-        workspace_root: &Utf8PathBuf,
-        name: &str,
-        manifest_path: &Utf8PathBuf,
-    ) -> Result<()> {
+    fn build(&self, workspace_root: &Utf8PathBuf, manifest_path: &Utf8PathBuf) -> Result<bool> {
         let mut args = vec!["build"];
+
         args.push("--manifest-path");
         args.push(manifest_path.as_str());
 
         let (_stdout, stderr) = cargo(workspace_root, &args, &[])?;
+
         if stderr.contains("could not compile") {
-            return Err(Error::Build(name.to_string()));
+            return Ok(false);
         }
-        Ok(())
+
+        Ok(true)
     }
 }

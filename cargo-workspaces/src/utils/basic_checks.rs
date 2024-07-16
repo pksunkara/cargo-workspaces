@@ -1,6 +1,7 @@
+use cargo_metadata::Package;
 use url::Url;
 
-use crate::utils::{warn, Error, Result};
+use crate::utils::{warn, Result};
 
 /// Performs basic checks to make sure that crate can be published.
 /// Returns `Ok(())` if no problems were found, otherwise returns a list of
@@ -12,7 +13,7 @@ use crate::utils::{warn, Error, Result};
 /// Current list of checks is based on the [cargo reference recommendations][1].
 ///
 /// [1]: https://doc.rust-lang.org/cargo/reference/publishing.html#before-publishing-a-new-crate
-pub fn basic_checks(pkg: &cargo_metadata::Package) -> Result<()> {
+pub fn basic_checks(pkg: &Package) -> Result {
     let mut problems = Vec::new();
 
     // Mandatory fields.
@@ -64,16 +65,11 @@ pub fn basic_checks(pkg: &cargo_metadata::Package) -> Result<()> {
         }
     }
 
-    if problems.is_empty() {
-        Ok(())
-    } else {
-        let name = pkg.name.clone();
-        warn!("  basic checks failed", name);
-        for problem in problems {
-            warn!("  - {}", problem);
-        }
-        Err(Error::Publish(name))
+    for problem in problems {
+        warn!("check failed", problem);
     }
+
+    Ok(())
 }
 
 // Adapted from:
