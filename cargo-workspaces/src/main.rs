@@ -98,6 +98,8 @@ fn set_handlers() {
     ctrlc::set_handler(move || {
         let term = dialoguer::console::Term::stdout();
         let _ = term.show_cursor();
+        // Mimic normal `Ctrl-C` exit code.
+        std::process::exit(130);
     })
     .expect("Error setting Ctrl-C handler");
 }
