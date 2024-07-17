@@ -1,0 +1,10 @@
+---
+source: tests/publish.rs
+expression: err
+---
+warn Dry run doesn't check that all dependencies have been published. 
+warn Dry run doesn't perform versioning. 
+info checking dep1
+info checking dep2
+info checking top
+info success ok
