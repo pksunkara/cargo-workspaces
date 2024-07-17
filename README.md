@@ -21,6 +21,7 @@ But this will also work on single crates because by default every individual cra
    7. [Publish](#publish)
    8. [Rename](#rename)
    9. [Plan](#plan)
+   10. [Owner](#owner)
 3. [Config](#config)
 4. [Changelog](#changelog)
 
@@ -296,6 +297,27 @@ REGISTRY OPTIONS:
 LIST OPTIONS:
         --json    Show information as a JSON array
     -l, --long    Show extended information
+```
+
+### Owner
+
+Manage the owners of the workspaces crates.
+
+```
+USAGE:
+    cargo workspaces owner [OPTIONS]
+
+OPTIONS:
+    -h, --help    Print help information
+
+OWNER OPTIONS:
+    -a, --add <ADD>          Name of a user or team to invite as an owner
+    -l, --list               List owners for each crate in the workspace
+    -r, --remove <REMOVE>    Name of a user or team to remove as an owner
+
+REGISTRY OPTIONS:
+        --registry <REGISTRY>    The Cargo registry to use
+        --token <TOKEN>          The token to use for accessing the registry
 ```
 
 ## Config

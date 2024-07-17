@@ -3,6 +3,7 @@ mod create;
 mod exec;
 mod init;
 mod list;
+mod owner;
 mod plan;
 mod publish;
 mod rename;
@@ -26,6 +27,7 @@ enum Subcommand {
     Rename(rename::Rename),
     Init(init::Init),
     Plan(plan::Plan),
+    Owner(owner::Owner),
 }
 
 #[derive(Debug, Parser)]
@@ -86,6 +88,7 @@ fn main() {
             Subcommand::Create(x) => x.run(metadata),
             Subcommand::Rename(x) => x.run(metadata),
             Subcommand::Plan(x) => x.run(metadata),
+            Subcommand::Owner(x) => x.run(metadata),
             _ => unreachable!(),
         }
     };

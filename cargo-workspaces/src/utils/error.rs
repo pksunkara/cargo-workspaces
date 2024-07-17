@@ -83,6 +83,9 @@ pub enum Error {
     #[error("unable to update Cargo.lock")]
     Update,
 
+    #[error("unable to modify owners for package {0}")]
+    Owner(String),
+
     #[error("{0} value must contain '%n'")]
     MustContainPercentN(String),
 
