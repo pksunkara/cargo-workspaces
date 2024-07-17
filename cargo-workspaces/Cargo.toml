@@ -51,6 +51,7 @@ insta = { version = "1.32.0", features = ["redactions"] }
 indoc = "1.0.9"
 serial_test = "2.0.0"
 tempfile = "3.6.0"
+strip-ansi-escapes = "0.2.0"
 
 [workspace.metadata.workspaces]
 no_individual_tags = true

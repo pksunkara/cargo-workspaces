@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 use assert_cmd::Command;
-use regex::Regex;
 use std::str::from_utf8;
 
 pub fn run(dir: &str, args: &[&str]) -> (String, String) {
@@ -35,17 +34,22 @@ pub fn run_err(dir: &str, args: &[&str]) -> String {
 /// - Removes the error for missing `http.cainfo` config value.
 /// - Removes `cargo build` output.
 pub fn normalize_output(input: &mut String) {
-    // This warning is emitted by cargo when trying to fetch value; can be either present
-    // or not depending on the user configuration.
-    *input = input.replace("error: config value `http.cainfo` is not set\n", "");
-
-    // `cargo build` output starts with 4 spaces.
-    // The actual output cannot be reliably asserted (e.g. paths can differ, package may compile or not, etc)
-    // so we fully strip any lines that start with 4 spaces.
-    let re = Regex::new(r"^\s{4}.*$").unwrap();
     *input = input
         .lines()
-        .filter_map(|line| if re.is_match(line) { None } else { Some(line) })
+        .filter(|line| {
+            // `cargo build` output starts with 3 spaces.
+            // Depending on configuration, there may be also ANSI escape codes,
+            // so we're performing the simplest check possible.
+            if strip_ansi_escapes::strip_str(line).starts_with("   ") {
+                return false;
+            }
+            // `cargo` may warn about missing `http.cainfo` config value, and it
+            // depends on the user configuration.
+            if line.contains("http.cainfo") {
+                return false;
+            }
+            true
+        })
         .collect::<Vec<_>>()
         .join("\n");
 }
