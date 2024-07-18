@@ -1,7 +1,11 @@
-use std::{fs::write, path::Path};
+use std::{
+    fs::{read_to_string, write},
+    path::Path,
+};
 
 use cargo_metadata::{Dependency, DependencyKind, Package};
 use semver::VersionReq;
+use toml_edit::Document;
 
 use crate::utils::Result;
 
@@ -13,10 +17,20 @@ pub struct DevDependencyRemover {
 
 impl DevDependencyRemover {
     pub fn remove_dev_deps(manifest_path: &Path) -> Result<Self> {
-        let original_toml = std::fs::read_to_string(manifest_path)?;
-        let mut document: toml_edit::Document = original_toml.parse()?;
+        let original_toml = read_to_string(manifest_path)?;
+        let mut document = original_toml.parse::<Document>()?;
 
         document.as_table_mut().remove("dev-dependencies");
+
+        if let Some(table) = document.as_table_mut().get_mut("target") {
+            if let Some(table) = table.as_table_mut() {
+                table.iter_mut().for_each(|(_, value)| {
+                    if let Some(table) = value.as_table_mut() {
+                        table.remove("dev-dependencies");
+                    }
+                });
+            }
+        }
 
         write(manifest_path, document.to_string())?;
 
@@ -79,6 +93,48 @@ mod tests {
         dep1 = "1.0.0"
 
         [dev-dependencies]
+        dep2 = "2.0.1"
+
+        [workspace.metadata.workspaces]
+        "#;
+
+        write(&manifest_path, original_toml).unwrap();
+
+        let remover = DevDependencyRemover::remove_dev_deps(&manifest_path).unwrap();
+
+        assert_eq!(
+            read_to_string(&manifest_path).unwrap(),
+            r#"
+        [package]
+        name = "foo" # A comment
+        version = "0.1.0"
+
+        [dependencies]
+        dep1 = "1.0.0"
+
+        [workspace.metadata.workspaces]
+        "#
+        );
+
+        drop(remover);
+
+        assert_eq!(read_to_string(&manifest_path).unwrap(), original_toml);
+    }
+
+    #[test]
+    fn test_remove_dev_deps_target() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let manifest_path = tempdir.path().join("Cargo.toml");
+
+        let original_toml = r#"
+        [package]
+        name = "foo" # A comment
+        version = "0.1.0"
+
+        [dependencies]
+        dep1 = "1.0.0"
+
+        [target.'cfg(unix)'.dev-dependencies]
         dep2 = "2.0.1"
 
         [workspace.metadata.workspaces]
@@ -224,6 +280,51 @@ mod tests {
         path = "lib.rs"
 
         [dev-dependencies]
+        bar = { workspace = true }
+
+        [workspace]
+        members = [".", "bar"]
+
+        [workspace.package]
+        version = "0.1.0"
+
+        [workspace.dependencies]
+        bar = { version = "0.1.0", path = "./bar" }
+        "#;
+
+        write(&manifest_path, original_toml).unwrap();
+
+        let member_toml = r#"
+        [package]
+        name = "bar" # A comment
+        version = { workspace = true }
+
+        [lib]
+        path = "lib.rs"
+        "#;
+
+        create_dir(tempdir.path().join("bar")).unwrap();
+        write(tempdir.path().join("bar").join("Cargo.toml"), member_toml).unwrap();
+
+        let (deps, pkgs) = args(&manifest_path, "foo");
+
+        assert!(should_remove_dev_deps(&deps, &pkgs))
+    }
+
+    #[test]
+    fn test_should_remove_dev_deps_member_workspace_dependency_target() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let manifest_path = tempdir.path().join("Cargo.toml");
+
+        let original_toml = r#"
+        [package]
+        name = "foo" # A comment
+        version = { workspace = true }
+
+        [lib]
+        path = "lib.rs"
+
+        [target.'cfg(unix)'.dev-dependencies]
         bar = { workspace = true }
 
         [workspace]
