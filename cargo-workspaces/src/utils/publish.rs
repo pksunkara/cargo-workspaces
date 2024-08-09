@@ -48,7 +48,7 @@ pub fn package_registry<'a>(
     pkg: &Package,
 ) -> Result<IndexUrl<'a>> {
     let url = if let Some(registry) =
-        registry.or_else(|| pkg.publish.as_deref().and_then(|x| x.get(0)))
+        registry.or_else(|| pkg.publish.as_deref().and_then(|x| x.first()))
     {
         let registry_url = cargo_config_get(
             &metadata.workspace_root,

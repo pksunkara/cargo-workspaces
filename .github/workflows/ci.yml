@@ -53,7 +53,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Install rust
-        uses: dtolnay/rust-toolchain@1.70.0
+        uses: dtolnay/rust-toolchain@1.78.0
         with:
           targets: ${{ matrix.target }}
       - name: Install linker
@@ -70,7 +70,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Install rust
-        uses: dtolnay/rust-toolchain@1.70.0
+        uses: dtolnay/rust-toolchain@1.78.0
         with:
           components: rustfmt, clippy
       - name: Lint check
@@ -83,6 +83,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Install rust
-        uses: dtolnay/rust-toolchain@1.70.0
+        uses: dtolnay/rust-toolchain@1.78.0
       - name: Lockfile check
         run: cargo update -w --locked --manifest-path cargo-workspaces/Cargo.toml
