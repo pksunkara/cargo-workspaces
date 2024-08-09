@@ -129,10 +129,10 @@ impl VersionOpt {
         let new_versions = self.confirm_versions(new_versions)?;
 
         for p in &metadata.packages {
-            if new_versions.get(&p.name).is_none()
+            if new_versions.contains_key(&p.name)
                 && p.dependencies
                     .iter()
-                    .all(|x| new_versions.get(&x.name).is_none())
+                    .all(|x| new_versions.contains_key(&x.name))
             {
                 continue;
             }
@@ -345,7 +345,7 @@ impl VersionOpt {
 }
 
 fn inc_pre(pre: &[Identifier], preid: &Option<String>) -> Vec<Identifier> {
-    match pre.get(0) {
+    match pre.first() {
         Some(Identifier::AlphaNumeric(id)) => {
             vec![Identifier::AlphaNumeric(id.clone()), Identifier::Numeric(0)]
         }
@@ -368,7 +368,7 @@ fn inc_preid(cur_version: &Version, preid: Identifier) -> Version {
         version.increment_patch();
         version.pre = vec![preid, Identifier::Numeric(0)];
     } else {
-        match cur_version.pre.get(0).expect(INTERNAL_ERR) {
+        match cur_version.pre.first().expect(INTERNAL_ERR) {
             Identifier::AlphaNumeric(id) => {
                 version.pre = vec![preid.clone()];
 
@@ -385,7 +385,7 @@ fn inc_preid(cur_version: &Version, preid: Identifier) -> Version {
             }
             Identifier::Numeric(n) => {
                 if preid.to_string() == n.to_string() {
-                    version.pre = cur_version.pre.clone();
+                    version.pre.clone_from(&cur_version.pre);
 
                     if let Some(Identifier::Numeric(n)) = version
                         .pre
@@ -405,7 +405,7 @@ fn inc_preid(cur_version: &Version, preid: Identifier) -> Version {
 }
 
 fn custom_pre(cur_version: &Version) -> (Identifier, Version) {
-    let id = if let Some(id) = cur_version.pre.get(0) {
+    let id = if let Some(id) = cur_version.pre.first() {
         id.clone()
     } else {
         Identifier::AlphaNumeric("alpha".to_string())

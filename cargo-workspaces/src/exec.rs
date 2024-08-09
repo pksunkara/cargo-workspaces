@@ -60,7 +60,7 @@ impl Exec {
                 .parent()
                 .ok_or_else(|| Error::ManifestHasNoParent(pkg.name.clone()))?;
 
-            let status = Command::new(self.args.get(0).expect(INTERNAL_ERR))
+            let status = Command::new(self.args.first().expect(INTERNAL_ERR))
                 .args(&self.args[1..])
                 .current_dir(dir)
                 .status()?;
