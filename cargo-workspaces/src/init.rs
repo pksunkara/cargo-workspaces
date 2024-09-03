@@ -6,7 +6,12 @@ use dunce::canonicalize;
 use glob::glob;
 use toml_edit::{Array, Document, Formatted, Item, Table, Value};
 
-use std::{collections::HashSet, fs::write, path::PathBuf};
+use std::{
+    collections::HashSet,
+    fs::{read_to_string, write},
+    io::ErrorKind,
+    path::PathBuf,
+};
 
 #[derive(Debug, Clone, Copy, ArgEnum)]
 enum Resolver {
@@ -47,11 +52,6 @@ impl Init {
 
         let cargo_toml = self.path.join("Cargo.toml");
 
-        // TODO: Append to existing toml file
-        if cargo_toml.is_file() {
-            return Err(Error::Init("'Cargo.toml' exists".into()));
-        }
-
         // NOTE: Globset is not used here because it does not support file iterator
         let pkgs = glob(&format!("{}/**/Cargo.toml", self.path.display()))?.filter_map(|e| e.ok());
 
@@ -68,7 +68,11 @@ impl Init {
 
         let ws = canonicalize(&self.path)?;
 
-        let mut document = Document::default();
+        let mut document = match read_to_string(cargo_toml.as_path()) {
+            Ok(manifest) => manifest.parse()?,
+            Err(err) if err.kind() == ErrorKind::NotFound => Document::default(),
+            Err(err) => return Err(err.into()),
+        };
 
         let workspace = document
             .entry("workspace")
