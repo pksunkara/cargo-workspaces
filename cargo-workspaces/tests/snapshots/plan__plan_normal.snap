@@ -1,0 +1,8 @@
+---
+source: tests/plan.rs
+expression: out
+---
+dep1
+dep2
+top
+
