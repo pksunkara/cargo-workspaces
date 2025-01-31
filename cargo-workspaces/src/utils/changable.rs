@@ -23,24 +23,31 @@ pub struct ChangeOpt {
 #[derive(Debug, Default)]
 pub struct ChangeData {
     pub since: Option<String>,
-    pub version: Option<String>,
-    pub sha: String,
     pub count: String,
     pub dirty: bool,
 }
 
 impl ChangeData {
     pub fn new(metadata: &Metadata, _change: &ChangeOpt) -> Result<Self, Error> {
-        let args = ["rev-list", "--tags", "--max-count=1"];
-        let (_, sha, _) = git(&metadata.workspace_root, &args)?;
-        let mut ret = Self::default();
+        let (_, sha, _) = git(
+            &metadata.workspace_root,
+            &["rev-list", "--tags", "--max-count=1"],
+        )?;
 
-        ret.sha = sha.trim().to_string();
-        let (_, count, _) = git(&metadata.workspace_root, &["rev-list", "--count", &ret.sha])?;
+        let (_, count, _) = git(&metadata.workspace_root, &["rev-list", "--count", &sha])?;
 
-        ret.count = count;
+        let since = git(
+            &metadata.workspace_root,
+            &["describe", "--exact-match", &sha],
+        )
+        .ok()
+        .map(|x| x.1);
 
-        Ok(ret)
+        Ok(Self {
+            count,
+            since,
+            ..Default::default()
+        })
     }
 }
 
