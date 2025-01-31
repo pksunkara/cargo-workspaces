@@ -2,7 +2,6 @@ use crate::utils::{get_pkgs, git, info, Error, Pkg, INTERNAL_ERR};
 use cargo_metadata::Metadata;
 use clap::Parser;
 use globset::{Error as GlobsetError, Glob};
-use regex::Regex;
 use std::path::Path;
 
 #[derive(Debug, Parser)]
@@ -31,20 +30,9 @@ pub struct ChangeData {
 }
 
 impl ChangeData {
-    pub fn new(metadata: &Metadata, change: &ChangeOpt) -> Result<Self, Error> {
-        // let mut args = vec!["describe", "--always", "--long", "--dirty", "--tags"];
-
-        // if !change.include_merged_tags {
-        //     args.push("--first-parent");
-        // }
-
+    pub fn new(metadata: &Metadata, _change: &ChangeOpt) -> Result<Self, Error> {
         let args = ["rev-list", "--tags", "--max-count=1"];
         let (_, sha, _) = git(&metadata.workspace_root, &args)?;
-
-        // let sha_regex = Regex::new("^([0-9a-f]{7,40})(-dirty)?$").expect(INTERNAL_ERR);
-        // ret.dirty = caps.get(2).is_some();
-        // let caps = sha_regex.captures(&description).expect(INTERNAL_ERR);
-
         let mut ret = Self::default();
 
         ret.sha = sha.trim().to_string();
