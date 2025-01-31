@@ -32,39 +32,25 @@ pub struct ChangeData {
 
 impl ChangeData {
     pub fn new(metadata: &Metadata, change: &ChangeOpt) -> Result<Self, Error> {
-        let mut args = vec!["describe", "--always", "--long", "--dirty", "--tags"];
+        // let mut args = vec!["describe", "--always", "--long", "--dirty", "--tags"];
 
-        if !change.include_merged_tags {
-            args.push("--first-parent");
-        }
+        // if !change.include_merged_tags {
+        //     args.push("--first-parent");
+        // }
 
-        let (_, description, _) = git(&metadata.workspace_root, &args)?;
+        let args = ["rev-list", "--tags", "--max-count=1"];
+        let (_, sha, _) = git(&metadata.workspace_root, &args)?;
 
-        let sha_regex = Regex::new("^([0-9a-f]{7,40})(-dirty)?$").expect(INTERNAL_ERR);
-        let tag_regex =
-            Regex::new("^((?:.*@)?v?(.*))-(\\d+)-g([0-9a-f]{7,40})(-dirty)?$").expect(INTERNAL_ERR);
+        // let sha_regex = Regex::new("^([0-9a-f]{7,40})(-dirty)?$").expect(INTERNAL_ERR);
+        // ret.dirty = caps.get(2).is_some();
+        // let caps = sha_regex.captures(&description).expect(INTERNAL_ERR);
 
         let mut ret = Self::default();
 
-        if sha_regex.is_match(&description) {
-            let caps = sha_regex.captures(&description).expect(INTERNAL_ERR);
+        ret.sha = sha.trim().to_string();
+        let (_, count, _) = git(&metadata.workspace_root, &["rev-list", "--count", &ret.sha])?;
 
-            ret.sha = caps.get(1).expect(INTERNAL_ERR).as_str().to_string();
-            ret.dirty = caps.get(2).is_some();
-
-            let (_, count, _) = git(&metadata.workspace_root, &["rev-list", "--count", &ret.sha])?;
-
-            ret.count = count;
-        } else if tag_regex.is_match(&description) {
-            let caps = tag_regex.captures(&description).expect(INTERNAL_ERR);
-
-            ret.since = Some(caps.get(1).expect(INTERNAL_ERR).as_str().to_string());
-            ret.version = Some(caps.get(2).expect(INTERNAL_ERR).as_str().to_string());
-
-            ret.sha = caps.get(4).expect(INTERNAL_ERR).as_str().to_string();
-            ret.dirty = caps.get(5).is_some();
-            ret.count = caps.get(3).expect(INTERNAL_ERR).as_str().to_string();
-        }
+        ret.count = count;
 
         Ok(ret)
     }
