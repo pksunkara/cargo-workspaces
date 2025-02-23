@@ -102,11 +102,10 @@ pub fn is_published(
         _ => return Err(Error::UnsupportedCratesIndexType),
     };
 
-    if let Some(crate_data) = index.krate(KrateName::try_from(name)?, false, &lock)? {
-        if crate_data.versions.iter().any(|v| v.version == version) {
-            return Ok(true);
-        }
+    let index_crate = index.krate(KrateName::try_from(name)?, false, &lock);
+    match index_crate {
+        Ok(Some(crate_data)) => Ok(crate_data.versions.iter().any(|v| v.version == version)),
+        Ok(None) | Err(tame_index::Error::NoCrateVersions) => Ok(false),
+        Err(e) => Err(e.into()),
     }
-
-    Ok(false)
 }
