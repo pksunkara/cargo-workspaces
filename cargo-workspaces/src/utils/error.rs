@@ -67,6 +67,8 @@ pub enum Error {
     PackageNotInWorkspace { id: String, ws: String },
     #[error("unable to find package {id}")]
     PackageNotFound { id: String },
+    #[error("did not find any public packages (use -a to include private packages)")]
+    NoPublicPackages,
     #[error("did not find any package")]
     EmptyWorkspace,
     #[error("package {0}'s manifest has no parent directory")]

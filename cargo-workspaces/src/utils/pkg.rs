@@ -70,7 +70,13 @@ pub fn get_pkgs(metadata: &Metadata, all: bool) -> Result<Vec<Pkg>> {
     }
 
     if pkgs.is_empty() {
-        return Err(Error::EmptyWorkspace);
+        let error = if all {
+            Error::EmptyWorkspace
+        } else {
+            Error::NoPublicPackages
+        };
+
+        return Err(error);
     }
 
     pkgs.sort();
