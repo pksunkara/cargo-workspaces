@@ -42,6 +42,10 @@ pub struct Publish {
 
     #[clap(flatten)]
     registry: RegistryOpt,
+
+    /// Assert that `Cargo.lock` will remain unchanged
+    #[clap(long)]
+    locked: bool,
 }
 
 impl Publish {
@@ -123,6 +127,10 @@ impl Publish {
 
             if self.allow_dirty {
                 args.push("--allow-dirty");
+            }
+
+            if self.locked {
+                args.push("--locked");
             }
 
             if let Some(ref registry) = self.registry.registry {
