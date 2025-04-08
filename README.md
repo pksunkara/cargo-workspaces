@@ -248,11 +248,12 @@ GIT OPTIONS:
         --tag-prefix <prefix>               Customize tag prefix (can be empty) [default: v]
 
 PUBLISH OPTIONS:
-        --allow-dirty            Allow dirty working directories to be published
-        --dry-run                Runs in dry-run mode
-        --no-remove-dev-deps     Don't remove dev-dependencies while publishing
-        --no-verify              Skip crate verification (not recommended)
-        --publish-as-is          Publish crates from the current commit without versioning
+        --allow-dirty           Allow dirty working directories to be published
+        --dry-run               Runs in dry-run mode
+        --locked                Assert that `Cargo.lock` will remain unchanged
+        --no-remove-dev-deps    Don't remove dev-dependencies while publishing
+        --no-verify             Skip crate verification (not recommended)
+        --publish-as-is         Publish crates from the current commit without versioning
 
 REGISTRY OPTIONS:
         --registry <REGISTRY>    The Cargo registry to use
