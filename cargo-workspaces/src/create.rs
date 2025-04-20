@@ -25,6 +25,8 @@ enum Edition {
     Eighteen,
     #[clap(name = "2021")]
     TwentyOne,
+    #[clap(name = "2024")]
+    TwentyFour,
 }
 
 /// Create a new workspace crate
@@ -150,6 +152,7 @@ impl Create {
                 Edition::Fifteen => 0,
                 Edition::Eighteen => 1,
                 Edition::TwentyOne => 2,
+                Edition::TwentyFour => 3,
             },
             None => Select::with_theme(&theme)
                 .items(&editions)
