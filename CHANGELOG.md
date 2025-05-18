@@ -1,10 +1,26 @@
 # Changelog
 
+## 0.4.0
+
+### BREAKING
+* Update MSRV to 1.78.0
+
+### Enhancements
+* Allow `init` subcommand to use existing manifest
+* Improve error message when no public packages found with `list`
+* Added support for `2024` edition when creating package
+
+## 0.3.6
+
+### Bug Fixes
+* Fix issue with Ctrl+C termination
+* Fix issue with ignoring dev-dependencies for targets when publishing
+
 ## 0.3.5
 
 ### Enhancements
 * Allow error on no changes detected
-* List crates to be published
+* Added `plan` subcommand to list crates to be published
 * Add dry-run mode for publishing
 
 ## 0.3.4
