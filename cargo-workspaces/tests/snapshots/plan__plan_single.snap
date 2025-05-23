@@ -1,0 +1,6 @@
+---
+source: tests/plan.rs
+expression: out
+---
+simple
+

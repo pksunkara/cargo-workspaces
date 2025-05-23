@@ -7,6 +7,8 @@ name = "dep1"
 version = "0.1.0"
 authors = ["Pavan Kumar Sunkara <pavan.sss1991@gmail.com>"]
 edition = "2018"
+description = "dep1"
+license = "MIT"
 
 [dependencies]
 [package]
@@ -14,6 +16,8 @@ name = "dep2"
 version = "0.1.0"
 authors = ["Pavan Kumar Sunkara <pavan.sss1991@gmail.com>"]
 edition = "2018"
+description = "dep2"
+license = "MIT"
 
 [dependencies]
 pre_dep1 = { version = "0.1.0", path = "../dep1", package = "dep1" }
@@ -22,6 +26,8 @@ name = "top"
 version = "0.1.0"
 authors = ["Pavan Kumar Sunkara <pavan.sss1991@gmail.com>"]
 edition = "2018"
+description = "top"
+license = "MIT"
 
 [dependencies]
 dep = { version = "0.1.0", path = "../dep1", package = "dep1" }
