@@ -12,6 +12,7 @@
 * Added support for `2024` edition when creating package
 * Added `locked` flag to `publish` subcommand
 * Added `since` flag to `version` & `publish` subcommands
+* Added `publish-interval` flag to `publish` subcommand
 
 ### Bug Fixes
 * Fixes issue with first publish to custom registries

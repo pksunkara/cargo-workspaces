@@ -207,6 +207,8 @@ Publish all the crates from the workspace in the correct order according to the 
 this command runs [version](#version) first. If you do not want that to happen, you can supply the
 `--from-git` option.
 
+To avoid potential rate-limiting by the registry when publishing many crates, you can use the `--publish-interval <SECONDS>` option. For example, `cargo workspaces publish --publish-interval 10` will wait 10 seconds between each crate publication.
+
 > Note: dev-dependencies are not taken into account when building the dependency
 > graph used to determine the proper publishing order. This is because
 > dev-dependencies are ignored by `cargo publish` - as such, a dev-dependency on a
@@ -247,12 +249,13 @@ GIT OPTIONS:
         --tag-prefix <PREFIX>               Customize tag prefix (can be empty) [default: v]
 
 PUBLISH OPTIONS:
-        --allow-dirty           Allow dirty working directories to be published
-        --dry-run               Runs in dry-run mode
-        --locked                Assert that `Cargo.lock` will remain unchanged
-        --no-remove-dev-deps    Don't remove dev-dependencies while publishing
-        --no-verify             Skip crate verification (not recommended)
-        --publish-as-is         Publish crates from the current commit without versioning
+        --allow-dirty                   Allow dirty working directories to be published
+        --dry-run                       Runs in dry-run mode
+        --locked                        Assert that `Cargo.lock` will remain unchanged
+        --no-remove-dev-deps            Don't remove dev-dependencies while publishing
+        --no-verify                     Skip crate verification (not recommended)
+        --publish-as-is                 Publish crates from the current commit without versioning
+        --publish-interval <SECONDS>    Number of seconds to wait between publish attempt
 
 REGISTRY OPTIONS:
         --registry <REGISTRY>    The Cargo registry to use
