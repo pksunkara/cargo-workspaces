@@ -1,0 +1,7 @@
+---
+source: tests/init.rs
+assertion_line: 94
+expression: err
+---
+info crates , dep1, dep2, top
+info initialized .

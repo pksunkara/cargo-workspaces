@@ -1,6 +1,0 @@
----
-source: tests/init.rs
-expression: err
----
-error: unable to initialize workspace: 'Cargo.toml' exists
-
