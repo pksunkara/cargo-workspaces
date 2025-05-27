@@ -17,6 +17,7 @@
 ### Bug Fixes
 * Fixes issue with first publish to custom registries
 * Fixes issue with recognising the last tag with `changed`
+* Fixes issue with removing dev deps and cargo's git ops
 
 ## 0.3.6
 

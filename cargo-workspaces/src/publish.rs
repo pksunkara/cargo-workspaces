@@ -131,10 +131,6 @@ impl Publish {
                 args.push("--no-verify");
             }
 
-            if self.allow_dirty {
-                args.push("--allow-dirty");
-            }
-
             if self.locked {
                 args.push("--locked");
             }
@@ -148,9 +144,6 @@ impl Publish {
                 args.push("--token");
                 args.push(token);
             }
-
-            args.push("--manifest-path");
-            args.push(p.as_str());
 
             if let Some(interval) = self.publish_interval {
                 if interval > 0 && !self.dry_run {
@@ -172,6 +165,13 @@ impl Publish {
                     );
                     Some(DevDependencyRemover::remove_dev_deps(p.as_std_path())?)
                 };
+
+            if dev_deps_remover.is_some() || self.allow_dirty {
+                args.push("--allow-dirty");
+            }
+
+            args.push("--manifest-path");
+            args.push(p.as_str());
 
             let (_, stderr) = cargo(&metadata.workspace_root, &args, &[])?;
 
