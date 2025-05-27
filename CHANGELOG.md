@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
 
 ### BREAKING
 * Update MSRV to 1.78.0
