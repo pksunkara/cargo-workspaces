@@ -230,6 +230,7 @@ VERSION OPTIONS:
         --force <pattern>             Always include targeted crates matched by glob even when there are no changes
         --ignore-changes <pattern>    Ignore changes in files matched by glob
         --pre-id <identifier>         Specify prerelease identifier
+        --since <SINCE>               Use this git reference instead of the last tag
     -y, --yes                         Skip confirmation prompt
 
 GIT OPTIONS:

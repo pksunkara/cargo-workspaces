@@ -14,6 +14,10 @@ pub struct ChangeOpt {
     /// Ignore changes in files matched by glob
     #[clap(long, value_name = "pattern")]
     pub ignore_changes: Option<String>,
+
+    /// Use this git reference instead of the last tag
+    #[clap(long, forbid_empty_values(true))]
+    pub since: Option<String>,
 }
 
 #[derive(Debug, Default)]
@@ -62,6 +66,7 @@ impl ChangeOpt {
     pub fn get_changed_pkgs(
         &self,
         metadata: &Metadata,
+        // Optional because there can be no tags
         since: &Option<String>,
         private: bool,
     ) -> Result<(Vec<Pkg>, Vec<Pkg>), Error> {

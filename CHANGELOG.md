@@ -4,13 +4,14 @@
 
 ### BREAKING
 * Update MSRV to 1.78.0
-* Remove `include-merged-tags` option from `changed`, `version` and `publish` subcommands
+* Remove `include-merged-tags` option from `changed`, `version` & `publish` subcommands
 
 ### Enhancements
 * Allow `init` subcommand to use existing manifest
 * Improve error message when no public packages found with `list`
 * Added support for `2024` edition when creating package
 * Added `locked` flag to `publish` subcommand
+* Added `since` flag to `version` & `publish` subcommands
 
 ### Bug Fixes
 * Fixes issue with first publish to custom registries

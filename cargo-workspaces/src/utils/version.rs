@@ -82,17 +82,21 @@ impl VersionOpt {
     pub fn do_versioning(&self, metadata: &Metadata) -> Result<Map<String, Version>> {
         let config: WorkspaceConfig = read_config(&metadata.workspace_metadata)?;
         let branch = self.git.validate(&metadata.workspace_root, &config)?;
+        let mut since = self.change.since.clone();
 
-        let change_data = ChangeData::new(metadata, &self.change)?;
+        if self.change.since.is_none() {
+            let change_data = ChangeData::new(metadata, &self.change)?;
 
-        if self.change.force.is_none() && change_data.count == "0" && !change_data.dirty {
-            TERM_OUT.write_line("Current HEAD is already released, skipping versioning")?;
-            return Ok(Map::new());
+            if self.change.force.is_none() && change_data.count == "0" && !change_data.dirty {
+                TERM_OUT.write_line("Current HEAD is already released, skipping versioning")?;
+                return Ok(Map::new());
+            }
+
+            since = change_data.since;
         }
 
         let (mut changed_p, mut unchanged_p) =
-            self.change
-                .get_changed_pkgs(metadata, &change_data.since, self.all)?;
+            self.change.get_changed_pkgs(metadata, &since, self.all)?;
 
         if changed_p.is_empty() {
             TERM_OUT.write_line("No changes detected, skipping versioning")?;
