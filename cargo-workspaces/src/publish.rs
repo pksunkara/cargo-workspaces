@@ -1,3 +1,5 @@
+use std::{thread, time::Duration};
+
 use crate::utils::{
     basic_checks, cargo, create_http_client, dag, filter_private, info, is_published,
     package_registry, should_remove_dev_deps, warn, DevDependencyRemover, Error, RegistryOpt,
@@ -46,6 +48,10 @@ pub struct Publish {
     /// Assert that `Cargo.lock` will remain unchanged
     #[clap(long)]
     locked: bool,
+
+    /// Number of seconds to wait between publish attempts
+    #[clap(long, value_name = "SECONDS")]
+    publish_interval: Option<u64>,
 }
 
 impl Publish {
@@ -145,6 +151,16 @@ impl Publish {
 
             args.push("--manifest-path");
             args.push(p.as_str());
+
+            if let Some(interval) = self.publish_interval {
+                if interval > 0 && !self.dry_run {
+                    info!(
+                        "waiting",
+                        format!("{} seconds before publishing {}", interval, name_ver)
+                    );
+                    thread::sleep(Duration::from_secs(interval));
+                }
+            }
 
             let dev_deps_remover =
                 if self.no_remove_dev_deps || !should_remove_dev_deps(&pkg.dependencies, &pkgs) {
