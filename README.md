@@ -45,13 +45,14 @@ fills the `members` with the all the crates that can be found in that directory.
 
 ```
 USAGE:
-    cargo workspaces init [PATH]
+    cargo workspaces init [OPTIONS] [PATH]
 
 ARGS:
     <PATH>    Path to the workspace root [default: .]
 
 OPTIONS:
-    -h, --help    Print help information
+    -h, --help                   Print help information
+        --resolver <RESOLVER>    Workspace feature resolver version [possible values: 1, 2]
 ```
 
 ### Create
@@ -69,7 +70,7 @@ ARGS:
 
 OPTIONS:
         --bin                  Whether this is a binary crate
-        --edition <EDITION>    The crate edition [possible values: 2015, 2018, 2021]
+        --edition <EDITION>    The crate edition [possible values: 2015, 2018, 2021, 2024]
     -h, --help                 Print help information
         --lib                  Whether this is a library crate
         --name <NAME>          The name of the crate

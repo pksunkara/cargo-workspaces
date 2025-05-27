@@ -34,11 +34,22 @@ impl ChangeData {
             &["rev-list", "--tags", "--max-count=1"],
         )?;
 
-        let (_, count, _) = git(&metadata.workspace_root, &["rev-list", "--count", &sha])?;
+        if sha.is_empty() {
+            return Ok(Self {
+                count: "1".to_string(),
+                since: None,
+                ..Default::default()
+            });
+        }
+
+        let (_, count, _) = git(
+            &metadata.workspace_root,
+            &["rev-list", "--count", &format!("HEAD...{sha}")],
+        )?;
 
         let since = git(
             &metadata.workspace_root,
-            &["describe", "--exact-match", &sha],
+            &["describe", "--exact-match", "--tags", &sha],
         )
         .ok()
         .map(|x| x.1);
