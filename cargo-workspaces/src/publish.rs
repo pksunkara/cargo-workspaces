@@ -190,7 +190,9 @@ impl Publish {
             }
         }
 
-        info!("success", "ok");
+        if !self.dry_run {
+            info!("success", "ok");
+        }
         Ok(())
     }
 

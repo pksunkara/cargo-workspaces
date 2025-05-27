@@ -1,0 +1,11 @@
+---
+source: tests/publish.rs
+expression: err
+---
+warn Dry run doesn't check that all dependencies have been published. 
+warn Dry run doesn't perform versioning. 
+info checking dep1
+warn check failed 'description' field should be set
+info checking dep2
+info checking top
+warn failure some checks failed

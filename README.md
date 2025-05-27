@@ -319,6 +319,8 @@ overrides the value specified in **Workspace**.
 
 <!-- omit from toc -->
 ## Contributors
+See the [Contributor guide](CONTRIBUTING.md).
+
 Here is a list of [Contributors](http://github.com/pksunkara/cargo-workspaces/contributors)
 
 <!-- omit from toc -->

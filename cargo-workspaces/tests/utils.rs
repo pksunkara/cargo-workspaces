@@ -29,3 +29,27 @@ pub fn run_err(dir: &str, args: &[&str]) -> String {
     assert!(out.is_empty());
     err
 }
+
+/// Makes the output of commands suitable for snapshot testing:
+/// - Removes the error for missing `http.cainfo` config value.
+/// - Removes `cargo build` output.
+pub fn normalize_output(input: &mut String) {
+    *input = input
+        .lines()
+        .filter(|line| {
+            // `cargo build` output starts with 3 spaces.
+            // Depending on configuration, there may be also ANSI escape codes,
+            // so we're performing the simplest check possible.
+            if strip_ansi_escapes::strip_str(line).starts_with("   ") {
+                return false;
+            }
+            // `cargo` may warn about missing `http.cainfo` config value, and it
+            // depends on the user configuration.
+            if line.contains("http.cainfo") {
+                return false;
+            }
+            true
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+}
