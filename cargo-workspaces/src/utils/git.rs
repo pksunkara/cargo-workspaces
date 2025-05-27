@@ -43,7 +43,7 @@ pub struct GitOpt {
     pub no_git_commit: bool,
 
     /// Specify which branches to allow from [default: master]
-    #[clap(long, value_name = "pattern", forbid_empty_values(true))]
+    #[clap(long, value_name = "PATTERN", forbid_empty_values(true))]
     pub allow_branch: Option<String>,
 
     /// Amend the existing commit, instead of generating a new one
@@ -72,14 +72,14 @@ pub struct GitOpt {
     pub no_global_tag: bool,
 
     /// Customize tag prefix (can be empty)
-    #[clap(long, default_value = "v", value_name = "prefix")]
+    #[clap(long, default_value = "v", value_name = "PREFIX")]
     pub tag_prefix: String,
 
     /// Customize prefix for individual tags (should contain `%n`)
     #[clap(
         long,
         default_value = "%n@",
-        value_name = "prefix",
+        value_name = "PREFIX",
         validator = validate_value_containing_name,
         forbid_empty_values(true)
     )]
@@ -93,7 +93,7 @@ pub struct GitOpt {
     #[clap(
         long,
         default_value = "origin",
-        value_name = "remote",
+        value_name = "REMOTE",
         forbid_empty_values(true)
     )]
     pub git_remote: String,

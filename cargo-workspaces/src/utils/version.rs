@@ -56,7 +56,7 @@ pub struct VersionOpt {
     pub custom: Option<Version>,
 
     /// Specify prerelease identifier
-    #[clap(long, value_name = "identifier", forbid_empty_values(true))]
+    #[clap(long, value_name = "IDENTIFIER", forbid_empty_values(true))]
     pub pre_id: Option<String>,
 
     #[clap(flatten)]

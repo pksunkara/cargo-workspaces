@@ -8,11 +8,11 @@ use std::path::Path;
 pub struct ChangeOpt {
     // TODO: include_dirty
     /// Always include targeted crates matched by glob even when there are no changes
-    #[clap(long, value_name = "pattern")]
+    #[clap(long, value_name = "PATTERN")]
     pub force: Option<String>,
 
     /// Ignore changes in files matched by glob
-    #[clap(long, value_name = "pattern")]
+    #[clap(long, value_name = "PATTERN")]
     pub ignore_changes: Option<String>,
 
     /// Use this git reference instead of the last tag

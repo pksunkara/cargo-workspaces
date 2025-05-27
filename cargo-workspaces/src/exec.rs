@@ -15,7 +15,7 @@ pub struct Exec {
     no_bail: bool,
 
     /// Ignore the crates matched by glob
-    #[clap(long, value_name = "pattern")]
+    #[clap(long, value_name = "PATTERN")]
     ignore: Option<String>,
 
     /// Ignore private crates
