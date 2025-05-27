@@ -25,10 +25,11 @@ bench = false
 lto = "thin"
 
 [dependencies]
+camino = "1.0.1"
+cargo_metadata = "0.13.1"
 clap = { version = "~3.1.12", features = ["derive", "wrap_help", "unstable-replace"] }
 oclif = "0.4.0"
-cargo_metadata = "0.13.1"
-camino = "1.0.1"
+openssl = { version = "0.10", optional = true, features = ["vendored"] }
 semver = "0.11"
 serde = { version = "1.0.188", features = ["derive"] }
 serde_json = "1.0.107"
