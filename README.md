@@ -113,7 +113,6 @@ OPTIONS:
         --force <pattern>             Always include targeted crates matched by glob even when there are no changes
     -h, --help                        Print help information
         --ignore-changes <pattern>    Ignore changes in files matched by glob
-        --include-merged-tags         Include tags from merged branches
         --since <SINCE>               Use this git reference instead of the last tag
 
 LIST OPTIONS:
@@ -173,7 +172,6 @@ VERSION OPTIONS:
         --exact                       Specify inter dependency version numbers exactly with `=`
         --force <pattern>             Always include targeted crates matched by glob even when there are no changes
         --ignore-changes <pattern>    Ignore changes in files matched by glob
-        --include-merged-tags         Include tags from merged branches
         --pre-id <identifier>         Specify prerelease identifier
     -y, --yes                         Skip confirmation prompt
 
@@ -231,7 +229,6 @@ VERSION OPTIONS:
         --exact                       Specify inter dependency version numbers exactly with `=`
         --force <pattern>             Always include targeted crates matched by glob even when there are no changes
         --ignore-changes <pattern>    Ignore changes in files matched by glob
-        --include-merged-tags         Include tags from merged branches
         --pre-id <identifier>         Specify prerelease identifier
     -y, --yes                         Skip confirmation prompt
 

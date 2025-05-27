@@ -14,11 +14,7 @@ pub struct Changed {
     change: ChangeOpt,
 
     /// Use this git reference instead of the last tag
-    #[clap(
-        long,
-        conflicts_with = "include-merged-tags",
-        forbid_empty_values(true)
-    )]
+    #[clap(long, forbid_empty_values(true))]
     since: Option<String>,
 
     /// Return non-zero exit code if no changes detected

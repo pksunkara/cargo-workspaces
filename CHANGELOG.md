@@ -1,9 +1,10 @@
 # Changelog
 
-## 0.4.0
+## Unreleased
 
 ### BREAKING
 * Update MSRV to 1.78.0
+* Remove `include-merged-tags` option from `changed`, `version` and `publish` subcommands
 
 ### Enhancements
 * Allow `init` subcommand to use existing manifest
