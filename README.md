@@ -45,13 +45,14 @@ fills the `members` with the all the crates that can be found in that directory.
 
 ```
 USAGE:
-    cargo workspaces init [PATH]
+    cargo workspaces init [OPTIONS] [PATH]
 
 ARGS:
     <PATH>    Path to the workspace root [default: .]
 
 OPTIONS:
-    -h, --help    Print help information
+    -h, --help                   Print help information
+        --resolver <RESOLVER>    Workspace feature resolver version [possible values: 1, 2]
 ```
 
 ### Create
@@ -69,7 +70,7 @@ ARGS:
 
 OPTIONS:
         --bin                  Whether this is a binary crate
-        --edition <EDITION>    The crate edition [possible values: 2015, 2018, 2021]
+        --edition <EDITION>    The crate edition [possible values: 2015, 2018, 2021, 2024]
     -h, --help                 Print help information
         --lib                  Whether this is a library crate
         --name <NAME>          The name of the crate
@@ -109,10 +110,9 @@ USAGE:
 
 OPTIONS:
         --error-on-empty              Return non-zero exit code if no changes detected
-        --force <pattern>             Always include targeted crates matched by glob even when there are no changes
+        --force <PATTERN>             Always include targeted crates matched by glob even when there are no changes
     -h, --help                        Print help information
-        --ignore-changes <pattern>    Ignore changes in files matched by glob
-        --include-merged-tags         Include tags from merged branches
+        --ignore-changes <PATTERN>    Ignore changes in files matched by glob
         --since <SINCE>               Use this git reference instead of the last tag
 
 LIST OPTIONS:
@@ -134,7 +134,7 @@ ARGS:
 
 OPTIONS:
     -h, --help                Print help information
-        --ignore <pattern>    Ignore the crates matched by glob
+        --ignore <PATTERN>    Ignore the crates matched by glob
         --ignore-private      Ignore private crates
         --no-bail             Continue executing command despite non-zero exit in a given crate
 ```
@@ -170,24 +170,23 @@ VERSION ARGS:
 VERSION OPTIONS:
     -a, --all                         Also do versioning for private crates (will not be published)
         --exact                       Specify inter dependency version numbers exactly with `=`
-        --force <pattern>             Always include targeted crates matched by glob even when there are no changes
-        --ignore-changes <pattern>    Ignore changes in files matched by glob
-        --include-merged-tags         Include tags from merged branches
-        --pre-id <identifier>         Specify prerelease identifier
+        --force <PATTERN>             Always include targeted crates matched by glob even when there are no changes
+        --ignore-changes <PATTERN>    Ignore changes in files matched by glob
+        --pre-id <IDENTIFIER>         Specify prerelease identifier
     -y, --yes                         Skip confirmation prompt
 
 GIT OPTIONS:
-        --allow-branch <pattern>            Specify which branches to allow from [default: master]
+        --allow-branch <PATTERN>            Specify which branches to allow from [default: master]
         --amend                             Amend the existing commit, instead of generating a new one
-        --git-remote <remote>               Push git changes to the specified remote [default: origin]
-        --individual-tag-prefix <prefix>    Customize prefix for individual tags (should contain `%n`) [default: %n@]
+        --git-remote <REMOTE>               Push git changes to the specified remote [default: origin]
+        --individual-tag-prefix <PREFIX>    Customize prefix for individual tags (should contain `%n`) [default: %n@]
     -m, --message <MESSAGE>                 Use a custom commit message when creating the version commit [default: Release %v]
         --no-git-commit                     Do not commit version changes
         --no-git-push                       Do not push generated commit and tags to git remote
         --no-git-tag                        Do not tag generated commit
         --no-global-tag                     Do not create a global tag for a workspace
         --no-individual-tags                Do not tag individual versions for crates
-        --tag-prefix <prefix>               Customize tag prefix (can be empty) [default: v]
+        --tag-prefix <PREFIX>               Customize tag prefix (can be empty) [default: v]
 ```
 
 #### Fixed or Independent
@@ -228,24 +227,24 @@ VERSION ARGS:
 VERSION OPTIONS:
     -a, --all                         Also do versioning for private crates (will not be published)
         --exact                       Specify inter dependency version numbers exactly with `=`
-        --force <pattern>             Always include targeted crates matched by glob even when there are no changes
-        --ignore-changes <pattern>    Ignore changes in files matched by glob
-        --include-merged-tags         Include tags from merged branches
-        --pre-id <identifier>         Specify prerelease identifier
+        --force <PATTERN>             Always include targeted crates matched by glob even when there are no changes
+        --ignore-changes <PATTERN>    Ignore changes in files matched by glob
+        --pre-id <IDENTIFIER>         Specify prerelease identifier
+        --since <SINCE>               Use this git reference instead of the last tag
     -y, --yes                         Skip confirmation prompt
 
 GIT OPTIONS:
-        --allow-branch <pattern>            Specify which branches to allow from [default: master]
+        --allow-branch <PATTERN>            Specify which branches to allow from [default: master]
         --amend                             Amend the existing commit, instead of generating a new one
-        --git-remote <remote>               Push git changes to the specified remote [default: origin]
-        --individual-tag-prefix <prefix>    Customize prefix for individual tags (should contain `%n`) [default: %n@]
+        --git-remote <REMOTE>               Push git changes to the specified remote [default: origin]
+        --individual-tag-prefix <PREFIX>    Customize prefix for individual tags (should contain `%n`) [default: %n@]
     -m, --message <MESSAGE>                 Use a custom commit message when creating the version commit [default: Release %v]
         --no-git-commit                     Do not commit version changes
         --no-git-push                       Do not push generated commit and tags to git remote
         --no-git-tag                        Do not tag generated commit
         --no-global-tag                     Do not create a global tag for a workspace
         --no-individual-tags                Do not tag individual versions for crates
-        --tag-prefix <prefix>               Customize tag prefix (can be empty) [default: v]
+        --tag-prefix <PREFIX>               Customize tag prefix (can be empty) [default: v]
 
 PUBLISH OPTIONS:
         --allow-dirty           Allow dirty working directories to be published

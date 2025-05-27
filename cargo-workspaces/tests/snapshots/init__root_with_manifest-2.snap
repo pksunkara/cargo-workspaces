@@ -1,3 +1,8 @@
+---
+source: tests/init.rs
+assertion_line: 76
+expression: data
+---
 [package]
 name = "root"
 version = "0.1.0"
@@ -11,3 +16,8 @@ path = "src/main.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+
+[workspace]
+members = [
+    "",
+]

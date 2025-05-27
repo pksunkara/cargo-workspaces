@@ -13,14 +13,6 @@ pub struct Changed {
     #[clap(flatten)]
     change: ChangeOpt,
 
-    /// Use this git reference instead of the last tag
-    #[clap(
-        long,
-        conflicts_with = "include-merged-tags",
-        forbid_empty_values(true)
-    )]
-    since: Option<String>,
-
     /// Return non-zero exit code if no changes detected
     #[clap(long)]
     error_on_empty: bool,
@@ -28,9 +20,9 @@ pub struct Changed {
 
 impl Changed {
     pub fn run(self, metadata: Metadata) -> Result {
-        let mut since = self.since.clone();
+        let mut since = self.change.since.clone();
 
-        if self.since.is_none() {
+        if self.change.since.is_none() {
             let change_data = ChangeData::new(&metadata, &self.change)?;
 
             if change_data.count == "0" {

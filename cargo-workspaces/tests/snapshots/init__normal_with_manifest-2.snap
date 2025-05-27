@@ -1,0 +1,11 @@
+---
+source: tests/init.rs
+assertion_line: 41
+expression: data
+---
+[workspace]
+members = [
+	"top",
+	"dep1",
+	"dep2",
+]

@@ -1,0 +1,7 @@
+---
+source: tests/init.rs
+assertion_line: 35
+expression: err
+---
+info crates 
+info initialized .

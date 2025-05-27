@@ -74,6 +74,8 @@ impl Init {
             Err(err) => return Err(err.into()),
         };
 
+        let is_root_package = document.get("package").is_some();
+
         let workspace = document
             .entry("workspace")
             .or_insert_with(|| Item::Table(Table::default()))
@@ -101,6 +103,13 @@ impl Init {
                 .filter_map(|m| m.strip_prefix(&ws).ok())
                 .map(|path| path.to_string())
                 .collect();
+
+            // Remove the root Cargo.toml if not package
+            if !is_root_package {
+                if let Some(index) = members.iter().position(|x| x.is_empty()) {
+                    members.remove(index);
+                }
+            }
 
             members.sort();
 
