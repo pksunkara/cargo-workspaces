@@ -46,7 +46,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           tag: ${{ github.ref_name }}
         run: |
-          file="cargo-workspaces-${{ matrix.CARGO_BUILD_TARGET }}-$tag"
+          file="cargo-workspaces-$CARGO_BUILD_TARGET-$tag"
           cp cargo-workspaces/target/release/cargo-workspaces "$file"
           
           gh release upload "$tag" \
