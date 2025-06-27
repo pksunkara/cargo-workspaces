@@ -133,10 +133,10 @@ impl VersionOpt {
         let new_versions = self.confirm_versions(new_versions)?;
 
         for p in &metadata.packages {
-            if new_versions.contains_key(&p.name)
+            if !new_versions.contains_key(&p.name)
                 && p.dependencies
                     .iter()
-                    .all(|x| new_versions.contains_key(&x.name))
+                    .all(|x| !new_versions.contains_key(&x.name))
             {
                 continue;
             }
