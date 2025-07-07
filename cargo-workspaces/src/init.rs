@@ -19,6 +19,8 @@ enum Resolver {
     V1,
     #[clap(name = "2")]
     V2,
+    #[clap(name = "3")]
+    V3,
 }
 
 impl Resolver {
@@ -26,6 +28,7 @@ impl Resolver {
         match self {
             Resolver::V1 => "1",
             Resolver::V2 => "2",
+            Resolver::V3 => "3",
         }
     }
 }
