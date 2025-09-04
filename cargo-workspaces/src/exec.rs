@@ -46,6 +46,7 @@ impl Exec {
             .map(|x| Glob::new(&x))
             .map_or::<StdResult<_, GlobsetError>, _>(Ok(None), |x| Ok(x.ok()))?;
 
+        let mut errored = false;
         for p in &visited {
             let (pkg, _) = names.get(p).expect(INTERNAL_ERR);
 
@@ -65,12 +66,23 @@ impl Exec {
                 .current_dir(dir)
                 .status()?;
 
-            if !self.no_bail && !status.success() {
-                return Err(Error::Bail);
+            if !status.success() {
+                match self.no_bail {
+                    true => errored = true,
+                    false => return Err(Error::Bail),
+                }
             }
         }
 
-        info!("success", "ok");
-        Ok(())
+        match errored {
+            true => {
+                info!("failed", "error(s) occurred");
+                Err(Error::Bail)
+            }
+            false => {
+                info!("success", "ok");
+                Ok(())
+            }
+        }
     }
 }
