@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.1
+
+### Bug Fixes
+* Using `--no-bail` in `exec` propagates the error status code correctly
+
 ## 0.4.0
 
 ### BREAKING
