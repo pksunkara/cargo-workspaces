@@ -11,7 +11,7 @@ fn test_no_path() {
 
 #[test]
 #[serial]
-fn test_normal() {
+fn test_normal_with_no_manifest() {
     let manifest = "../fixtures/normal/Cargo.toml";
     let backup = "../fixtures/normal/Cargo.toml.bak";
 
@@ -30,7 +30,7 @@ fn test_normal() {
 
 #[test]
 #[serial]
-fn test_normal_with_manifest() {
+fn test_normal_with_manifest_initialized() {
     let manifest = "../fixtures/normal/Cargo.toml";
     let content = read_to_string(manifest).unwrap();
 
@@ -46,7 +46,7 @@ fn test_normal_with_manifest() {
 
 #[test]
 #[serial]
-fn test_root() {
+fn test_root_with_no_manifest() {
     let manifest = "../fixtures/root/Cargo.toml";
     let backup = "../fixtures/root/Cargo.toml.bak";
 
@@ -55,6 +55,33 @@ fn test_root() {
 
     let err = utils::run_err("../fixtures/root", &["ws", "init"]);
     assert_snapshot!(err);
+
+    let data = read_to_string(manifest).unwrap();
+    assert_snapshot!(data);
+
+    // Rename Cargo.toml
+    rename(backup, manifest).unwrap();
+}
+
+#[test]
+#[serial]
+fn test_root_with_no_manifest_initialized() {
+    let manifest = "../fixtures/root/Cargo.toml";
+    let backup = "../fixtures/root/Cargo.toml.bak";
+
+    // Rename Cargo.toml
+    rename(manifest, backup).unwrap();
+
+    utils::run_err("../fixtures/root", &["ws", "init"]);
+
+    let err = utils::run_err("../fixtures/root", &["ws", "init"]);
+
+    assert!(err.contains(
+        "error: unable to initialize workspace: `cargo metadata` exited with an error: "
+    ));
+    assert!(err.contains(
+        " contains no package: The manifest is virtual, and the workspace has no members."
+    ));
 
     let data = read_to_string(manifest).unwrap();
     assert_snapshot!(data);
@@ -81,6 +108,24 @@ fn test_root_with_manifest() {
 
 #[test]
 #[serial]
+fn test_root_with_manifest_initialized() {
+    let manifest = "../fixtures/root/Cargo.toml";
+    let content = read_to_string(manifest).unwrap();
+
+    utils::run_err("../fixtures/root", &["ws", "init"]);
+
+    let err = utils::run_err("../fixtures/root", &["ws", "init"]);
+    assert_snapshot!(err);
+
+    let data = read_to_string(manifest).unwrap();
+    assert_snapshot!(data);
+
+    // Restore Cargo.toml
+    write(manifest, content).unwrap();
+}
+
+#[test]
+#[serial]
 fn test_root_with_manifest_no_workspace() {
     let manifest = "../fixtures/normal/Cargo.toml";
     let backup = "../fixtures/normal/Cargo.toml.bak";
@@ -89,6 +134,29 @@ fn test_root_with_manifest_no_workspace() {
     // Rename Cargo.toml
     rename(manifest, backup).unwrap();
     write(manifest, read_to_string(root_manifest).unwrap()).unwrap();
+
+    let err = utils::run_err("../fixtures/normal", &["ws", "init"]);
+    assert_snapshot!(err);
+
+    let data = read_to_string(manifest).unwrap();
+    assert_snapshot!(data);
+
+    // Rename Cargo.toml
+    rename(backup, manifest).unwrap();
+}
+
+#[test]
+#[serial]
+fn test_root_with_manifest_no_workspace_initialized() {
+    let manifest = "../fixtures/normal/Cargo.toml";
+    let backup = "../fixtures/normal/Cargo.toml.bak";
+    let root_manifest = "../fixtures/root/Cargo.toml";
+
+    // Rename Cargo.toml
+    rename(manifest, backup).unwrap();
+    write(manifest, read_to_string(root_manifest).unwrap()).unwrap();
+
+    utils::run_err("../fixtures/normal", &["ws", "init"]);
 
     let err = utils::run_err("../fixtures/normal", &["ws", "init"]);
     assert_snapshot!(err);

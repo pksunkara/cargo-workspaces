@@ -101,6 +101,11 @@ impl Init {
                     )
                 })?;
 
+            if !workspace_members.is_empty() {
+                info!("already initialized", self.path.display());
+                return Ok(());
+            }
+
             let mut members: Vec<_> = workspace_roots
                 .iter()
                 .filter_map(|m| m.strip_prefix(&ws).ok())

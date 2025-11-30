@@ -1,6 +1,6 @@
 ---
 source: tests/init.rs
-assertion_line: 35
+assertion_line: 163
 expression: err
 ---
 info crates 
