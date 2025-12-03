@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.2
+
+### Bug Fixes
+* Re-initializing a workspace takes current members into account
+
 ## 0.4.1
 
 ### Bug Fixes
