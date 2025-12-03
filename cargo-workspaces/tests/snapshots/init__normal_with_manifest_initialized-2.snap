@@ -1,6 +1,6 @@
 ---
 source: tests/init.rs
-assertion_line: 41
+assertion_line: 146
 expression: data
 ---
 [workspace]

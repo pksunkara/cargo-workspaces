@@ -1,6 +1,6 @@
 ---
 source: tests/init.rs
-assertion_line: 252
+assertion_line: 229
 expression: data
 ---
 [package]
@@ -20,7 +20,4 @@ path = "src/main.rs"
 [workspace]
 members = [
     "",
-    "dep1",
-    "dep2",
-    "top",
 ]

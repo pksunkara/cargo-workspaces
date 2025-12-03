@@ -1,6 +1,6 @@
 ---
 source: tests/init.rs
-assertion_line: 252
+assertion_line: 277
 expression: data
 ---
 [package]

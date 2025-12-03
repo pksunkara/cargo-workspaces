@@ -1,0 +1,7 @@
+---
+source: tests/init.rs
+assertion_line: 83
+expression: data
+---
+[workspace]
+members = []

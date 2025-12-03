@@ -1,0 +1,6 @@
+---
+source: tests/init.rs
+assertion_line: 225
+expression: err
+---
+info already initialized .
