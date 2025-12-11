@@ -4,6 +4,7 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+  workflow_dispatch:
 jobs:
   ci:
     name: CI
@@ -35,14 +36,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Install rust
-        uses: dtolnay/rust-toolchain@1.78.0
+        uses: dtolnay/rust-toolchain@1.88.0
         with:
           targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: cargo-workspaces
+
       - name: Install linker
         if: matrix.target == 'i686-unknown-linux-gnu'
         run: |
           sudo apt-get update
           sudo apt-get install gcc-multilib
+
       - name: Test
         run: cargo test --target ${{ matrix.target }} --manifest-path cargo-workspaces/Cargo.toml
   lint:
@@ -52,7 +58,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Install rust
-        uses: dtolnay/rust-toolchain@1.78.0
+        uses: dtolnay/rust-toolchain@1.88.0
         with:
           components: rustfmt, clippy
       - name: Lint check
@@ -65,6 +71,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Install rust
-        uses: dtolnay/rust-toolchain@1.78.0
+        uses: dtolnay/rust-toolchain@1.88.0
       - name: Lockfile check
         run: cargo update -w --locked --manifest-path cargo-workspaces/Cargo.toml
