@@ -14,7 +14,7 @@ use std::{
 };
 
 #[derive(Debug, Clone, Copy, ArgEnum)]
-enum Resolver {
+pub enum Resolver {
     #[clap(name = "1")]
     V1,
     #[clap(name = "2")]
@@ -38,11 +38,11 @@ impl Resolver {
 pub struct Init {
     /// Path to the workspace root
     #[clap(parse(from_os_str), default_value = ".")]
-    path: PathBuf,
+    pub path: PathBuf,
 
     /// Workspace feature resolver version
     #[clap(long, arg_enum)]
-    resolver: Option<Resolver>,
+    pub resolver: Option<Resolver>,
 }
 
 impl Init {
