@@ -64,7 +64,7 @@ pub fn package_registry<'a>(
 
 pub fn create_http_client(workspace_root: &Utf8PathBuf, token: &Option<String>) -> Result<Client> {
     let client_builder = Client::builder().use_rustls_tls();
-    let client_builder = if let Some(ref token) = token {
+    let client_builder = if let Some(token) = token {
         let mut headers = HeaderMap::new();
         headers.insert(AUTHORIZATION, HeaderValue::from_str(token).unwrap());
         client_builder.default_headers(headers)

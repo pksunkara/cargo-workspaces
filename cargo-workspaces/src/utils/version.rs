@@ -223,7 +223,7 @@ impl VersionOpt {
                 *new_version = self.ask_version(cur_version, None)?;
             }
 
-            if let Some(ref new_version) = new_version {
+            if let &mut Some(ref new_version) = new_version {
                 for p in &same_pkgs {
                     new_versions.push((p.name.to_string(), new_version.clone(), p.version.clone()));
                 }

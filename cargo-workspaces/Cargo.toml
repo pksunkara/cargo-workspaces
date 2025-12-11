@@ -1,14 +1,13 @@
 [package]
 name = "cargo-workspaces"
 version = "0.4.2"
-authors = ["Pavan Kumar Sunkara <pavan.sss1991@gmail.com>"]
-edition = "2018"
+edition = "2024"
 description = "Cargo workspace manager"
-repository = "https://github.com/pksunkara/cargo-workspaces"
+repository = "https://github.com/AzureZee/cargo-workspaces"
 license = "MIT"
 readme = "README.md"
 exclude = ["tests"]
-rust-version = "1.78"
+
 default-run = "cargo-workspaces"
 
 [[bin]]
