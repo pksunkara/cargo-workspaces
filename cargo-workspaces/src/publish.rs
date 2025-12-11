@@ -145,15 +145,14 @@ impl Publish {
                 args.push(token);
             }
 
-            if let Some(interval) = self.publish_interval {
-                if interval > 0 && !self.dry_run {
+            if let Some(interval) = self.publish_interval
+                && interval > 0 && !self.dry_run {
                     info!(
                         "waiting",
                         format!("{} seconds before publishing {}", interval, name_ver)
                     );
                     thread::sleep(Duration::from_secs(interval));
                 }
-            }
 
             let dev_deps_remover =
                 if self.no_remove_dev_deps || !should_remove_dev_deps(&pkg.dependencies, &pkgs) {

@@ -113,11 +113,10 @@ impl Init {
                 .collect();
 
             // Remove the root Cargo.toml if not package
-            if !is_root_package {
-                if let Some(index) = members.iter().position(|x| x.is_empty()) {
+            if !is_root_package
+                && let Some(index) = members.iter().position(|x| x.is_empty()) {
                     members.remove(index);
                 }
-            }
 
             members.sort();
 

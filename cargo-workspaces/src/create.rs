@@ -228,13 +228,12 @@ fn add_workspace_member(
             Error::WorkspaceBadFormat("workspace manifest item must be a table".into())
         })?;
 
-    if let Some(exclude_item) = workspace_table.get("exclude") {
-        if let Some(pattern) =
+    if let Some(exclude_item) = workspace_table.get("exclude")
+        && let Some(pattern) =
             exists_in_glob_list(metadata, exclude_item, &path, "workspace.exclude")?
         {
             return Err(Error::InWorkspaceExclude(pattern.into()));
         }
-    }
 
     let members_item = workspace_table
         .entry("members")

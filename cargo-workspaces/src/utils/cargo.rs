@@ -303,11 +303,10 @@ pub fn rename_packages(
         manifest,
         true,
         |line, new_lines| {
-            if let Some(to) = renames.get(pkg_name) {
-                if let Some(caps) = NAME.captures(line) {
+            if let Some(to) = renames.get(pkg_name)
+                && let Some(caps) = NAME.captures(line) {
                     new_lines.push(format!("{}{}{}", &caps[1], to, &caps[3]));
                 }
-            }
 
             Ok(())
         },
@@ -321,16 +320,14 @@ pub fn rename_packages(
                 }
             } else if let Some(caps) = DEP_OBJ_RENAME_NAME.captures(line) {
                 rename_dep(caps, new_lines, renames, 2)?;
-            } else if let Some(caps) = DEP_OBJ_NAME.captures(line) {
-                if let Some(new_name) = renames.get(&caps[2]) {
-                    if WORKSPACE_KEY.captures(&caps[3]).is_none() {
+            } else if let Some(caps) = DEP_OBJ_NAME.captures(line)
+                && let Some(new_name) = renames.get(&caps[2])
+                    && WORKSPACE_KEY.captures(&caps[3]).is_none() {
                         new_lines.push(format!(
                             "{}, package = \"{}\"{}",
                             &caps[1], new_name, &caps[4]
                         ));
                     }
-                }
-            }
 
             Ok(())
         },
@@ -362,11 +359,10 @@ pub fn change_versions(
         manifest,
         false,
         |line, new_lines| {
-            if let Some(new_version) = versions.get(pkg_name) {
-                if let Some(caps) = VERSION.captures(line) {
+            if let Some(new_version) = versions.get(pkg_name)
+                && let Some(caps) = VERSION.captures(line) {
                     new_lines.push(format!("{}{}{}", &caps[1], new_version, &caps[3]));
                 }
-            }
 
             Ok(())
         },
@@ -386,15 +382,14 @@ pub fn change_versions(
         |dep, line, new_lines| {
             if let Some(caps) = PACKAGE.captures(line) {
                 return Ok(Some(Context::DependencyEntry(caps[2].to_string())));
-            } else if let Some(caps) = VERSION.captures(line) {
-                if let Some(new_version) = versions.get(dep) {
+            } else if let Some(caps) = VERSION.captures(line)
+                && let Some(new_version) = versions.get(dep) {
                     if exact {
                         new_lines.push(format!("{}={}{}", &caps[1], new_version, &caps[3]));
                     } else if !VersionReq::parse(&caps[2])?.matches(new_version) {
                         new_lines.push(format!("{}{}{}", &caps[1], new_version, &caps[3]));
                     }
                 }
-            }
 
             Ok(None)
         },

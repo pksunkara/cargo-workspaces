@@ -50,11 +50,10 @@ impl Exec {
         for p in &visited {
             let (pkg, _) = names.get(p).expect(INTERNAL_ERR);
 
-            if let Some(pattern) = &ignore {
-                if pattern.compile_matcher().is_match(&pkg.name) {
+            if let Some(pattern) = &ignore
+                && pattern.compile_matcher().is_match(&pkg.name) {
                     continue;
                 }
-            }
 
             let dir = pkg
                 .manifest_path

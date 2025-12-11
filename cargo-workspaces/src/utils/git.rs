@@ -247,12 +247,11 @@ impl GitOpt {
             if !self.no_git_tag {
                 info!("version", "tagging");
 
-                if !self.no_global_tag {
-                    if let Some(version) = new_version {
+                if !self.no_global_tag
+                    && let Some(version) = new_version {
                         let tag = format!("{}{}", &self.tag_prefix, version);
                         self.tag(root, &tag, &tag)?;
                     }
-                }
 
                 if !(self.no_individual_tags || config.no_individual_tags.unwrap_or_default()) {
                     for (p, v) in new_versions {

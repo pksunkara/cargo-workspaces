@@ -55,11 +55,10 @@ impl Rename {
                 .map_err(|_| Error::MustContainPercentN("<TO>".into()))?;
 
             for pkg in pkgs {
-                if let Some(pattern) = &ignore {
-                    if pattern.compile_matcher().is_match(&pkg.name) {
+                if let Some(pattern) = &ignore
+                    && pattern.compile_matcher().is_match(&pkg.name) {
                         continue;
                     }
-                }
 
                 let new_name = self.to.replace("%n", &pkg.name);
 

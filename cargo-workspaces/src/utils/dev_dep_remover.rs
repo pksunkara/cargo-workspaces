@@ -22,15 +22,14 @@ impl DevDependencyRemover {
 
         document.as_table_mut().remove("dev-dependencies");
 
-        if let Some(table) = document.as_table_mut().get_mut("target") {
-            if let Some(table) = table.as_table_mut() {
+        if let Some(table) = document.as_table_mut().get_mut("target")
+            && let Some(table) = table.as_table_mut() {
                 table.iter_mut().for_each(|(_, value)| {
                     if let Some(table) = value.as_table_mut() {
                         table.remove("dev-dependencies");
                     }
                 });
             }
-        }
 
         write(manifest_path, document.to_string())?;
 

@@ -98,21 +98,19 @@ impl ChangeOpt {
                 .map_or::<Result<_, GlobsetError>, _>(Ok(None), |x| Ok(x.ok()))?;
 
             pkgs.into_iter().partition(|p: &Pkg| {
-                if let Some(pattern) = &force {
-                    if pattern.compile_matcher().is_match(&p.name) {
+                if let Some(pattern) = &force
+                    && pattern.compile_matcher().is_match(&p.name) {
                         return true;
                     }
-                }
 
                 changed_files.iter().any(|f| {
-                    if let Some(pattern) = &ignore_changes {
-                        if pattern
+                    if let Some(pattern) = &ignore_changes
+                        && pattern
                             .compile_matcher()
                             .is_match(f.to_str().expect(INTERNAL_ERR))
                         {
                             return false;
                         }
-                    }
 
                     f.starts_with(&p.path)
                 })
