@@ -1,54 +1,97 @@
-name: release.yml
+name: Release
+
+defaults:
+  run:
+    shell: bash
+
 on:
   push:
     tags:
       - v*.*.* # Match semantic version tags
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v1.2.3)"
+        required: true
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.vars.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Create a GitHub release
+      - name: Determine tag
+        id: vars
+        run: |
+          if [ -n "${{ github.event.inputs.tag }}" ]; then
+            echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
         env:
-          GH_TOKEN: ${{ github.token }}
-          tag: ${{ github.ref_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.vars.outputs.tag }}
         run: |
           gh release create "$tag" \
               --title="${GITHUB_REPOSITORY#*/} ${tag#v}" \
-              --generate-notes
+              --generate-notes \
+              --target ${{ github.sha }}
 
   upload_binaries:
     needs: release
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { on: "ubuntu-latest", target: "x86_64-unknown-linux-gnu" }
-          - { on: "macos-latest", target: "aarch64-apple-darwin" }
-          - { on: "windows-latest", target: "x86_64-pc-windows-msvc" }
+          - { os: "ubuntu-latest", target: "x86_64-unknown-linux-gnu" }
+          - { os: "macos-latest", target: "aarch64-apple-darwin" }
+          - { os: "windows-latest", target: "x86_64-pc-windows-msvc" }
 
     name: Upload release artifacts on ${{ matrix.os }}
-    runs-on: ${{ matrix.on }}
+    runs-on: ${{ matrix.os }}
     permissions:
       contents: write
     env:
       CARGO_BUILD_TARGET: ${{ matrix.target }}
+      TAG: ${{ needs.release.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
       - name: Install rust
-        uses: dtolnay/rust-toolchain@1.78.0
+        uses: dtolnay/rust-toolchain@1.88.0
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: cargo-workspaces
+
       - name: Build release binary
         run: cargo build --release --manifest-path cargo-workspaces/Cargo.toml --bin cargo-workspaces
+
+      - name: Prepare artifact
+        id: artifact
+        run: |
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            file="cargo-workspaces-${CARGO_BUILD_TARGET}-${TAG}.exe"
+            cp "cargo-workspaces/target/${CARGO_BUILD_TARGET}/release/cargo-workspaces.exe" "$file"
+            echo "file=$file" >> $GITHUB_OUTPUT
+          else
+            file="cargo-workspaces-${CARGO_BUILD_TARGET}-${TAG}"
+            cp "cargo-workspaces/target/${CARGO_BUILD_TARGET}/release/cargo-workspaces" "$file"
+            tar -czf "$file.tar.gz" "$file"
+            echo "file=$file.tar.gz" >> $GITHUB_OUTPUT
+          fi
+
       - name: Upload release artifact
         env:
-          GH_TOKEN: ${{ github.token }}
-          tag: ${{ github.ref_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ env.TAG }}
         run: |
-          file="cargo-workspaces-$CARGO_BUILD_TARGET-$tag"
-          cp cargo-workspaces/target/release/cargo-workspaces "$file"
-          
-          gh release upload "$tag" \
-              "$file" \
+          gh release upload "$TAG" \
+              "${{ steps.artifact.outputs.file }}" \
               --clobber
