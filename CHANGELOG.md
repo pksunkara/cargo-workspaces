@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.0
+
+### BREAKING
+* Update MSRV to 1.85.0
+
 ## 0.4.2
 
 ### Bug Fixes
