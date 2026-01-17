@@ -56,6 +56,10 @@ pub struct Publish {
 
 impl Publish {
     pub fn run(mut self, metadata: Metadata) -> Result {
+        eprintln!("[publish] Starting publish command");
+        eprintln!("[publish] Options: dry_run={}, publish_as_is={}, skip_published={}, no_verify={}",
+            self.dry_run, self.publish_as_is, self.skip_published, self.no_verify);
+
         if self.dry_run {
             warn!(
                 "Dry run doesn't check that all dependencies have been published.",
@@ -68,7 +72,9 @@ impl Publish {
             }
         }
 
+        eprintln!("[publish] Collecting packages...");
         let pkgs = if !self.publish_as_is {
+            eprintln!("[publish] Running versioning...");
             self.version
                 .do_versioning(&metadata)?
                 .iter()
@@ -85,43 +91,68 @@ impl Publish {
                 })
                 .collect::<Vec<_>>()
         } else {
+            eprintln!("[publish] Using packages as-is (no versioning)");
             metadata
                 .packages
                 .iter()
                 .map(|x| (x.clone(), x.version.to_string()))
                 .collect()
         };
+        eprintln!("[publish] Collected {} packages", pkgs.len());
+        for (idx, (pkg, ver)) in pkgs.iter().enumerate() {
+            eprintln!("[publish]   {}: {} v{}", idx + 1, pkg.name, ver);
+        }
 
+        eprintln!("[publish] Building dependency DAG...");
         let (names, visited) = dag(&pkgs);
+        eprintln!("[publish] DAG built. names={}, visited={}", names.len(), visited.len());
 
         // Filter out private packages
+        eprintln!("[publish] Filtering private packages...");
         let visited = filter_private(visited, &pkgs);
+        eprintln!("[publish] After filtering: {} packages to publish", visited.len());
+        for (idx, path) in visited.iter().enumerate() {
+            if let Some((pkg, ver)) = names.get(path) {
+                eprintln!("[publish]   {}: {} v{}", idx + 1, pkg.name, ver);
+            }
+        }
 
+        eprintln!("[publish] Creating HTTP client...");
         let http_client = create_http_client(&metadata.workspace_root, &self.registry.token)?;
+        eprintln!("[publish] HTTP client created");
 
-        for p in &visited {
+        eprintln!("[publish] Starting publish loop for {} packages", visited.len());
+        for (pkg_idx, p) in visited.iter().enumerate() {
             let (pkg, version) = names.get(p).expect(INTERNAL_ERR);
             let name = pkg.name.clone();
+            eprintln!("[publish] [{}/{}] Processing {} v{}", pkg_idx + 1, visited.len(), name, version);
 
             if self.dry_run {
                 info!("checking", name);
 
+                eprintln!("[publish] [{}/{}] Running build verification for {}", pkg_idx + 1, visited.len(), name);
                 if !self.no_verify && !self.build(&metadata.workspace_root, p)? {
                     warn!("build failed", "");
                 }
 
+                eprintln!("[publish] [{}/{}] Running basic checks for {}", pkg_idx + 1, visited.len(), name);
                 basic_checks(pkg)?;
             }
 
             let mut args = vec!["publish"];
 
             let name_ver = format!("{} v{}", name, version);
+            eprintln!("[publish] [{}/{}] Getting package registry for {}", pkg_idx + 1, visited.len(), name);
             let index_url = package_registry(&metadata, self.registry.registry.as_ref(), pkg)?;
+            eprintln!("[publish] [{}/{}] Registry URL obtained for {}", pkg_idx + 1, visited.len(), name);
 
+            eprintln!("[publish] [{}/{}] Checking if {} v{} is already published...", pkg_idx + 1, visited.len(), name, version);
             if is_published(&http_client, index_url, &name, version)? {
                 info!("already published", name_ver);
+                eprintln!("[publish] [{}/{}] {} already published, skipping", pkg_idx + 1, visited.len(), name);
                 continue;
             }
+            eprintln!("[publish] [{}/{}] {} not yet published, proceeding", pkg_idx + 1, visited.len(), name);
 
             if self.dry_run {
                 args.push("--dry-run");

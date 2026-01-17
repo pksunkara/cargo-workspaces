@@ -59,13 +59,15 @@ fn main() {
 
     let Cargo::Workspaces(opt) = Cargo::parse();
 
-    if opt.verbose {
-        utils::set_debug();
-    }
+    // if opt.verbose || std::env::var_os("RUST_LOG").is_some() {
+    utils::set_debug();
+    // }
 
     let result = if let Subcommand::Init(ref init) = opt.subcommand {
         init.run()
     } else {
+        println!("Loading cargo metadata...");
+
         let mut cmd = MetadataCommand::new();
 
         cmd.features(CargoOpt::AllFeatures);
@@ -76,6 +78,8 @@ fn main() {
         }
 
         let metadata = cmd.exec().unwrap();
+
+        println!("cmd made");
 
         match opt.subcommand {
             Subcommand::List(x) => x.run(metadata),
