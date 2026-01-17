@@ -88,57 +88,24 @@ pub fn is_published(
     name: &str,
     version: &str,
 ) -> Result<bool> {
-    eprintln!("[is_published] Checking if {} v{} is published", name, version);
-
-    eprintln!("[is_published] Creating index cache...");
     let index_cache = ComboIndexCache::new(IndexLocation::new(index_url))?;
-    eprintln!("[is_published] Index cache created");
-
-    eprintln!("[is_published] Acquiring package lock...");
     let lock = LockOptions::cargo_package_lock(None)?.try_lock()?;
-    eprintln!("[is_published] Lock acquired");
 
-    eprintln!("[is_published] Building index (type: {:?})...",
-        match &index_cache {
-            ComboIndexCache::Git(_) => "Git",
-            ComboIndexCache::Sparse(_) => "Sparse",
-            _ => "Unknown",
-        }
-    );
     let index: ComboIndex = match index_cache {
         ComboIndexCache::Git(git) => {
-            eprintln!("[is_published] Creating RemoteGitIndex...");
             let mut rgi = RemoteGitIndex::new(git, &lock)?;
-            eprintln!("[is_published] Fetching git index...");
+
             rgi.fetch(&lock)?;
-            eprintln!("[is_published] Git index fetched");
             rgi.into()
         }
-        ComboIndexCache::Sparse(sparse) => {
-            eprintln!("[is_published] Creating RemoteSparseIndex...");
-            RemoteSparseIndex::new(sparse, client.clone()).into()
-        }
+        ComboIndexCache::Sparse(sparse) => RemoteSparseIndex::new(sparse, client.clone()).into(),
         _ => return Err(Error::UnsupportedCratesIndexType),
     };
-    eprintln!("[is_published] Index built");
 
-    eprintln!("[is_published] Querying crate {} in index...", name);
     let index_crate = index.krate(KrateName::try_from(name)?, false, &lock);
-    let result = match index_crate {
-        Ok(Some(crate_data)) => {
-            let found = crate_data.versions.iter().any(|v| v.version == version);
-            eprintln!("[is_published] Crate {} found, version {} published: {}", name, version, found);
-            Ok(found)
-        }
-        Ok(None) | Err(tame_index::Error::NoCrateVersions) => {
-            eprintln!("[is_published] Crate {} not found in index", name);
-            Ok(false)
-        }
-        Err(e) => {
-            eprintln!("[is_published] Error querying crate {}: {:?}", name, e);
-            Err(e.into())
-        }
-    };
-    eprintln!("[is_published] Check complete for {} v{}", name, version);
-    result
+    match index_crate {
+        Ok(Some(crate_data)) => Ok(crate_data.versions.iter().any(|v| v.version == version)),
+        Ok(None) | Err(tame_index::Error::NoCrateVersions) => Ok(false),
+        Err(e) => Err(e.into()),
+    }
 }
