@@ -24,6 +24,14 @@ fn dag_insert(pkgs: &[(Package, String)], pkg: &Package, visited: &mut Set<Utf8P
     }
 
     for d in &pkg.dependencies {
+        // Only follow path dependencies (workspace members), not external registry deps.
+        // This prevents issues where a renamed external dep like:
+        //   const-serialize-07 = { package = "const-serialize", version = "0.7.2" }
+        // would match a workspace package with the same name, causing infinite recursion.
+        if d.path.is_none() {
+            continue;
+        }
+
         if let Some((dep, _)) = pkgs.iter().find(|(p, _)| d.name == p.name) {
             match d.kind {
                 DependencyKind::Normal | DependencyKind::Build => {
