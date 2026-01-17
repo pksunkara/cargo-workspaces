@@ -155,11 +155,13 @@ impl VersionOpt {
             )?;
         }
 
-        if let Some(new_version) = &new_version {
+        {
             let workspace_root = metadata.workspace_root.join("Cargo.toml");
             let mut new_versions = new_versions.clone();
 
-            new_versions.insert("".to_string(), new_version.clone());
+            if let Some(new_version) = &new_version {
+                new_versions.insert("".to_string(), new_version.clone());
+            }
 
             fs::write(
                 &workspace_root,
